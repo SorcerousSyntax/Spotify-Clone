@@ -1,0 +1,99 @@
+2026-03-07 18:45:22,107 [WARNING] TgCrypto is missing! Pyrogram will work the same, but at a much slower speed. More info: https://docs.pyrogram.org/topics/speedups
+C:\Users\harsh\Desktop\Raabta\music-app\telegram-service\main.py:238: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+C:\Users\harsh\Desktop\Raabta\music-app\telegram-service\main.py:260: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("shutdown")
+INFO:     Started server process [6552]
+INFO:     Waiting for application startup.
+2026-03-07 18:45:22,672 [INFO] Connecting...
+2026-03-07 18:45:22,773 [INFO] Connected! Production DC5 - IPv4
+2026-03-07 18:45:22,776 [INFO] NetworkTask started
+2026-03-07 18:45:23,236 [INFO] Session initialized: Layer 158
+2026-03-07 18:45:23,238 [INFO] Device: CPython 3.13.5 - Pyrogram 2.0.106
+2026-03-07 18:45:23,238 [INFO] System: Windows 11 (en)
+2026-03-07 18:45:23,238 [INFO] Session started
+2026-03-07 18:45:23,240 [INFO] PingTask started
+2026-03-07 18:45:23,495 [INFO] Started 20 HandlerTasks
+2026-03-07 18:45:23,619 [INFO] \u2713 Telegram client started as: Alien (919205685853)
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+2026-03-07 18:54:55,395 [INFO] \U0001f50d Fetching: 'gehra'
+2026-03-07 18:54:55,397 [INFO] Trying @MusicsHuntersbot with: 'gehra...'
+2026-03-07 18:54:55,401 [INFO] \U0001f50d Fetching: 'gehra ua'
+2026-03-07 18:54:55,402 [INFO] Trying @MusicsHuntersbot with: 'gehra ua...'
+2026-03-07 18:54:55,955 [INFO] \U0001f50d Fetching: 'gehra hua'
+2026-03-07 18:54:55,957 [INFO] Trying @MusicsHuntersbot with: 'gehra hua...'
+2026-03-07 18:55:16,123 [INFO] \u2717 @MusicsHuntersbot timed out or no audio received
+2026-03-07 18:55:16,126 [INFO] Trying @SMLoadBot with: 'gehra...'
+2026-03-07 18:55:16,275 [INFO] \u2717 @MusicsHuntersbot timed out or no audio received
+2026-03-07 18:55:16,277 [INFO] Trying @SMLoadBot with: 'gehra hua...'
+2026-03-07 18:55:16,279 [INFO] \u2717 @MusicsHuntersbot timed out or no audio received
+2026-03-07 18:55:16,280 [INFO] Trying @SMLoadBot with: 'gehra ua...'
+2026-03-07 18:55:37,839 [INFO] \u2717 @SMLoadBot timed out or no audio received
+2026-03-07 18:55:37,841 [INFO] Trying @DeezerMusicBot with: 'gehra...'
+2026-03-07 18:55:38,131 [INFO] \u2717 @SMLoadBot timed out or no audio received
+2026-03-07 18:55:38,134 [INFO] Trying @DeezerMusicBot with: 'gehra hua...'
+2026-03-07 18:55:38,136 [INFO] \u2717 @SMLoadBot timed out or no audio received
+2026-03-07 18:55:38,137 [INFO] Trying @DeezerMusicBot with: 'gehra ua...'
+2026-03-07 18:55:59,831 [INFO] \u2717 @DeezerMusicBot timed out or no audio received
+2026-03-07 18:55:59,835 [INFO] All bots failed, trying YouTube fallback for: 'gehra'
+2026-03-07 18:56:00,047 [ERROR] YouTube search error: post() got an unexpected keyword argument 'proxies'
+2026-03-07 18:56:00,048 [WARNING] \u2717 Song not found anywhere: 'gehra'
+2026-03-07 18:56:00,062 [INFO] \u2717 @DeezerMusicBot timed out or no audio received
+2026-03-07 18:56:00,064 [INFO] All bots failed, trying YouTube fallback for: 'gehra hua'
+2026-03-07 18:56:00,065 [ERROR] YouTube search error: post() got an unexpected keyword argument 'proxies'
+2026-03-07 18:56:00,065 [WARNING] \u2717 Song not found anywhere: 'gehra hua'
+2026-03-07 18:56:00,186 [INFO] \u2717 @DeezerMusicBot timed out or no audio received
+2026-03-07 18:56:00,189 [INFO] All bots failed, trying YouTube fallback for: 'gehra ua'
+2026-03-07 18:56:00,191 [ERROR] YouTube search error: post() got an unexpected keyword argument 'proxies'
+2026-03-07 18:56:00,193 [WARNING] \u2717 Song not found anywhere: 'gehra ua'
+2026-03-07 18:56:44,600 [INFO] \U0001f50d Fetching: 'kesariya'
+2026-03-07 18:56:44,601 [INFO] Trying @MusicsHuntersbot with: 'kesariya...'
+2026-03-07 18:57:06,316 [INFO] \u2717 @MusicsHuntersbot timed out or no audio received
+2026-03-07 18:57:06,318 [INFO] Trying @SMLoadBot with: 'kesariya...'
+2026-03-07 18:57:27,978 [INFO] \u2717 @SMLoadBot timed out or no audio received
+2026-03-07 18:57:27,981 [INFO] Trying @DeezerMusicBot with: 'kesariya...'
+2026-03-07 18:57:49,826 [INFO] \u2717 @DeezerMusicBot timed out or no audio received
+2026-03-07 18:57:49,828 [INFO] All bots failed, trying YouTube fallback for: 'kesariya'
+2026-03-07 18:57:49,829 [ERROR] YouTube search error: post() got an unexpected keyword argument 'proxies'
+2026-03-07 18:57:49,830 [WARNING] \u2717 Song not found anywhere: 'kesariya'
+2026-03-07 19:00:32,916 [INFO] \U0001f50d Fetching: 'lat lag'
+2026-03-07 19:00:32,918 [INFO] Trying @MusicsHuntersbot with: 'lat lag...'
+2026-03-07 19:00:37,773 [INFO] \U0001f50d Fetching: 'lat lag'
+2026-03-07 19:00:37,776 [INFO] Trying @MusicsHuntersbot with: 'lat lag...'
+2026-03-07 19:00:40,620 [INFO] \U0001f50d Fetching: 'solid body'
+2026-03-07 19:00:40,623 [INFO] Trying @MusicsHuntersbot with: 'solid body...'
+2026-03-07 19:00:55,065 [INFO] \u2717 @MusicsHuntersbot timed out or no audio received
+2026-03-07 19:00:55,066 [INFO] Trying @SMLoadBot with: 'lat lag...'
+2026-03-07 19:01:00,021 [INFO] \u2717 @MusicsHuntersbot timed out or no audio received
+2026-03-07 19:01:00,023 [INFO] Trying @SMLoadBot with: 'lat lag...'
+2026-03-07 19:01:02,632 [INFO] \u2717 @MusicsHuntersbot timed out or no audio received
+2026-03-07 19:01:02,632 [INFO] Trying @SMLoadBot with: 'solid body...'
+2026-03-07 19:01:15,387 [INFO] \u2717 @SMLoadBot timed out or no audio received
+2026-03-07 19:01:15,388 [INFO] Trying @DeezerMusicBot with: 'lat lag...'
+2026-03-07 19:01:22,330 [INFO] \u2717 @SMLoadBot timed out or no audio received
+2026-03-07 19:01:22,332 [INFO] Trying @DeezerMusicBot with: 'lat lag...'
+2026-03-07 19:01:24,760 [INFO] \u2717 @SMLoadBot timed out or no audio received
+2026-03-07 19:01:24,761 [INFO] Trying @DeezerMusicBot with: 'solid body...'
+2026-03-07 19:01:36,965 [INFO] \u2717 @DeezerMusicBot timed out or no audio received
+2026-03-07 19:01:36,965 [INFO] All bots failed, trying YouTube fallback for: 'lat lag'
+2026-03-07 19:01:36,966 [ERROR] YouTube search error: post() got an unexpected keyword argument 'proxies'
+2026-03-07 19:01:36,966 [WARNING] \u2717 Song not found anywhere: 'lat lag'
+2026-03-07 19:01:43,907 [INFO] \u2717 @DeezerMusicBot timed out or no audio received
+2026-03-07 19:01:43,908 [INFO] All bots failed, trying YouTube fallback for: 'lat lag'
+2026-03-07 19:01:43,908 [ERROR] YouTube search error: post() got an unexpected keyword argument 'proxies'
+2026-03-07 19:01:43,909 [WARNING] \u2717 Song not found anywhere: 'lat lag'
+2026-03-07 19:01:46,433 [INFO] \u2717 @DeezerMusicBot timed out or no audio received
+2026-03-07 19:01:46,436 [INFO] All bots failed, trying YouTube fallback for: 'solid body'
+2026-03-07 19:01:46,437 [ERROR] YouTube search error: post() got an unexpected keyword argument 'proxies'
+2026-03-07 19:01:46,439 [WARNING] \u2717 Song not found anywhere: 'solid body'

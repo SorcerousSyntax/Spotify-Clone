@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://your-backend-service-url/api/:path*"
+    },
+    {
+      "source": "/songs/:path*",
+      "destination": "https://your-backend-service-url/songs/:path*"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "projectId": "fa2bb2d9-18a1-4a69-b575-9f9a964ee2a8",
+  "createdAt": 1772878142562,
+  "version": "1.0",
+  "startupCommands": [
+    "bun install --cwd C:/Users/harsh/Desktop/Raabta/music-app/backend; bun run --cwd C:/Users/harsh/Desktop/Raabta/music-app/backend dev",
+    "bun install --cwd C:/Users/harsh/Desktop/Raabta/music-app/frontend; bun run --cwd C:/Users/harsh/Desktop/Raabta/music-app/frontend dev"
+  ],
+  "templateId": "any"
+}

@@ -1,0 +1,7 @@
+pyrogram==2.0.106
+tgcrypto
+fastapi
+uvicorn[standard]
+python-dotenv
+youtube-search-python
+pydantic

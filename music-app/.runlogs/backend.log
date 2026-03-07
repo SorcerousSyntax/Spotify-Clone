@@ -1,0 +1,19 @@
+✓ Supabase client initialized
+
+🎵 Music App Backend running on http://localhost:3001
+   Health: http://localhost:3001/api/health
+
+🔍 Searching Telegram for: "arijit"
+📡 Calling Telegram microservice for: "arijit"
+🔍 Searching Telegram for: "gehra hus"
+📡 Calling Telegram microservice for: "gehra hus"
+🔍 Searching Telegram for: "gehra hua"
+📡 Calling Telegram microservice for: "gehra hua"
+🔍 Searching Telegram for: "gehra hu"
+📡 Calling Telegram microservice for: "gehra hu"
+🔍 Searching Telegram for: "criminal"
+📡 Calling Telegram microservice for: "criminal"
+🔍 Searching Telegram for: "crimina"
+📡 Calling Telegram microservice for: "crimina"
+🔍 Searching Telegram for: "criminal"
+📡 Calling Telegram microservice for: "criminal"
