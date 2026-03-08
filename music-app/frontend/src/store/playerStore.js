@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { supabase, hasSupabase } from '../lib/supabase';
 
+export const LIKED_SONGS_PLAYLIST_ID = 'liked-songs-auto';
+export const LIKED_SONGS_PLAYLIST_NAME = 'Liked Songs';
+
 const makePlaylistId = () =>
   `pl_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
@@ -11,6 +14,22 @@ const toSongMap = (songs = []) =>
     }
     return acc;
   }, {});
+
+const toLikedSongsPlaylist = (likedSongIds = [], existing = {}) => ({
+  id: LIKED_SONGS_PLAYLIST_ID,
+  name: LIKED_SONGS_PLAYLIST_NAME,
+  emoji: existing.emoji || '💚',
+  songIds: [...likedSongIds],
+  createdAt: existing.createdAt || Date.now(),
+  isSystem: true,
+});
+
+const ensureLikedSongsPlaylist = (playlists = [], likedSongIds = []) => {
+  const existing = playlists.find((playlist) => playlist.id === LIKED_SONGS_PLAYLIST_ID);
+  const nextLiked = toLikedSongsPlaylist(likedSongIds, existing);
+  const others = playlists.filter((playlist) => playlist.id !== LIKED_SONGS_PLAYLIST_ID);
+  return [nextLiked, ...others];
+};
 
 const isUuid = (value = '') =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -275,13 +294,14 @@ const usePlayerStore = create((set, get) => ({
   }, {}),
 
   // User playlists (custom)
-  playlists: (offlineSnapshot?.playlists || []).map((playlist) => ({
+  playlists: ensureLikedSongsPlaylist((offlineSnapshot?.playlists || []).map((playlist) => ({
     id: playlist.id,
     name: playlist.name,
     emoji: playlist.emoji || '🎵',
     songIds: Array.isArray(playlist.songIds) ? playlist.songIds : [],
     createdAt: playlist.createdAt || Date.now(),
-  })),
+    isSystem: Boolean(playlist.isSystem),
+  })), offlineSnapshot?.likedSongIds || []),
 
   supabaseReady: hasSupabase,
 
@@ -413,6 +433,10 @@ const usePlayerStore = create((set, get) => ({
       .filter((song) => song?.id);
 
     const loadedPlaylists = (playlistsQuery.data || []).map((row) => {
+      if (row.id === LIKED_SONGS_PLAYLIST_ID || row.name === LIKED_SONGS_PLAYLIST_NAME) {
+        return null;
+      }
+
       const songs = Array.isArray(row.songs) ? row.songs.map(normalizeSong) : [];
       return {
         id: row.id,
@@ -421,7 +445,7 @@ const usePlayerStore = create((set, get) => ({
         songIds: songs.map((song) => song.id).filter(Boolean),
         createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
       };
-    });
+    }).filter(Boolean);
 
     const playlistSongs = (playlistsQuery.data || [])
       .flatMap((row) => (Array.isArray(row.songs) ? row.songs : []))
@@ -429,10 +453,11 @@ const usePlayerStore = create((set, get) => ({
       .filter((song) => song.id);
 
     set((state) => {
+      const likedIds = likedSongs.map((song) => song.id);
       const nextState = {
-        likedSongIds: new Set(likedSongs.map((song) => song.id)),
+        likedSongIds: new Set(likedIds),
         recentlyPlayed: historySongs,
-        playlists: loadedPlaylists,
+        playlists: ensureLikedSongsPlaylist(loadedPlaylists, likedIds),
         songsById: {
           ...state.songsById,
           ...toSongMap([...likedSongs, ...historySongs, ...playlistSongs]),
@@ -570,16 +595,42 @@ const usePlayerStore = create((set, get) => ({
       }
     }
 
+    const nextPlaylists = ensureLikedSongsPlaylist(state.playlists, [...newLiked]);
+
+    const likedSongsPlaylist = nextPlaylists.find((playlist) => playlist.id === LIKED_SONGS_PLAYLIST_ID);
+    if (supabase && likedSongsPlaylist) {
+      const songs = likedSongsPlaylist.songIds
+        .map((id) => nextSongsById[id])
+        .filter(Boolean)
+        .map(normalizeSong);
+
+      supabase
+        .from('playlists')
+        .upsert({
+          id: likedSongsPlaylist.id,
+          name: likedSongsPlaylist.name,
+          emoji: likedSongsPlaylist.emoji,
+          songs,
+          created_at: new Date(likedSongsPlaylist.createdAt || Date.now()).toISOString(),
+        }, { onConflict: 'id' })
+        .then(({ error }) => {
+          if (error) {
+            console.error('Supabase liked songs playlist upsert error:', error);
+          }
+        });
+    }
+
     persistOfflineLibrarySnapshot({
       likedSongIds: newLiked,
       recentlyPlayed: state.recentlyPlayed,
       songsById: nextSongsById,
-      playlists: state.playlists,
+      playlists: nextPlaylists,
     });
 
     return {
       likedSongIds: newLiked,
       songsById: nextSongsById,
+      playlists: nextPlaylists,
     };
   }),
 
@@ -623,6 +674,8 @@ const usePlayerStore = create((set, get) => ({
   }),
 
   renamePlaylist: (playlistId, newName) => set((state) => {
+    if (playlistId === LIKED_SONGS_PLAYLIST_ID) return state;
+
     const updated = state.playlists.map((playlist) =>
       playlist.id === playlistId
         ? { ...playlist, name: (newName || '').trim() || playlist.name }
@@ -662,6 +715,8 @@ const usePlayerStore = create((set, get) => ({
   }),
 
   deletePlaylist: (playlistId) => set((state) => {
+    if (playlistId === LIKED_SONGS_PLAYLIST_ID) return state;
+
     if (supabase) {
       supabase
         .from('playlists')
@@ -686,7 +741,7 @@ const usePlayerStore = create((set, get) => ({
   }),
 
   addSongToPlaylist: (playlistId, song) => set((state) => {
-    if (!playlistId || !song?.id) return state;
+    if (!playlistId || !song?.id || playlistId === LIKED_SONGS_PLAYLIST_ID) return state;
 
     const normalized = normalizeSong(song);
 

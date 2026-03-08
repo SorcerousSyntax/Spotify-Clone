@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import usePlayerStore from '../store/playerStore';
+import { LIKED_SONGS_PLAYLIST_ID } from '../store/playerStore';
 import useColorExtract from '../hooks/useColorExtract';
 import Waveform from '../components/Waveform';
 import LyricsPanel from '../components/LyricsPanel';
@@ -62,6 +63,8 @@ const NowPlaying = () => {
   const toggleLike = usePlayerStore((s) => s.toggleLike);
   const likedSongIds = usePlayerStore((s) => s.likedSongIds);
   const toggleLyricsPanel = usePlayerStore((s) => s.toggleLyricsPanel);
+  const playlists = usePlayerStore((s) => s.playlists);
+  const addSongToPlaylist = usePlayerStore((s) => s.addSongToPlaylist);
   const seek = usePlayerStore((s) => s.playerControls.seek);
   const getFrequencyData = usePlayerStore((s) => s.playerControls.getFrequencyData);
 
@@ -72,10 +75,25 @@ const NowPlaying = () => {
   const [dragProgress, setDragProgress] = useState(0);
   const [offlineStatus, setOfflineStatus] = useState('idle'); // idle | saving | saved | error
   const [downloadStatus, setDownloadStatus] = useState('idle'); // idle | downloading | done | error
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState('');
+  const [playlistAddStatus, setPlaylistAddStatus] = useState('');
   const progressBarRef = useRef(null);
   const [isCompact, setIsCompact] = useState(true);
 
   const isLiked = currentSong ? likedSongIds.has(currentSong.id) : false;
+  const customPlaylists = playlists.filter((playlist) => playlist.id !== LIKED_SONGS_PLAYLIST_ID);
+
+  useEffect(() => {
+    if (!customPlaylists.length) {
+      setSelectedPlaylistId('');
+      return;
+    }
+
+    const exists = customPlaylists.some((playlist) => playlist.id === selectedPlaylistId);
+    if (!exists) {
+      setSelectedPlaylistId(customPlaylists[0].id);
+    }
+  }, [customPlaylists, selectedPlaylistId]);
 
   useEffect(() => {
     const onResize = () => setIsCompact(true);
@@ -173,6 +191,13 @@ const NowPlaying = () => {
       setDownloadStatus('error');
       setTimeout(() => setDownloadStatus('idle'), 1600);
     }
+  };
+
+  const handleAddToPlaylist = () => {
+    if (!currentSong || !selectedPlaylistId) return;
+    addSongToPlaylist(selectedPlaylistId, currentSong);
+    setPlaylistAddStatus('Added');
+    setTimeout(() => setPlaylistAddStatus(''), 1400);
   };
 
   const handleProgressDrag = useCallback((e) => {
@@ -548,6 +573,58 @@ const NowPlaying = () => {
                 >
                   Lyrics
                 </button>
+
+                <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <select
+                    value={selectedPlaylistId}
+                    onChange={(e) => setSelectedPlaylistId(e.target.value)}
+                    disabled={!customPlaylists.length}
+                    style={{
+                      height: 34,
+                      borderRadius: 999,
+                      border: '1px solid rgba(255,255,255,0.24)',
+                      background: 'rgba(255,255,255,0.08)',
+                      color: '#fff',
+                      padding: '0 12px',
+                      minWidth: 180,
+                      fontSize: 11,
+                    }}
+                  >
+                    {customPlaylists.length === 0 ? (
+                      <option value="">No playlist found</option>
+                    ) : (
+                      customPlaylists.map((playlist) => (
+                        <option key={playlist.id} value={playlist.id}>
+                          {playlist.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  <button
+                    onClick={handleAddToPlaylist}
+                    disabled={!selectedPlaylistId || !customPlaylists.length}
+                    style={{
+                      height: 34,
+                      borderRadius: 999,
+                      border: '1px solid rgba(0,255,65,0.35)',
+                      background: selectedPlaylistId ? 'rgba(0,255,65,0.12)' : 'rgba(255,255,255,0.05)',
+                      color: selectedPlaylistId ? '#00ff6a' : 'rgba(255,255,255,0.5)',
+                      padding: '0 12px',
+                      cursor: selectedPlaylistId ? 'pointer' : 'default',
+                      fontSize: 11,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      fontFamily: "'DM Mono', monospace",
+                    }}
+                  >
+                    Add to Playlist
+                  </button>
+                  {playlistAddStatus && (
+                    <span style={{ color: 'rgba(0,255,106,0.9)', fontSize: 11, fontFamily: "'DM Mono', monospace" }}>
+                      {playlistAddStatus}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>

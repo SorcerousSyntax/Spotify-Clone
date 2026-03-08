@@ -1,17 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import usePlayerStore from '../store/playerStore';
+import usePlayerStore, { LIKED_SONGS_PLAYLIST_ID } from '../store/playerStore';
 import { SongRow } from '../components/MusicCards';
-import SkeletonLoader from '../components/SkeletonLoader';
 
-const FILTERS = ['All', 'Recent', 'Liked', 'Playlists'];
+const FILTERS = ['Playlists'];
 
 const PLAYLIST_EMOJIS = ['🎵', '🔥', '🌙', '💚', '🎧', '⚡', '🎹'];
 
 const isPlayableSong = (song) => Boolean(song?.stream_url || song?.r2_url);
 
-const PlaylistCard = ({ playlist, index, onOpen, onRename, onDelete }) => (
+const PlaylistCard = ({ playlist, index, onOpen, onRename, onDelete, canManage }) => (
   <motion.div
     initial={{ opacity: 0, x: -10 }}
     animate={{ opacity: 1, x: 0 }}
@@ -70,49 +69,49 @@ const PlaylistCard = ({ playlist, index, onOpen, onRename, onDelete }) => (
       </p>
     </button>
 
-    <div style={{ display: 'flex', gap: 8 }}>
-      <button
-        onClick={onRename}
-        style={{
-          border: '1px solid rgba(255,255,255,0.15)',
-          background: 'transparent',
-          color: 'rgba(255,255,255,0.8)',
-          borderRadius: 999,
-          padding: '5px 10px',
-          fontSize: 11,
-          cursor: 'pointer',
-        }}
-      >
-        Edit
-      </button>
-      <button
-        onClick={onDelete}
-        style={{
-          border: '1px solid rgba(255,100,100,0.3)',
-          background: 'transparent',
-          color: 'rgba(255,120,120,0.9)',
-          borderRadius: 999,
-          padding: '5px 10px',
-          fontSize: 11,
-          cursor: 'pointer',
-        }}
-      >
-        Delete
-      </button>
-    </div>
+    {canManage && (
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          onClick={onRename}
+          style={{
+            border: '1px solid rgba(255,255,255,0.15)',
+            background: 'transparent',
+            color: 'rgba(255,255,255,0.8)',
+            borderRadius: 999,
+            padding: '5px 10px',
+            fontSize: 11,
+            cursor: 'pointer',
+          }}
+        >
+          Edit
+        </button>
+        <button
+          onClick={onDelete}
+          style={{
+            border: '1px solid rgba(255,100,100,0.3)',
+            background: 'transparent',
+            color: 'rgba(255,120,120,0.9)',
+            borderRadius: 999,
+            padding: '5px 10px',
+            fontSize: 11,
+            cursor: 'pointer',
+          }}
+        >
+          Delete
+        </button>
+      </div>
+    )}
   </motion.div>
 );
 
 const Library = () => {
   const location = useLocation();
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('Playlists');
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
 
   const likedSongIds = usePlayerStore((s) => s.likedSongIds);
-  const recentlyPlayed = usePlayerStore((s) => s.recentlyPlayed);
   const songsById = usePlayerStore((s) => s.songsById);
   const playlists = usePlayerStore((s) => s.playlists);
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
@@ -122,10 +121,6 @@ const Library = () => {
   const deletePlaylist = usePlayerStore((s) => s.deletePlaylist);
   const addSongToPlaylist = usePlayerStore((s) => s.addSongToPlaylist);
   const removeSongFromPlaylist = usePlayerStore((s) => s.removeSongFromPlaylist);
-
-  useEffect(() => {
-    setLoading(false);
-  }, []);
 
   useEffect(() => {
     const requestedPlaylistId = location.state?.openPlaylistId;
@@ -153,24 +148,6 @@ const Library = () => {
     [savedSongIds, songsById]
   );
 
-  const recentSongs = useMemo(() => {
-    const seen = new Set();
-    return recentlyPlayed.filter((song) => {
-      if (!song?.id || seen.has(song.id) || !isPlayableSong(song) || !savedSongIds.has(song.id)) {
-        return false;
-      }
-      seen.add(song.id);
-      return true;
-    });
-  }, [recentlyPlayed, savedSongIds]);
-
-  const likedSongs = useMemo(
-    () => [...likedSongIds]
-      .map((id) => songsById[id])
-      .filter((song) => song && isPlayableSong(song)),
-    [likedSongIds, songsById]
-  );
-
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId) || null;
 
   const playlistSongs = useMemo(
@@ -187,13 +164,6 @@ const Library = () => {
     const set = new Set(selectedPlaylist.songIds);
     return allSongs.filter((song) => !set.has(song.id));
   }, [selectedPlaylist, allSongs]);
-
-  const filteredSongs = useMemo(() => {
-    if (activeFilter === 'Recent') return recentSongs;
-    if (activeFilter === 'Liked') return likedSongs;
-    if (activeFilter === 'All') return allSongs;
-    return [];
-  }, [activeFilter, recentSongs, likedSongs, allSongs]);
 
   const playSong = (song, index, list) => {
     if (!isPlayableSong(song)) return;
@@ -333,81 +303,82 @@ const Library = () => {
         })}
       </motion.div>
 
-      {activeFilter === 'Playlists' ? (
-        <section style={{ padding: '0 16px' }}>
-          {!selectedPlaylist && playlists.map((playlist, i) => (
-            <PlaylistCard
-              key={playlist.id}
-              playlist={playlist}
-              index={i}
-              onOpen={() => setSelectedPlaylistId(playlist.id)}
-              onRename={() => onRenamePlaylist(playlist)}
-              onDelete={() => onDeletePlaylist(playlist)}
-            />
-          ))}
+      <section style={{ padding: '0 16px' }}>
+        {!selectedPlaylist && playlists.map((playlist, i) => (
+          <PlaylistCard
+            key={playlist.id}
+            playlist={playlist}
+            index={i}
+            onOpen={() => setSelectedPlaylistId(playlist.id)}
+            onRename={() => onRenamePlaylist(playlist)}
+            onDelete={() => onDeletePlaylist(playlist)}
+            canManage={playlist.id !== LIKED_SONGS_PLAYLIST_ID}
+          />
+        ))}
 
-          {!selectedPlaylist && playlists.length === 0 && (
-            <p style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: 12,
-              color: 'rgba(255,255,255,0.4)',
-              textAlign: 'center',
-              padding: '30px 0',
-            }}>
-              No playlists yet. Create one from the button above.
-            </p>
-          )}
+        {!selectedPlaylist && playlists.length === 0 && (
+          <p style={{
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 12,
+            color: 'rgba(255,255,255,0.4)',
+            textAlign: 'center',
+            padding: '30px 0',
+          }}>
+            No playlists yet. Create one from the button above.
+          </p>
+        )}
 
-          {selectedPlaylist && (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <button
-                  onClick={() => setSelectedPlaylistId(null)}
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    color: 'rgba(255,255,255,0.8)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Back
-                </button>
-                <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 26, color: '#fff' }}>
-                  {selectedPlaylist.name}
-                </p>
-                <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>
-                  {playlistSongs.length} songs
-                </span>
-              </div>
-
+        {selectedPlaylist && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <button
-                onClick={shufflePlayPlaylist}
-                disabled={!playlistSongs.length}
+                onClick={() => setSelectedPlaylistId(null)}
                 style={{
-                  marginBottom: 12,
-                  border: '1px solid rgba(255,255,255,0.25)',
-                  borderRadius: 999,
-                  background: playlistSongs.length ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
-                  color: playlistSongs.length ? '#fff' : 'rgba(255,255,255,0.45)',
-                  padding: '8px 14px',
-                  cursor: playlistSongs.length ? 'pointer' : 'default',
-                  fontSize: 11,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  fontFamily: "'DM Mono', monospace",
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'rgba(255,255,255,0.8)',
+                  cursor: 'pointer',
                 }}
               >
-                Shuffle Play Playlist
+                Back
               </button>
-
-              <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(0,255,65,0.6)', marginBottom: 8 }}>
-                Playlist Songs
+              <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 26, color: '#fff' }}>
+                {selectedPlaylist.name}
               </p>
-              {playlistSongs.length > 0 ? playlistSongs.map((song, i) => (
-                <div key={song.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ flex: 1 }}>
-                    <SongRow song={song} index={i} showIndex onClick={(s, idx) => playSong(s, idx, playlistSongs)} />
-                  </div>
+              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>
+                {playlistSongs.length} songs
+              </span>
+            </div>
+
+            <button
+              onClick={shufflePlayPlaylist}
+              disabled={!playlistSongs.length}
+              style={{
+                marginBottom: 12,
+                border: '1px solid rgba(255,255,255,0.25)',
+                borderRadius: 999,
+                background: playlistSongs.length ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
+                color: playlistSongs.length ? '#fff' : 'rgba(255,255,255,0.45)',
+                padding: '8px 14px',
+                cursor: playlistSongs.length ? 'pointer' : 'default',
+                fontSize: 11,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                fontFamily: "'DM Mono', monospace",
+              }}
+            >
+              Shuffle Play Playlist
+            </button>
+
+            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(0,255,65,0.6)', marginBottom: 8 }}>
+              Playlist Songs
+            </p>
+            {playlistSongs.length > 0 ? playlistSongs.map((song, i) => (
+              <div key={song.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <SongRow song={song} index={i} showIndex onClick={(s, idx) => playSong(s, idx, playlistSongs)} />
+                </div>
+                {selectedPlaylist.id !== LIKED_SONGS_PLAYLIST_ID && (
                   <button
                     onClick={() => removeSongFromPlaylist(selectedPlaylist.id, song.id)}
                     style={{
@@ -422,71 +393,46 @@ const Library = () => {
                   >
                     Remove
                   </button>
-                </div>
-              )) : (
-                <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, marginBottom: 16 }}>
-                  No songs in this playlist yet.
+                )}
+              </div>
+            )) : (
+              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, marginBottom: 16 }}>
+                No songs in this playlist yet.
+              </p>
+            )}
+
+            {selectedPlaylist.id !== LIKED_SONGS_PLAYLIST_ID && (
+              <>
+                <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(0,255,65,0.6)', margin: '16px 0 8px' }}>
+                  Add Songs
                 </p>
-              )}
-
-              <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(0,255,65,0.6)', margin: '16px 0 8px' }}>
-                Add Songs
-              </p>
-              {addableSongs.slice(0, 20).map((song) => (
-                <div key={`add-${song.id}`} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ flex: 1 }}>
-                    <SongRow song={song} />
+                {addableSongs.slice(0, 20).map((song) => (
+                  <div key={`add-${song.id}`} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ flex: 1 }}>
+                      <SongRow song={song} />
+                    </div>
+                    <button
+                      onClick={() => addSongToPlaylist(selectedPlaylist.id, song)}
+                      style={{
+                        border: '1px solid rgba(0,255,65,0.3)',
+                        background: 'rgba(0,255,65,0.08)',
+                        color: '#00ff6a',
+                        borderRadius: 999,
+                        padding: '6px 10px',
+                        cursor: 'pointer',
+                        fontSize: 11,
+                      }}
+                    >
+                      Add
+                    </button>
                   </div>
-                  <button
-                    onClick={() => addSongToPlaylist(selectedPlaylist.id, song)}
-                    style={{
-                      border: '1px solid rgba(0,255,65,0.3)',
-                      background: 'rgba(0,255,65,0.08)',
-                      color: '#00ff6a',
-                      borderRadius: 999,
-                      padding: '6px 10px',
-                      cursor: 'pointer',
-                      fontSize: 11,
-                    }}
-                  >
-                    Add
-                  </button>
-                </div>
-              ))}
-            </>
-          )}
-        </section>
-      ) : (
-        <section style={{ padding: '0 16px' }}>
-          <p style={{
-            fontFamily: "'Share Tech Mono', monospace",
-            fontSize: 9,
-            letterSpacing: '0.15em',
-            color: 'rgba(0,255,106,0.45)',
-            textTransform: 'uppercase',
-            marginBottom: 8,
-          }}>
-            {activeFilter === 'Liked' ? 'Liked Songs' : activeFilter === 'Recent' ? 'Recent' : 'All Songs'}
-          </p>
+                ))}
+              </>
+            )}
+          </>
+        )}
+      </section>
 
-          {loading ? (
-            <SkeletonLoader type="row" count={6} />
-          ) : filteredSongs.length > 0 ? (
-            filteredSongs.map((song, i) => (
-              <SongRow key={song.id} song={song} index={i} showIndex onClick={(s, idx) => playSong(s, idx, filteredSongs)} />
-            ))
-          ) : (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center', padding: '60px 0' }}>
-              <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 20, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.18)' }}>
-                {activeFilter === 'Liked' ? 'No liked songs yet' : 'Nothing here'}
-              </p>
-              <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.1)', marginTop: 8 }}>
-                {activeFilter === 'Liked' ? 'Like a real song from Search/Home first' : 'Play some songs to build your library'}
-              </p>
-            </motion.div>
-          )}
-        </section>
-      )}
     </div>
   );
 };

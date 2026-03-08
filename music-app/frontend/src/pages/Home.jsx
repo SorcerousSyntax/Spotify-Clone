@@ -2,8 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import usePlayerStore from '../store/playerStore';
-import { CompactCard, SongRow } from '../components/MusicCards';
-import SkeletonLoader from '../components/SkeletonLoader';
 import { supabase } from '../lib/supabase';
 import { decodeSongTitle } from '../lib/text';
 
@@ -79,7 +77,6 @@ const getMoodConfig = (hour, userName = 'there') => {
 
 const Home = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
   const [recentFromApi, setRecentFromApi] = useState([]);
   const [suggestedSong, setSuggestedSong] = useState(null);
   const [bannerName, setBannerName] = useState('there');
@@ -111,11 +108,8 @@ const Home = () => {
 
   const mood = useMemo(() => getMoodConfig(new Date().getHours(), bannerName), [bannerName]);
 
-  const currentSong = usePlayerStore((s) => s.currentSong);
   const recentlyPlayed = usePlayerStore((s) => s.recentlyPlayed);
-  const likedSongIds = usePlayerStore((s) => s.likedSongIds);
   const playlists = usePlayerStore((s) => s.playlists);
-  const songsById = usePlayerStore((s) => s.songsById);
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
   const setQueue = usePlayerStore((s) => s.setQueue);
 
@@ -124,7 +118,6 @@ const Home = () => {
 
     const loadRecent = async () => {
       if (!supabase) {
-        setLoading(false);
         return;
       }
 
@@ -152,16 +145,10 @@ const Home = () => {
         );
       }
 
-      if (mounted) {
-        setLoading(false);
-      }
     };
 
     loadRecent().catch((err) => {
       console.error('Supabase play_history Home fetch exception:', err);
-      if (mounted) {
-        setLoading(false);
-      }
     });
 
     return () => {
@@ -196,14 +183,6 @@ const Home = () => {
     };
   }, [mood.query]);
 
-  const savedSongIds = useMemo(() => {
-    const ids = new Set(likedSongIds);
-    playlists.forEach((playlist) => {
-      playlist.songIds.forEach((songId) => ids.add(songId));
-    });
-    return ids;
-  }, [likedSongIds, playlists]);
-
   const recentSongs = useMemo(() => {
     const merged = [...recentFromApi, ...recentlyPlayed];
     const seen = new Set();
@@ -215,14 +194,6 @@ const Home = () => {
       return true;
     });
   }, [recentFromApi, recentlyPlayed]);
-
-  const libraryFiles = useMemo(
-    () => [...savedSongIds]
-      .map((id) => songsById[id])
-      .filter((song) => song && isPlayableSong(song))
-      .slice(0, 12),
-    [savedSongIds, songsById]
-  );
 
   const playSong = (song, index, list) => {
     if (!isPlayableSong(song)) {
@@ -335,29 +306,6 @@ const Home = () => {
         </motion.div>
       </motion.section>
 
-      <section style={{ width: 'min(980px, calc(100vw - 24px))', margin: '0 auto' }}>
-        <SectionTitle text="Recently Played" />
-        {loading ? (
-          <SkeletonLoader type="card" count={4} />
-        ) : recentSongs.length > 0 ? (
-          <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }} className="hide-scrollbar">
-            {recentSongs.map((song, i) => (
-              <CompactCard
-                key={song.id}
-                song={song}
-                index={i}
-                size={128}
-                onClick={(s, idx) => playSong(s, idx, recentSongs)}
-              />
-            ))}
-          </div>
-        ) : (
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '12px 4px' }}>
-            No recent tracks yet. Play something from Search.
-          </p>
-        )}
-      </section>
-
       <section style={{ width: 'min(980px, calc(100vw - 24px))', margin: '20px auto 0' }}>
         <SectionTitle text="Your Playlists" />
         {playlists.length > 0 ? (
@@ -406,25 +354,6 @@ const Home = () => {
         ) : (
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '12px 4px' }}>
             No playlists yet. Create one in Library.
-          </p>
-        )}
-      </section>
-
-      <section style={{ width: 'min(980px, calc(100vw - 24px))', margin: '20px auto 0', padding: '0 16px', boxSizing: 'border-box' }}>
-        <SectionTitle text="Library Files" />
-        {libraryFiles.length > 0 ? (
-          libraryFiles.map((song, i) => (
-            <SongRow
-              key={song.id}
-              song={song}
-              index={i}
-              showIndex
-              onClick={(s, idx) => playSong(s, idx, libraryFiles)}
-            />
-          ))
-        ) : (
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '12px 4px' }}>
-            Library is empty. Download songs from Now Playing or search and play tracks.
           </p>
         )}
       </section>
