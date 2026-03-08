@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const tabs = [
@@ -66,11 +66,11 @@ const BottomNav = () => {
     <nav
       style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 4,
-        background: 'rgba(0, 0, 0, 0.6)',
+        background: 'rgba(0,0,0,0.95)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        borderTop: '1px solid rgba(0, 255, 65, 0.15)',
-        boxShadow: '0 -4px 30px rgba(0, 0, 0, 0.4)',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+        boxShadow: 'none',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
@@ -87,6 +87,7 @@ const BottomNav = () => {
                 alignItems: 'center', justifyContent: 'center', position: 'relative',
                 background: 'transparent', border: 'none', outline: 'none',
                 gap: 4,
+                cursor: 'pointer',
               }}
             >
               {/* Active dot at bottom */}
@@ -100,7 +101,7 @@ const BottomNav = () => {
                     height: 4,
                     borderRadius: '50%',
                     background: '#00ff41',
-                    boxShadow: '0 0 8px #00ff41, 0 0 16px rgba(0,255,65,0.4)',
+                    boxShadow: '0 0 6px #00ff41',
                   }}
                   transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
@@ -112,8 +113,8 @@ const BottomNav = () => {
                 transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                 style={{
                   color: isActive ? '#00ff41' : 'rgba(255,255,255,0.3)',
-                  filter: isActive ? 'drop-shadow(0 0 6px rgba(0,255,65,0.7))' : 'none',
-                  transition: 'color 0.2s, filter 0.2s',
+                  filter: 'none',
+                  transition: 'color 0.15s ease',
                 }}
               >
                 {isActive ? tab.iconFilled : tab.icon}
@@ -122,10 +123,10 @@ const BottomNav = () => {
               <span style={{
                 fontFamily: "'DM Mono', monospace",
                 fontSize: 9,
-                letterSpacing: '0.06em',
+                letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: isActive ? '#00ff41' : 'rgba(255,255,255,0.28)',
-                transition: 'color 0.2s',
+                color: isActive ? '#00ff41' : 'rgba(255,255,255,0.25)',
+                transition: 'color 0.15s ease',
               }}>
                 {tab.label}
               </span>

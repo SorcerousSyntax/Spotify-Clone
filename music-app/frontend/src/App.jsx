@@ -2,7 +2,6 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate, Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import SmokeBackground from './components/SmokeBackground';
-import FloatingParticles from './components/FloatingParticles';
 import GlobalCursor from './components/GlobalCursor';
 import LoadingScreen from './components/LoadingScreen';
 import BottomNav from './components/BottomNav';
@@ -349,7 +348,6 @@ const AppInner = () => {
 
       {/* z-1: Scanlines + noise */}
       <div className="scanlines" />
-      <FloatingParticles count={25} />
       <div className="noise-overlay" />
 
       {/* z-2: Page content */}

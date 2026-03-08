@@ -26,7 +26,7 @@ export default function SmokeBackground() {
     }
     renderer.setSize(W, H);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-    renderer.setClearColor(0x000000, 0);
+    renderer.setClearColor(0x000000, 1);
     mountRef.current?.appendChild(renderer.domElement);
 
     // Build smoke texture procedurally
@@ -44,9 +44,9 @@ export default function SmokeBackground() {
       return undefined;
     }
     const smokeStops = [
-      ['rgba(67,232,143,0.28)', 'rgba(67,232,143,0.10)'],
-      ['rgba(87,242,161,0.24)', 'rgba(87,242,161,0.08)'],
-      ['rgba(170,255,211,0.18)', 'rgba(170,255,211,0.06)'],
+      ['rgba(255,255,255,0.20)', 'rgba(255,255,255,0.08)'],
+      ['rgba(255,255,255,0.16)', 'rgba(255,255,255,0.06)'],
+      ['rgba(255,255,255,0.12)', 'rgba(255,255,255,0.05)'],
     ];
 
     for (let i = 0; i < 3; i++) {
@@ -105,20 +105,20 @@ export default function SmokeBackground() {
       particles.push(mesh);
     }
 
-    const floorLight = new THREE.PointLight(0x2fd17d, 2.5, 20);
+    const floorLight = new THREE.PointLight(0xffffff, 2.2, 20);
     floorLight.position.set(0, -6, 2);
     scene.add(floorLight);
 
-    const sideLight = new THREE.PointLight(0x57f2a1, 1.2, 16);
+    const sideLight = new THREE.PointLight(0xffffff, 0.8, 16);
     sideLight.position.set(-5, 1, 1);
     scene.add(sideLight);
 
-    const topLight = new THREE.PointLight(0x8fffc7, 0.7, 14);
+    const topLight = new THREE.PointLight(0xffffff, 0.45, 14);
     topLight.position.set(4, 3, 0);
     scene.add(topLight);
 
     // Subtle ambient
-    scene.add(new THREE.AmbientLight(0xbff8de, 0.26));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
 
     let frame;
     let t = 0;
@@ -171,6 +171,7 @@ export default function SmokeBackground() {
   return (
     <div
       ref={mountRef}
+      className="smoke-container"
       style={{
         position: 'fixed',
         inset: 0,

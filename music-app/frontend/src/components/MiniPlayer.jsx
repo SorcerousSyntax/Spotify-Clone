@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import usePlayerStore from '../store/playerStore';
-import useColorExtract from '../hooks/useColorExtract';
 import { decodeSongTitle } from '../lib/text';
 
 const ScrollingTitle = ({ title, fontSize = 18 }) => {
@@ -53,45 +52,9 @@ const MiniPlayer = () => {
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const toggleLike = usePlayerStore((s) => s.toggleLike);
   const likedSongIds = usePlayerStore((s) => s.likedSongIds);
-  const getFrequencyData = usePlayerStore((s) => s.playerControls.getFrequencyData);
-  const { rgbaString } = useColorExtract(currentSong?.album_art_url);
-  const [beatLevel, setBeatLevel] = useState(0.25);
 
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
   const isLiked = currentSong ? likedSongIds.has(currentSong.id) : false;
-
-  useEffect(() => {
-    if (!currentSong) {
-      setBeatLevel(0.25);
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      const frequencyData = typeof getFrequencyData === 'function' ? getFrequencyData() : null;
-
-      if (!frequencyData || !frequencyData.length) {
-        setBeatLevel((prev) => prev * 0.88 + 0.22 * 0.12);
-        return;
-      }
-
-      const sampleBins = Math.min(24, frequencyData.length);
-      let total = 0;
-      for (let i = 0; i < sampleBins; i += 1) {
-        total += frequencyData[i] || 0;
-      }
-
-      const energy = total / (sampleBins * 255);
-      const target = isPlaying ? energy : 0.18;
-      setBeatLevel((prev) => prev * 0.72 + target * 0.28);
-    }, 90);
-
-    return () => window.clearInterval(timer);
-  }, [currentSong?.id, isPlaying, getFrequencyData]);
-
-  const glowAlpha = useMemo(() => {
-    const normalized = Math.max(0.16, Math.min(0.95, beatLevel));
-    return normalized;
-  }, [beatLevel]);
 
   return (
     <AnimatePresence>
@@ -101,12 +64,12 @@ const MiniPlayer = () => {
             position: 'fixed',
             bottom: 64,
             top: 'auto',
-            right: 16,
-            left: 16,
+            right: 8,
+            left: 8,
             width: 'auto',
             height: 'auto',
-            zIndex: 3,
-            borderRadius: 16,
+            zIndex: 99,
+            borderRadius: 8,
             overflow: 'hidden',
           }}
           initial={{ y: 80, opacity: 0 }}
@@ -114,59 +77,49 @@ const MiniPlayer = () => {
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 350, damping: 30 }}
         >
-          {/* Glass bg */}
           <div style={{
-            background: `linear-gradient(145deg, ${rgbaString(0.28)} 0%, rgba(0,0,0,0.94) 44%, rgba(0,0,0,0.96) 100%)`,
-            backdropFilter: 'blur(40px)',
-            WebkitBackdropFilter: 'blur(40px)',
-            border: `1px solid ${rgbaString(0.42)}`,
-            borderRadius: 16,
-            boxShadow: `0 18px 44px rgba(0,0,0,0.55), 0 0 ${22 + Math.round(glowAlpha * 26)}px ${rgbaString(0.26 + glowAlpha * 0.42)}`,
+            background: 'rgba(10,10,10,0.97)',
+            backdropFilter: 'blur(30px)',
+            WebkitBackdropFilter: 'blur(30px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 8,
+            boxShadow: '0 -4px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,255,65,0.05)',
             height: 'auto',
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
-            transition: 'background 560ms ease, border-color 560ms ease, box-shadow 180ms linear',
+            transition: 'all 0.2s ease',
           }}>
             <div
               style={{
                 position: 'absolute',
-                inset: 0,
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 2,
+                background: '#00ff41',
+                borderRadius: '8px 0 0 8px',
+                boxShadow: '0 0 10px rgba(0,255,65,0.5)',
                 pointerEvents: 'none',
-                background: `radial-gradient(circle at 15% 50%, ${rgbaString(0.20 + glowAlpha * 0.26)} 0%, transparent 58%)`,
-                borderRadius: 16,
-                transition: 'background 220ms linear',
               }}
             />
-            {/* Top progress bar — full width green line */}
-            <div style={{ position: 'relative', height: 2, background: 'rgba(255,255,255,0.05)' }}>
-              <motion.div
-                className="progress-fill"
-                style={{ height: '100%', width: `${progressPercent}%` }}
-                transition={{ duration: 0.1 }}
-              />
-            </div>
-
             <div
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 14px', cursor: 'pointer', position: 'relative', zIndex: 1,
+                padding: '10px 16px', cursor: 'pointer', position: 'relative', zIndex: 1,
               }}
               onClick={() => navigate('/now-playing')}
             >
               <>
-                  {/* Slowly rotating album art */}
                   <div style={{
-                    width: 48, height: 48, borderRadius: 10, overflow: 'hidden', flexShrink: 0,
-                    boxShadow: `0 0 ${10 + Math.round(glowAlpha * 18)}px ${rgbaString(0.28 + glowAlpha * 0.28)}`,
-                    transition: 'box-shadow 180ms linear',
+                    width: 40, height: 40, borderRadius: 4, overflow: 'hidden', flexShrink: 0,
                   }}>
                     <img
                       src={currentSong.album_art_url || '/placeholder-album.svg'}
                       alt={decodeSongTitle(currentSong.title || '')}
                       style={{
                         width: '100%', height: '100%', objectFit: 'cover',
-                        borderRadius: 10,
+                        borderRadius: 4,
                         animation: 'none',
                       }}
                     />
@@ -174,14 +127,25 @@ const MiniPlayer = () => {
 
                   {/* Song info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <ScrollingTitle title={currentSong.title || ''} fontSize={18} />
+                    <ScrollingTitle title={currentSong.title || ''} fontSize={15} />
                     <p style={{
                       fontFamily: "'DM Mono', monospace",
-                      fontSize: 11, color: 'var(--white-mid)',
+                      fontSize: 10, color: 'rgba(255,255,255,0.3)',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2,
                     }}>
                       {(currentSong.primaryArtists || currentSong.artist || '').replace(/&amp;/g, '&')}
                     </p>
+                    <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', borderRadius: 1, marginTop: 6 }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${progressPercent}%`,
+                          background: '#00ff41',
+                          boxShadow: '0 0 4px rgba(0,255,65,0.6)',
+                          transition: 'width 1s linear',
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* Controls */}
@@ -211,18 +175,18 @@ const MiniPlayer = () => {
                       whileTap={{ scale: 0.88 }}
                       onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                       style={{
-                        width: 40, height: 40, borderRadius: '50%',
-                        background: 'transparent',
+                        width: 36, height: 36, borderRadius: '50%',
+                        background: '#00ff41',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: '1px solid rgba(255,255,255,0.35)',
-                        boxShadow: '0 0 16px rgba(255,255,255,0.2)',
+                        border: 'none',
+                        boxShadow: '0 0 16px rgba(0,255,65,0.4)',
                         outline: 'none',
                       }}
                     >
                       {isPlaying ? (
-                        <svg width="16" height="16" fill="#ffffff" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z" /></svg>
+                        <svg width="16" height="16" fill="#000" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z" /></svg>
                       ) : (
-                        <svg width="16" height="16" fill="#ffffff" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                        <svg width="16" height="16" fill="#000" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                       )}
                     </motion.button>
                   </div>

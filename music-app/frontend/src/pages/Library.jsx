@@ -19,27 +19,35 @@ const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, 
     style={{
       display: 'flex',
       alignItems: 'center',
-      gap: 12,
-      padding: '10px 12px',
-      borderRadius: 10,
-      border: '1px solid var(--green-border)',
-      background: 'var(--surface)',
-      marginBottom: 8,
+      gap: 16,
+      padding: '16px 20px',
+      borderRadius: 4,
+      border: '1px solid rgba(255,255,255,0.04)',
+      background: 'rgba(255,255,255,0.02)',
+      marginBottom: 2,
+    }}
+    onHoverStart={(e) => {
+      e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+      e.currentTarget.style.borderColor = 'rgba(0,255,65,0.2)';
+    }}
+    onHoverEnd={(e) => {
+      e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)';
     }}
   >
     <button
       onClick={onOpen}
       style={{
-        width: 44,
-        height: 44,
-        borderRadius: 8,
+        width: 48,
+        height: 48,
+        borderRadius: 4,
         border: 'none',
         background: 'transparent',
         cursor: 'pointer',
         padding: 0,
       }}
     >
-      <PlaylistCover playlist={playlist} songsById={songsById} size={44} />
+      <PlaylistCover playlist={playlist} songsById={songsById} size={48} />
     </button>
 
     <button
@@ -54,7 +62,7 @@ const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, 
     >
       <p style={{
         fontFamily: "'Bebas Neue', cursive",
-        fontSize: 17,
+        fontSize: 16,
         letterSpacing: '0.04em',
         color: '#fff',
       }}>
@@ -63,7 +71,8 @@ const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, 
       <p style={{
         fontFamily: "'DM Mono', monospace",
         fontSize: 10,
-        color: 'rgba(255,255,255,0.35)',
+        color: 'rgba(255,255,255,0.3)',
+        textTransform: 'uppercase',
       }}>
         {playlist.songIds.length} songs
       </p>
@@ -74,12 +83,14 @@ const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, 
         <button
           onClick={onRename}
           style={{
-            border: '1px solid rgba(255,255,255,0.15)',
+            border: '1px solid rgba(255,255,255,0.1)',
             background: 'transparent',
-            color: 'rgba(255,255,255,0.8)',
-            borderRadius: 999,
-            padding: '5px 10px',
-            fontSize: 11,
+            color: 'rgba(255,255,255,0.4)',
+            borderRadius: 2,
+            padding: '6px 12px',
+            fontSize: 10,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
             cursor: 'pointer',
           }}
         >
@@ -90,10 +101,12 @@ const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, 
           style={{
             border: '1px solid rgba(255,100,100,0.3)',
             background: 'transparent',
-            color: 'rgba(255,120,120,0.9)',
-            borderRadius: 999,
-            padding: '5px 10px',
-            fontSize: 11,
+            color: 'rgba(255,80,80,0.5)',
+            borderRadius: 2,
+            padding: '6px 12px',
+            fontSize: 10,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
             cursor: 'pointer',
           }}
         >
@@ -209,22 +222,23 @@ const Library = () => {
 
   return (
     <div style={{ position: 'relative', zIndex: 10, paddingTop: 44, paddingBottom: 24 }}>
-      <div style={{ padding: '0 18px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ padding: '0 16px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 48, letterSpacing: '0.06em', color: '#fff' }}
+          style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 48, letterSpacing: '0.06em', color: '#fff', paddingLeft: 16 }}
         >
-          Your Library
+          YOUR LIBRARY
         </motion.h1>
 
         <button
           onClick={() => setShowCreate((v) => !v)}
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px',
-            borderRadius: 50, background: 'rgba(0,255,106,0.08)',
+            borderRadius: 4, background: 'transparent',
             border: '1px solid rgba(0,255,106,0.2)', color: '#00ff6a', cursor: 'pointer',
             fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: '0.06em',
+            textTransform: 'uppercase',
           }}
         >
           New Playlist

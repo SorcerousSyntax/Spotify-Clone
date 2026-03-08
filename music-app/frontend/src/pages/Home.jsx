@@ -16,10 +16,12 @@ const SectionTitle = ({ text }) => (
     style={{
       fontFamily: "'DM Mono', monospace",
       fontSize: 10,
-      letterSpacing: '0.16em',
+      letterSpacing: '0.2em',
       textTransform: 'uppercase',
-      color: 'rgba(255,255,255,0.55)',
-      marginBottom: 10,
+      color: 'rgba(255,255,255,0.3)',
+      marginBottom: 16,
+      borderBottom: '1px solid rgba(255,255,255,0.04)',
+      paddingBottom: 8,
     }}
   >
     {text}
@@ -216,22 +218,32 @@ const Home = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
         style={{
-          margin: '0 auto 22px',
+          margin: '0 auto 40px',
           width: 'min(980px, calc(100vw - 24px))',
-          height: 180,
-          borderRadius: 20,
-          background: mood.gradient,
-          border: '1px solid rgba(0,255,65,0.15)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          borderRadius: 4,
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderLeft: '3px solid #00ff41',
           overflow: 'hidden',
-          padding: 18,
+          padding: '28px 32px',
+          position: 'relative',
           display: 'grid',
           gridTemplateColumns: '3fr 2fr',
-          gap: 12,
+          gap: 16,
           alignItems: 'center',
         }}
       >
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: 200,
+            height: 200,
+            background: 'radial-gradient(circle, rgba(0,255,65,0.06) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -242,9 +254,10 @@ const Home = () => {
             margin: 0,
             fontFamily: "'DM Mono', monospace",
             fontSize: 10,
-            letterSpacing: '0.2em',
+            letterSpacing: '0.15em',
             textTransform: 'uppercase',
-            color: 'rgba(0,255,65,0.7)',
+            color: '#00ff41',
+            marginBottom: 8,
           }}>
             {mood.icon} FOR YOU TODAY
           </p>
@@ -252,10 +265,11 @@ const Home = () => {
           <p style={{
             margin: '8px 0 10px',
             fontFamily: "'Bebas Neue', cursive",
-            fontSize: 32,
+            fontSize: 'clamp(28px, 4vw, 48px)',
             letterSpacing: '0.04em',
-            lineHeight: 1,
+            lineHeight: 1.1,
             color: '#fff',
+            marginBottom: 20,
           }}>
             {mood.message}
           </p>
@@ -267,14 +281,16 @@ const Home = () => {
               playSong(suggestedSong, 0, list);
             }}
             style={{
-              borderRadius: 999,
-              border: '1px solid rgba(0,255,65,0.3)',
-              background: 'rgba(0,255,65,0.1)',
-              color: '#c8ffd9',
-              padding: '9px 12px',
+              borderRadius: 4,
+              border: '1px solid rgba(0,255,65,0.4)',
+              background: 'transparent',
+              color: '#00ff41',
+              padding: '10px 24px',
               cursor: suggestedSong ? 'pointer' : 'default',
               fontFamily: "'DM Mono', monospace",
-              fontSize: 12,
+              fontSize: 11,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
               textAlign: 'left',
               maxWidth: 360,
               whiteSpace: 'nowrap',
@@ -297,11 +313,12 @@ const Home = () => {
             src={suggestedSong?.album_art_url || '/placeholder-album.svg'}
             alt={decodeSongTitle(suggestedSong?.title || suggestedSong?.name || 'Suggested Song')}
             style={{
-              width: 120,
-              height: 120,
-              borderRadius: 12,
+              width: 132,
+              height: 132,
+              borderRadius: 6,
+              border: '1px solid rgba(255,255,255,0.08)',
               objectFit: 'cover',
-              boxShadow: `0 0 28px ${mood.glow}`,
+              boxShadow: `0 0 20px rgba(0,255,65,0.12)`,
             }}
             animate={{ scale: [1, 1.03, 1] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}

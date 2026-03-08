@@ -2,7 +2,6 @@ import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import usePlayerStore from '../store/playerStore';
 import SkeletonLoader from '../components/SkeletonLoader';
-import useCardTilt from '../hooks/useCardTilt';
 import { decodeSongTitle } from '../lib/text';
 
 const buildApiUrl = (path) => path;
@@ -25,7 +24,6 @@ const mapJioSongToAppSong = (song = {}) => ({
 });
 
 const SearchResultRow = ({ song, index, onClick }) => {
-  const tilt = useCardTilt(5);
   const isChoice = Boolean(song.is_choice);
   const title = decodeSongTitle(song.title || song.name || 'Unknown Title');
   const artist = song.artist || song.primaryArtists || 'Unknown Artist';
@@ -42,27 +40,29 @@ const SearchResultRow = ({ song, index, onClick }) => {
       animate={{ opacity: 1, x: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30, delay: index * 0.05 }}
       onClick={() => onClick(song, index)}
-      {...tilt}
       style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '10px 12px', borderRadius: 12, cursor: 'pointer',
-        background: 'var(--surface)', border: '1px solid var(--green-border)',
-        transition: 'border-color 0.2s, box-shadow 0.2s',
-        marginBottom: 8,
+        display: 'flex', alignItems: 'center', gap: 14,
+        padding: '12px 16px', borderRadius: 4, cursor: 'pointer',
+        background: 'transparent', border: 'none',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        transition: 'background 0.15s ease',
+        marginBottom: 0,
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
-        e.currentTarget.style.boxShadow = '0 0 20px rgba(255,255,255,0.08)';
+        e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.borderColor = 'var(--glass-border)';
-        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.background = 'transparent';
       }}
     >
+      <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: 'rgba(255,255,255,0.2)', width: 20, textAlign: 'right', flexShrink: 0 }}>
+        {index + 1}
+      </span>
+
       {/* Album art */}
       <div style={{
-        width: 52, height: 52, borderRadius: 8, overflow: 'hidden', flexShrink: 0,
-        border: '1px solid rgba(0,255,106,0.1)',
+        width: 44, height: 44, borderRadius: 2, overflow: 'hidden', flexShrink: 0,
+        border: '1px solid rgba(255,255,255,0.06)',
       }}>
         <img
           src={albumArt}
@@ -76,14 +76,14 @@ const SearchResultRow = ({ song, index, onClick }) => {
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{
           fontFamily: "'Bebas Neue', cursive",
-          fontSize: 17, letterSpacing: '0.04em',
+          fontSize: 16, letterSpacing: '0.04em',
           color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {title}
         </p>
         <p style={{
           fontFamily: "'DM Mono', monospace",
-          fontSize: 11, color: 'rgba(255,255,255,0.35)',
+          fontSize: 10, color: 'rgba(255,255,255,0.3)',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2,
         }}>
           {safeArtist}{song.album ? ` · ${song.album}` : ''}{song.liked_by ? ` · Liked by ${song.liked_by}` : ''}
@@ -93,7 +93,7 @@ const SearchResultRow = ({ song, index, onClick }) => {
       {/* Duration */}
       <span style={{
         fontFamily: "'DM Mono', monospace",
-        fontSize: 11, color: 'rgba(255,255,255,0.25)', flexShrink: 0,
+        fontSize: 10, color: 'rgba(255,255,255,0.2)', flexShrink: 0,
       }}>
         {isChoice ? 'Choose' : formatDuration(song.duration)}
       </span>
@@ -203,10 +203,13 @@ const Search = () => {
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 48, letterSpacing: '0.06em', color: '#ffffff', marginBottom: 20 }}
+        style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 'clamp(48px, 8vw, 80px)', letterSpacing: '0.06em', color: '#ffffff', marginBottom: 8, paddingLeft: 16, lineHeight: 1 }}
       >
-        Search
+        SEARCH
       </motion.h1>
+      <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', paddingLeft: 16, marginBottom: 24 }}>
+        ANY SONG. ANY MOOD. ANY MEMORY.
+      </p>
 
       {/* Search bar */}
       <motion.div
@@ -221,13 +224,14 @@ const Search = () => {
           style={{
             position: 'relative',
             display: 'flex', alignItems: 'center', gap: 12,
-            padding: '14px 16px',
-            background: focused ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)',
-            border: `1px solid ${focused ? 'rgba(0,255,65,0.4)' : 'rgba(255,255,255,0.08)'}`,
-            borderRadius: 50,
-            boxShadow: focused ? '0 0 0 4px rgba(0,255,106,0.1), 0 0 20px rgba(0,255,106,0.08)' : 'none',
+            padding: '14px 20px',
+            background: 'rgba(255,255,255,0.02)',
+            border: focused ? '1px solid rgba(0,255,65,0.5)' : '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 4,
+            boxShadow: focused ? '0 0 0 3px rgba(0,255,65,0.08), inset 0 0 20px rgba(0,255,65,0.03)' : 'none',
             transition: 'all 0.25s ease',
             overflow: 'hidden',
+            margin: '0 16px 24px',
           }}
         >
           <svg width="18" height="18" fill="none" stroke={focused ? '#00ff6a' : 'rgba(255,255,255,0.25)'} viewBox="0 0 24 24" style={{ flexShrink: 0, transition: 'stroke 0.2s' }}>

@@ -35,31 +35,32 @@ export const SongRow = ({ song, index = 0, showIndex = false, onClick }) => {
       transition={{ delay: index * 0.04, type: 'spring', stiffness: 300, damping: 28 }}
       onClick={() => onClick ? onClick(song, index) : setCurrentSong(song)}
       style={{
-        display: 'flex', alignItems: 'center', gap: 10,
+        display: 'flex', alignItems: 'center', gap: 14,
         padding: '12px 16px',
-        borderRadius: 12,
-        marginBottom: 8,
+        borderRadius: 8,
+        marginBottom: 2,
         cursor: 'pointer',
-        background: 'var(--surface)',
-        border: '1px solid rgba(0,255,65,0.12)',
+        background: 'transparent',
+        border: 'none',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
       }}
-      whileHover={{ x: 4 }}
+      whileHover={{ x: 0 }}
       whileTap={{ scale: 0.98 }}
     >
       {showIndex && (
         <span style={{
           width: 20, textAlign: 'right', flexShrink: 0,
           fontFamily: "'DM Mono', monospace",
-          fontSize: 11, color: isActive ? '#00ff6a' : 'rgba(255,255,255,0.25)',
+          fontSize: 11, color: isActive ? '#00ff41' : 'rgba(255,255,255,0.2)',
         }}>
           {isActive ? '▶' : index + 1}
         </span>
       )}
       <div style={{
         width: 44, height: 44, borderRadius: 6, overflow: 'hidden', flexShrink: 0,
-        border: isActive ? '1px solid rgba(0,255,65,0.45)' : '1px solid rgba(255,255,255,0.06)',
+        border: isActive ? '1px solid rgba(0,255,65,0.3)' : '1px solid rgba(255,255,255,0.06)',
         boxShadow: isActive
-          ? '0 0 16px rgba(0,255,65,0.5), 0 18px 40px rgba(0,0,0,0.9)'
+          ? '0 0 16px rgba(0,255,65,0.2), 0 10px 24px rgba(0,0,0,0.7)'
           : '0 10px 24px rgba(0,0,0,0.7)',
         transition: 'box-shadow 0.3s, border-color 0.3s',
         background: GRADIENT_PALETTES[index % GRADIENT_PALETTES.length][0],
@@ -75,11 +76,11 @@ export const SongRow = ({ song, index = 0, showIndex = false, onClick }) => {
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{
           fontFamily: "'Bebas Neue', cursive",
-          fontSize: 14, letterSpacing: '0.04em',
-          color: isActive ? '#00ff6a' : '#fff',
+          fontSize: 16, letterSpacing: '0.04em',
+          color: isActive ? '#00ff41' : '#fff',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           lineHeight: 1.2,
-          textShadow: isActive ? '0 0 12px rgba(0,255,106,0.4)' : 'none',
+          textShadow: isActive ? '0 0 8px rgba(0,255,65,0.3)' : 'none',
         }}>
           {safeTitle}
         </p>
@@ -126,10 +127,10 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
         maxWidth: pxSize,
         flexShrink: 0,
         cursor: 'pointer',
-        borderRadius: 10, overflow: 'hidden',
-        background: 'var(--surface)',
-        border: '1px solid var(--green-border)',
-        boxShadow: '0 18px 40px rgba(0,0,0,0.9)',
+        borderRadius: 8, overflow: 'hidden',
+        background: 'transparent',
+        border: '1px solid rgba(255,255,255,0.06)',
+        boxShadow: 'none',
         willChange: 'transform',
       }}
     >
@@ -137,7 +138,7 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
       <div style={{ position: 'relative', width: pxSize, height: pxSize, overflow: 'hidden', flexShrink: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
-          background: `radial-gradient(circle at 10% 0%, rgba(0,255,65,0.08), transparent 55%), radial-gradient(circle at 90% 120%, rgba(0,255,65,0.06), transparent 55%)`,
+          background: 'transparent',
         }} />
         <img
           src={song?.album_art_url || '/placeholder-album.svg'}
@@ -148,7 +149,7 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
         {/* Shine overlay */}
         <div style={{
           position: 'absolute', inset: 0, zIndex: 2,
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%)',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)',
         }} />
       </div>
       {/* Text */}
