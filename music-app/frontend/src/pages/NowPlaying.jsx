@@ -14,6 +14,7 @@ const ScrollingTitle = ({ text, fontSize }) => {
     <div
       style={{
         overflow: 'hidden',
+        minWidth: 0,
         width: '100%',
         maxWidth: '100%',
         whiteSpace: 'nowrap',
@@ -72,9 +73,17 @@ const NowPlaying = () => {
   const [offlineStatus, setOfflineStatus] = useState('idle'); // idle | saving | saved | error
   const [downloadStatus, setDownloadStatus] = useState('idle'); // idle | downloading | done | error
   const progressBarRef = useRef(null);
-  const isCompact = typeof window !== 'undefined' && window.innerWidth < 900;
+  const [isCompact, setIsCompact] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 900 : true
+  );
 
   const isLiked = currentSong ? likedSongIds.has(currentSong.id) : false;
+
+  useEffect(() => {
+    const onResize = () => setIsCompact(window.innerWidth < 900);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     if (!currentSong) return;
@@ -231,7 +240,7 @@ const NowPlaying = () => {
         />
 
         <div style={{ position: 'relative', zIndex: 2, width: 'min(820px, calc(100vw - 24px))', margin: '0 auto', paddingTop: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
             <button
               onClick={() => navigate(-1)}
               style={{
@@ -247,11 +256,11 @@ const NowPlaying = () => {
               ←
             </button>
 
-            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.16em', color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase' }}>
+            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.16em', color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', flexShrink: 0 }}>
               Now Playing
             </p>
 
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
               <button
                 onClick={saveOffline}
                 style={{
@@ -259,7 +268,7 @@ const NowPlaying = () => {
                   border: '1px solid rgba(255,255,255,0.22)',
                   background: 'rgba(255,255,255,0.08)',
                   color: '#fff',
-                  minWidth: 88,
+                  minWidth: isCompact ? 72 : 88,
                   height: 36,
                   padding: '0 12px',
                   cursor: 'pointer',
@@ -267,7 +276,7 @@ const NowPlaying = () => {
                 }}
                 title="Save for offline play"
               >
-                {offlineStatus === 'saved' ? 'Saved' : offlineStatus === 'saving' ? 'Saving...' : 'Offline'}
+                {offlineStatus === 'saved' ? 'Saved' : offlineStatus === 'saving' ? (isCompact ? 'Saving' : 'Saving...') : 'Offline'}
               </button>
               <button
                 onClick={downloadToDevice}
@@ -276,7 +285,7 @@ const NowPlaying = () => {
                   border: '1px solid rgba(255,255,255,0.22)',
                   background: 'rgba(255,255,255,0.08)',
                   color: '#fff',
-                  minWidth: 88,
+                  minWidth: isCompact ? 72 : 88,
                   height: 36,
                   padding: '0 12px',
                   cursor: 'pointer',
@@ -284,7 +293,7 @@ const NowPlaying = () => {
                 }}
                 title="Download to your device"
               >
-                {downloadStatus === 'downloading' ? 'Downloading...' : downloadStatus === 'done' ? 'Done' : 'Download'}
+                {downloadStatus === 'downloading' ? (isCompact ? 'Downloading' : 'Downloading...') : downloadStatus === 'done' ? 'Done' : 'Download'}
               </button>
             </div>
           </div>
@@ -298,6 +307,7 @@ const NowPlaying = () => {
               border: '1px solid rgba(255,255,255,0.16)',
               background: 'linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
               padding: 18,
+              overflow: 'hidden',
             }}
           >
             <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : 'minmax(240px, 360px) 1fr', gap: 20, alignItems: 'center' }}>
@@ -315,8 +325,8 @@ const NowPlaying = () => {
                 />
               </div>
 
-              <div>
-                <ScrollingTitle text={safeTitle} fontSize={isCompact ? 56 : 52} />
+              <div style={{ minWidth: 0 }}>
+                <ScrollingTitle text={safeTitle} fontSize={isCompact ? 22 : 52} />
                 <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: 'rgba(255,255,255,0.66)', marginTop: 8 }}>
                   {currentSong.artist}
                 </p>

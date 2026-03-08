@@ -313,6 +313,8 @@ const AppInner = () => {
 
   const isPublicAuthPage = location.pathname === '/login' || location.pathname === '/register';
   const showShell = authReady && session && !isPublicAuthPage;
+  const isNowPlayingRoute = location.pathname === '/now-playing';
+  const showMiniPlayer = showShell && !isNowPlayingRoute;
 
   return (
     <div style={{ position: 'relative', minHeight: '100dvh', background: '#000000' }}>
@@ -330,7 +332,7 @@ const AppInner = () => {
           position: 'relative',
           zIndex: 2,
           // Extra mobile spacing keeps list rows visible above MiniPlayer + BottomNav.
-          paddingBottom: showShell ? (isDesktop ? '24px' : '170px') : '24px',
+          paddingBottom: showShell ? (isDesktop ? '24px' : (isNowPlayingRoute ? '96px' : '170px')) : '24px',
           paddingRight: showShell ? (isDesktop ? '360px' : '0px') : '0px',
           transition: 'padding-right 0.25s ease',
         }}
@@ -341,7 +343,7 @@ const AppInner = () => {
       </main>
 
       {/* z-3: Mini player, z-4: Bottom nav */}
-      {showShell && <MiniPlayer />}
+      {showMiniPlayer && <MiniPlayer />}
       {showShell && <BottomNav />}
 
       {/* z-99: Custom cursor */}
