@@ -4,6 +4,45 @@ import { useNavigate } from 'react-router-dom';
 import usePlayerStore from '../store/playerStore';
 import { decodeSongTitle } from '../lib/text';
 
+const ScrollingTitle = ({ title, fontSize = 18 }) => {
+  const safeTitle = decodeSongTitle(title || '');
+  const shouldScroll = safeTitle.length > 22;
+
+  return (
+    <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', width: '100%' }}>
+      {shouldScroll ? (
+        <motion.div
+          style={{ display: 'flex', width: 'max-content', gap: 28 }}
+          animate={{ x: ['0%', '-50%'] }}
+          transition={{ duration: 9, ease: 'linear', repeat: Infinity }}
+        >
+          <span style={{ fontSize, letterSpacing: '0.04em', color: '#ffffff', lineHeight: 1.15 }}>
+            {safeTitle}
+          </span>
+          <span style={{ fontSize, letterSpacing: '0.04em', color: '#ffffff', lineHeight: 1.15 }}>
+            {safeTitle}
+          </span>
+        </motion.div>
+      ) : (
+        <p
+          style={{
+            fontSize,
+            letterSpacing: '0.04em',
+            color: '#ffffff',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            lineHeight: 1.15,
+            margin: 0,
+          }}
+        >
+          {safeTitle}
+        </p>
+      )}
+    </div>
+  );
+};
+
 const MiniPlayer = () => {
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== 'undefined' ? window.innerWidth >= 1024 : false
@@ -103,9 +142,7 @@ const MiniPlayer = () => {
                   </div>
 
                   <div style={{ marginTop: 12 }}>
-                    <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 34, lineHeight: 0.95, color: '#fff', letterSpacing: '0.04em' }}>
-                      {decodeSongTitle(currentSong.title || '')}
-                    </p>
+                    <ScrollingTitle title={currentSong.title || ''} fontSize={34} />
                     <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: 6 }}>
                       {(currentSong.primaryArtists || currentSong.artist || '').replace(/&amp;/g, '&')}
                     </p>
@@ -232,14 +269,7 @@ const MiniPlayer = () => {
 
                   {/* Song info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{
-                      fontFamily: "'Bebas Neue', cursive",
-                      fontSize: 18, letterSpacing: '0.04em',
-                      color: '#ffffff', overflow: 'hidden',
-                      textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2,
-                    }}>
-                      {decodeSongTitle(currentSong.title || '')}
-                    </p>
+                    <ScrollingTitle title={currentSong.title || ''} fontSize={18} />
                     <p style={{
                       fontFamily: "'DM Mono', monospace",
                       fontSize: 11, color: 'var(--white-mid)',
