@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import usePlayerStore from '../store/playerStore';
+import { CompactCard } from '../components/MusicCards';
 import { supabase } from '../lib/supabase';
 import { decodeSongTitle } from '../lib/text';
 
@@ -305,6 +306,27 @@ const Home = () => {
           />
         </motion.div>
       </motion.section>
+
+      <section style={{ width: 'min(980px, calc(100vw - 24px))', margin: '0 auto' }}>
+        <SectionTitle text="Recently Played" />
+        {recentSongs.length > 0 ? (
+          <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }} className="hide-scrollbar">
+            {recentSongs.map((song, i) => (
+              <CompactCard
+                key={song.id}
+                song={song}
+                index={i}
+                size={128}
+                onClick={(s, idx) => playSong(s, idx, recentSongs)}
+              />
+            ))}
+          </div>
+        ) : (
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '12px 4px' }}>
+            No recent tracks yet. Play something from Search.
+          </p>
+        )}
+      </section>
 
       <section style={{ width: 'min(980px, calc(100vw - 24px))', margin: '20px auto 0' }}>
         <SectionTitle text="Your Playlists" />
