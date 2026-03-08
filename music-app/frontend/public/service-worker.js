@@ -1,5 +1,5 @@
-const CACHE_NAME = 'music-app-v2';
-const AUDIO_CACHE = 'music-audio-v2';
+const CACHE_NAME = 'music-app-v3';
+const AUDIO_CACHE = 'music-audio-v3';
 
 const APP_SHELL = [
   '/',
@@ -55,21 +55,30 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Audio files: cache first
-  if (
-    request.url.includes('/api/songs/') &&
-    request.url.includes('/stream')
-  ) {
+  // Audio files: cache first for proxy streams, song files, and audio requests.
+  const isAudioRequest =
+    request.destination === 'audio' ||
+    url.pathname === '/api/stream' ||
+    (url.pathname.includes('/api/songs/') && url.pathname.endsWith('/stream')) ||
+    url.pathname.startsWith('/songs/');
+
+  if (isAudioRequest) {
     event.respondWith(
       caches.open(AUDIO_CACHE).then(async (cache) => {
         const cached = await cache.match(request);
         if (cached) return cached;
 
-        const response = await fetch(request);
-        if (response.ok) {
-          cache.put(request, response.clone());
+        try {
+          const response = await fetch(request);
+          if (response.ok) {
+            cache.put(request, response.clone());
+          }
+          return response;
+        } catch {
+          const fallback = await cache.match(request);
+          if (fallback) return fallback;
+          throw new Error('Audio unavailable offline');
         }
-        return response;
       })
     );
     return;

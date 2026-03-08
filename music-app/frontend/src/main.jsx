@@ -3,22 +3,37 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-// Disable SW for now and clean stale caches to prevent deploy hash mismatch blank screens.
+// Register SW in production for offline shell support.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
-    const cleanupKey = 'raabta-sw-cleanup-v1';
-    if (sessionStorage.getItem(cleanupKey)) return;
-    const regs = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(regs.map((reg) => reg.unregister()));
-    if (window.caches?.keys) {
-      const keys = await caches.keys();
-      await Promise.all(
-        keys
-          .filter((key) => key.startsWith('music-app-') || key.startsWith('music-audio-'))
-          .map((key) => caches.delete(key))
-      );
+    const cleanupKey = 'raabta-sw-cleanup-v2';
+
+    if (!sessionStorage.getItem(cleanupKey)) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+
+      if (!import.meta.env.PROD) {
+        await Promise.all(regs.map((reg) => reg.unregister()));
+      }
+
+      if (window.caches?.keys) {
+        const keys = await caches.keys();
+        await Promise.all(
+          keys
+            .filter((key) => key.startsWith('music-app-') || key.startsWith('music-audio-'))
+            .map((key) => caches.delete(key))
+        );
+      }
+
+      sessionStorage.setItem(cleanupKey, '1');
     }
-    sessionStorage.setItem(cleanupKey, '1');
+
+    if (import.meta.env.PROD) {
+      try {
+        await navigator.serviceWorker.register('/service-worker.js');
+      } catch (err) {
+        console.warn('Service Worker registration failed:', err?.message || err);
+      }
+    }
   });
 }
 

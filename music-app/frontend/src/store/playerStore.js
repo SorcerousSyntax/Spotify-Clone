@@ -161,6 +161,81 @@ const upsertPlayHistoryRecord = async (songInput) => {
   }
 };
 
+const OFFLINE_LIBRARY_KEY = 'raabta_offline_library_v1';
+
+const readOfflineLibrarySnapshot = () => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = localStorage.getItem(OFFLINE_LIBRARY_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return {
+      likedSongIds: Array.isArray(parsed?.likedSongIds) ? parsed.likedSongIds : [],
+      recentlyPlayed: Array.isArray(parsed?.recentlyPlayed) ? parsed.recentlyPlayed : [],
+      songsById: parsed?.songsById && typeof parsed.songsById === 'object' ? parsed.songsById : {},
+      playlists: Array.isArray(parsed?.playlists) ? parsed.playlists : [],
+    };
+  } catch (error) {
+    console.warn('Offline snapshot read failed:', error?.message || error);
+    return null;
+  }
+};
+
+const persistOfflineLibrarySnapshot = ({ likedSongIds, recentlyPlayed, songsById, playlists }) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(
+      OFFLINE_LIBRARY_KEY,
+      JSON.stringify({
+        likedSongIds: [...(likedSongIds || [])],
+        recentlyPlayed: Array.isArray(recentlyPlayed) ? recentlyPlayed : [],
+        songsById: songsById || {},
+        playlists: Array.isArray(playlists) ? playlists : [],
+      })
+    );
+  } catch (error) {
+    console.warn('Offline snapshot write failed:', error?.message || error);
+  }
+};
+
+const resolveSongCacheUrl = (songInput) => {
+  const song = normalizeSong(songInput);
+  const isInlineAudio = typeof song.r2_url === 'string' && song.r2_url.startsWith('data:');
+  const rawStreamUrl =
+    song.stream_url ||
+    song.url ||
+    (song.id && song.r2_url && !isInlineAudio ? `/api/songs/${song.id}/stream` : song.r2_url);
+
+  if (!rawStreamUrl) return '';
+  if (/^https?:\/\//i.test(rawStreamUrl)) {
+    return `/api/stream?url=${encodeURIComponent(rawStreamUrl)}`;
+  }
+  return rawStreamUrl;
+};
+
+const cacheSongForOffline = async (songInput) => {
+  if (typeof window === 'undefined' || !window.caches || !navigator.onLine) return;
+  const streamUrl = resolveSongCacheUrl(songInput);
+  if (!streamUrl) return;
+
+  try {
+    const cache = await caches.open('saved-songs-v1');
+    const hit = await cache.match(streamUrl);
+    if (hit) return;
+
+    const response = await fetch(streamUrl);
+    if (response.ok) {
+      await cache.put(streamUrl, response.clone());
+    }
+  } catch (error) {
+    console.warn('Auto cache for offline failed:', error?.message || error);
+  }
+};
+
+const offlineSnapshot = readOfflineLibrarySnapshot();
+
 const usePlayerStore = create((set, get) => ({
   // Current song
   currentSong: null,
@@ -188,16 +263,25 @@ const usePlayerStore = create((set, get) => ({
   },
 
   // Liked songs
-  likedSongIds: new Set(),
+  likedSongIds: new Set(offlineSnapshot?.likedSongIds || []),
 
   // Recently played
-  recentlyPlayed: [],
+  recentlyPlayed: (offlineSnapshot?.recentlyPlayed || []).map(normalizeSong),
 
   // Song registry for library/liked/playlists
-  songsById: {},
+  songsById: Object.entries(offlineSnapshot?.songsById || {}).reduce((acc, [id, song]) => {
+    acc[id] = normalizeSong(song);
+    return acc;
+  }, {}),
 
   // User playlists (custom)
-  playlists: [],
+  playlists: (offlineSnapshot?.playlists || []).map((playlist) => ({
+    id: playlist.id,
+    name: playlist.name,
+    emoji: playlist.emoji || '🎵',
+    songIds: Array.isArray(playlist.songIds) ? playlist.songIds : [],
+    createdAt: playlist.createdAt || Date.now(),
+  })),
 
   supabaseReady: hasSupabase,
 
@@ -208,11 +292,24 @@ const usePlayerStore = create((set, get) => ({
 
     const state = get();
     const recent = [song, ...state.recentlyPlayed.filter(s => s.id !== song.id)].slice(0, 20);
+    const nextSongsById = {
+      ...state.songsById,
+      [song.id]: song,
+    };
+
+    persistOfflineLibrarySnapshot({
+      likedSongIds: state.likedSongIds,
+      recentlyPlayed: recent,
+      songsById: nextSongsById,
+      playlists: state.playlists,
+    });
+
     set({
       currentSong: song,
       isPlaying: true,
       progress: 0,
       recentlyPlayed: recent,
+      songsById: nextSongsById,
     });
 
     get().upsertPlayHistory(song);
@@ -223,12 +320,21 @@ const usePlayerStore = create((set, get) => ({
     queueIndex: startIndex,
   })),
 
-  registerSongs: (songs) => set((state) => ({
-    songsById: {
+  registerSongs: (songs) => set((state) => {
+    const nextSongsById = {
       ...state.songsById,
       ...toSongMap((Array.isArray(songs) ? songs : [songs]).map(normalizeSong)),
-    },
-  })),
+    };
+
+    persistOfflineLibrarySnapshot({
+      likedSongIds: state.likedSongIds,
+      recentlyPlayed: state.recentlyPlayed,
+      songsById: nextSongsById,
+      playlists: state.playlists,
+    });
+
+    return { songsById: nextSongsById };
+  }),
 
   hydrateFromSupabase: async () => {
     if (!supabase) {
@@ -322,15 +428,26 @@ const usePlayerStore = create((set, get) => ({
       .map(normalizeSong)
       .filter((song) => song.id);
 
-    set((state) => ({
-      likedSongIds: new Set(likedSongs.map((song) => song.id)),
-      recentlyPlayed: historySongs,
-      playlists: loadedPlaylists,
-      songsById: {
-        ...state.songsById,
-        ...toSongMap([...likedSongs, ...historySongs, ...playlistSongs]),
-      },
-    }));
+    set((state) => {
+      const nextState = {
+        likedSongIds: new Set(likedSongs.map((song) => song.id)),
+        recentlyPlayed: historySongs,
+        playlists: loadedPlaylists,
+        songsById: {
+          ...state.songsById,
+          ...toSongMap([...likedSongs, ...historySongs, ...playlistSongs]),
+        },
+      };
+
+      persistOfflineLibrarySnapshot(nextState);
+      return nextState;
+    });
+
+    if (navigator.onLine) {
+      playlistSongs.slice(0, 40).forEach((song) => {
+        cacheSongForOffline(song);
+      });
+    }
   },
 
   upsertPlayHistory: async (songInput) => {
@@ -452,6 +569,14 @@ const usePlayerStore = create((set, get) => ({
         });
       }
     }
+
+    persistOfflineLibrarySnapshot({
+      likedSongIds: newLiked,
+      recentlyPlayed: state.recentlyPlayed,
+      songsById: nextSongsById,
+      playlists: state.playlists,
+    });
+
     return {
       likedSongIds: newLiked,
       songsById: nextSongsById,
@@ -486,9 +611,15 @@ const usePlayerStore = create((set, get) => ({
         });
     }
 
-    return {
-      playlists: [playlist, ...state.playlists],
-    };
+    const nextPlaylists = [playlist, ...state.playlists];
+    persistOfflineLibrarySnapshot({
+      likedSongIds: state.likedSongIds,
+      recentlyPlayed: state.recentlyPlayed,
+      songsById: state.songsById,
+      playlists: nextPlaylists,
+    });
+
+    return { playlists: nextPlaylists };
   }),
 
   renamePlaylist: (playlistId, newName) => set((state) => {
@@ -520,6 +651,13 @@ const usePlayerStore = create((set, get) => ({
         });
     }
 
+    persistOfflineLibrarySnapshot({
+      likedSongIds: state.likedSongIds,
+      recentlyPlayed: state.recentlyPlayed,
+      songsById: state.songsById,
+      playlists: updated,
+    });
+
     return { playlists: updated };
   }),
 
@@ -536,9 +674,15 @@ const usePlayerStore = create((set, get) => ({
         });
     }
 
-    return {
-      playlists: state.playlists.filter((playlist) => playlist.id !== playlistId),
-    };
+    const nextPlaylists = state.playlists.filter((playlist) => playlist.id !== playlistId);
+    persistOfflineLibrarySnapshot({
+      likedSongIds: state.likedSongIds,
+      recentlyPlayed: state.recentlyPlayed,
+      songsById: state.songsById,
+      playlists: nextPlaylists,
+    });
+
+    return { playlists: nextPlaylists };
   }),
 
   addSongToPlaylist: (playlistId, song) => set((state) => {
@@ -577,11 +721,22 @@ const usePlayerStore = create((set, get) => ({
         });
     }
 
+    const nextSongsById = {
+      ...state.songsById,
+      [normalized.id]: normalized,
+    };
+
+    persistOfflineLibrarySnapshot({
+      likedSongIds: state.likedSongIds,
+      recentlyPlayed: state.recentlyPlayed,
+      songsById: nextSongsById,
+      playlists: nextPlaylists,
+    });
+
+    cacheSongForOffline(normalized);
+
     return {
-      songsById: {
-        ...state.songsById,
-        [normalized.id]: normalized,
-      },
+      songsById: nextSongsById,
       playlists: nextPlaylists,
     };
   }),
@@ -617,6 +772,13 @@ const usePlayerStore = create((set, get) => ({
           }
         });
     }
+
+    persistOfflineLibrarySnapshot({
+      likedSongIds: state.likedSongIds,
+      recentlyPlayed: state.recentlyPlayed,
+      songsById: state.songsById,
+      playlists: nextPlaylists,
+    });
 
     return { playlists: nextPlaylists };
   }),
