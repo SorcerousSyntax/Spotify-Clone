@@ -253,8 +253,17 @@ const AppInner = () => {
   const location = useLocation();
   const [session, setSession] = useState(null);
   const [authReady, setAuthReady] = useState(false);
+
+  const computeDesktopMode = () => {
+    if (typeof window === 'undefined') return false;
+    if (window.matchMedia) {
+      return window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
+    }
+    return window.innerWidth >= 1024;
+  };
+
   const [isDesktop, setIsDesktop] = useState(
-    typeof window !== 'undefined' ? window.innerWidth >= 1024 : false
+    computeDesktopMode()
   );
 
   const hydrateFromSupabase = usePlayerStore((s) => s.hydrateFromSupabase);
@@ -297,7 +306,7 @@ const AppInner = () => {
   }, []);
 
   useEffect(() => {
-    const onResize = () => setIsDesktop(window.innerWidth >= 1024);
+    const onResize = () => setIsDesktop(computeDesktopMode());
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
