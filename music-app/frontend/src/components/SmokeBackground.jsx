@@ -43,6 +43,12 @@ export default function SmokeBackground() {
       renderer.dispose();
       return undefined;
     }
+    const smokeStops = [
+      ['rgba(43,197,255,0.30)', 'rgba(43,197,255,0.11)'],
+      ['rgba(72,246,203,0.26)', 'rgba(72,246,203,0.09)'],
+      ['rgba(255,178,92,0.22)', 'rgba(255,178,92,0.07)'],
+    ];
+
     for (let i = 0; i < 3; i++) {
       const g = sCtx.createRadialGradient(
         size / 2 + (Math.random() - 0.5) * 40,
@@ -52,8 +58,8 @@ export default function SmokeBackground() {
         size / 2,
         size / 2
       );
-      g.addColorStop(0, `rgba(255,255,255,${0.15 - i * 0.04})`);
-      g.addColorStop(0.5, `rgba(255,255,255,${0.05 - i * 0.01})`);
+      g.addColorStop(0, smokeStops[i][0]);
+      g.addColorStop(0.5, smokeStops[i][1]);
       g.addColorStop(1, 'rgba(255,255,255,0)');
       sCtx.fillStyle = g;
       sCtx.fillRect(0, 0, size, size);
@@ -67,7 +73,7 @@ export default function SmokeBackground() {
       const mat = new THREE.MeshBasicMaterial({
         map: smokeTex,
         transparent: true,
-        opacity: Math.random() * 0.12 + 0.05,
+        opacity: Math.random() * 0.18 + 0.09,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       });
@@ -99,12 +105,20 @@ export default function SmokeBackground() {
       particles.push(mesh);
     }
 
-    const floorLight = new THREE.PointLight(0xffffff, 2.3, 18);
+    const floorLight = new THREE.PointLight(0x2bc5ff, 2.5, 20);
     floorLight.position.set(0, -6, 2);
     scene.add(floorLight);
 
+    const sideLight = new THREE.PointLight(0x48f6cb, 1.3, 16);
+    sideLight.position.set(-5, 1, 1);
+    scene.add(sideLight);
+
+    const warmLight = new THREE.PointLight(0xffb25c, 0.9, 14);
+    warmLight.position.set(5, -2, 0);
+    scene.add(warmLight);
+
     // Subtle white ambient
-    scene.add(new THREE.AmbientLight(0xffffff, 0.22));
+    scene.add(new THREE.AmbientLight(0xb8e6ff, 0.30));
 
     let frame;
     let t = 0;

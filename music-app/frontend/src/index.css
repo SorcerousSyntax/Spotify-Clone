@@ -1,7 +1,7 @@
 /* ==========================================
    FONTS
    ========================================== */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@500;600;700;800&family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap');
 
 /* ==========================================
    TAILWIND DIRECTIVES
@@ -14,28 +14,31 @@
    CSS VARIABLES — PHANTOM STAGE
    ========================================== */
 :root {
-  --font-serif: 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-base: 'Space Grotesk', system-ui, sans-serif;
+  --font-display: 'Sora', system-ui, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, monospace;
 
   /* Backgrounds */
-  --void: #000000;
-  --stage: #0a0a0a;
-  --deep: #0f0f0f;
-  --surface: #141414;
-  --lift: #1d1d1d;
+  --void: #03060d;
+  --stage: #07111f;
+  --deep: #0b1828;
+  --surface: #111f2f;
+  --lift: #16283d;
 
-  /* Accent (white-driven) */
-  --green-pure: #f5f5f5;
-  --green-glow: #cfcfcf;
-  --green-ghost: rgba(255,255,255,0.06);
-  --green-border: rgba(255,255,255,0.16);
-  --green-shine: rgba(255,255,255,0.35);
+  /* Accent */
+  --green-pure: #48f6cb;
+  --green-glow: #2bc5ff;
+  --green-neon: #3cf0b7;
+  --green-ghost: rgba(72, 246, 203, 0.08);
+  --green-border: rgba(72, 246, 203, 0.24);
+  --green-shine: rgba(43, 197, 255, 0.34);
 
-  /* Whites / Smoke */
-  --white-full: #ffffff;
-  --white-smoke: rgba(255,255,255,0.85);
-  --white-mid: rgba(255,255,255,0.45);
-  --white-dim: rgba(255,255,255,0.18);
-  --white-ghost: rgba(255,255,255,0.06);
+  /* Text */
+  --white-full: #f7fbff;
+  --white-smoke: rgba(247, 251, 255, 0.95);
+  --white-mid: rgba(228, 239, 250, 0.72);
+  --white-dim: rgba(195, 214, 233, 0.52);
+  --white-ghost: rgba(195, 214, 233, 0.14);
 }
 
 /* ==========================================
@@ -54,15 +57,16 @@ html, body {
   overflow-x: hidden;
   background-color: var(--void);
   color: var(--white-smoke);
-  font-family: var(--font-serif);
+  font-family: var(--font-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   cursor: none;
 }
 
-/* Enforce serif typography across UI components, even where inline fonts were used. */
+/* Keep a consistent, readable default font across UI controls. */
 body, button, input, textarea, select, p, span, h1, h2, h3, h4, h5, h6, label, a, li {
-  font-family: var(--font-serif) !important;
+  font-family: var(--font-base);
+  font-weight: 500;
 }
 
 /* Keep button text visually centered and consistent across different labels. */
@@ -78,7 +82,10 @@ button {
   min-height: 100dvh;
   position: relative;
   overflow: hidden;
-  background: radial-gradient(circle at top, #141414 0%, #000 60%);
+  background:
+    radial-gradient(70% 55% at 20% 10%, rgba(43, 197, 255, 0.14) 0%, transparent 65%),
+    radial-gradient(60% 45% at 85% 90%, rgba(72, 246, 203, 0.16) 0%, transparent 68%),
+    linear-gradient(160deg, #040b15 0%, #081426 48%, #0a1b2d 100%);
 }
 
 /* Hide default cursor everywhere */
@@ -90,12 +97,13 @@ button {
    TYPOGRAPHY
    ========================================== */
 .font-display {
-  font-family: 'Bebas Neue', system-ui;
+  font-family: var(--font-display);
+  font-weight: 700;
   letter-spacing: 0.04em;
 }
 
 .font-mono {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
 }
 
 /* ==========================================
@@ -110,8 +118,8 @@ button {
     0deg,
     transparent,
     transparent 2px,
-    rgba(255, 255, 255, 0.008) 2px,
-    rgba(255, 255, 255, 0.008) 4px
+    rgba(60, 240, 183, 0.012) 2px,
+    rgba(60, 240, 183, 0.012) 4px
   );
   opacity: 1;
 }
@@ -129,7 +137,7 @@ button {
   will-change: transform;
   box-shadow:
     0 4px 20px rgba(0,0,0,0.6),
-    0 0 0 1px var(--glass-border),
+    0 0 0 1px var(--green-border),
     inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
@@ -145,14 +153,14 @@ button {
    GLASS EFFECTS
    ========================================== */
 .glass {
-  background: rgba(0,0,0,0.6);
+  background: rgba(10, 20, 32, 0.64);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--green-border);
 }
 
 .glass-strong {
-  background: rgba(0,8,3,0.85);
+  background: rgba(7, 18, 31, 0.84);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   border: 1px solid var(--green-border);
@@ -177,15 +185,15 @@ button {
    ========================================== */
 .text-glow-green {
   text-shadow:
-    0 0 10px var(--green-pure),
-    0 0 20px var(--green-pure),
-    0 0 40px rgba(0,255,65,0.5);
+    0 0 10px rgba(72, 246, 203, 0.4),
+    0 0 24px rgba(43, 197, 255, 0.28),
+    0 0 42px rgba(43, 197, 255, 0.2);
 }
 
 .text-glow {
   text-shadow:
-    0 0 10px rgba(0,255,65,0.3),
-    0 0 20px rgba(0,255,65,0.15);
+    0 0 10px rgba(72, 246, 203, 0.25),
+    0 0 20px rgba(43, 197, 255, 0.18);
 }
 
 .box-glow-green {
@@ -249,8 +257,8 @@ button {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0,255,65,0.2); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0,255,65,0.4); }
-* { scrollbar-width: thin; scrollbar-color: rgba(0,255,65,0.2) transparent; }
+::-webkit-scrollbar-thumb:hover { background: rgba(72,246,203,0.48); }
+* { scrollbar-width: thin; scrollbar-color: rgba(72,246,203,0.32) transparent; }
 
 /* ==========================================
    HIDE SCROLLBAR
@@ -268,7 +276,7 @@ button {
    PROGRESS BAR
    ========================================== */
 .progress-fill {
-  background: linear-gradient(90deg, #00ff6a, #00c44f);
+  background: linear-gradient(90deg, #48f6cb, #2bc5ff);
   box-shadow: 0 0 10px var(--green-neon);
   border-radius: 9999px;
 }
@@ -340,7 +348,7 @@ button {
   background: linear-gradient(
     90deg,
     var(--surface) 0%,
-    rgba(0,255,65,0.05) 50%,
+    rgba(43, 197, 255, 0.12) 50%,
     var(--surface) 100%
   );
   background-size: 200% 100%;
@@ -385,7 +393,7 @@ button {
   left: -100%;
   width: 60%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0,255,65,0.15), transparent);
+  background: linear-gradient(90deg, transparent, rgba(43,197,255,0.2), transparent);
   animation: scanLine 2s ease-in-out infinite;
   pointer-events: none;
 }
@@ -476,7 +484,7 @@ body::after {
   left: 0;
   width: 30%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0,255,65,0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(72,246,203,0.42), transparent);
   animation: laserSweep 3s ease-in-out infinite;
   pointer-events: none;
   z-index: 2;
@@ -495,12 +503,12 @@ body::after {
    SELECTION + FOCUS (SPEC)
    ========================================== */
 ::selection {
-  background: rgba(0,255,65,0.25);
+  background: rgba(43,197,255,0.3);
   color: #ffffff;
 }
 
 *:focus-visible {
-  outline: 1px solid rgba(0,255,65,0.5);
+  outline: 1px solid rgba(72,246,203,0.64);
   outline-offset: 3px;
   border-radius: 4px;
 }
