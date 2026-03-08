@@ -1,7 +1,7 @@
 /* ==========================================
    FONTS
    ========================================== */
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap');
 
 /* ==========================================
    TAILWIND DIRECTIVES
@@ -14,6 +14,8 @@
    CSS VARIABLES — PHANTOM STAGE
    ========================================== */
 :root {
+  --font-serif: 'Cormorant Garamond', 'Times New Roman', serif;
+
   /* Backgrounds */
   --void: #000000;
   --stage: #0a0a0a;
@@ -52,10 +54,24 @@ html, body {
   overflow-x: hidden;
   background-color: var(--void);
   color: var(--white-smoke);
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   cursor: none;
+}
+
+/* Enforce serif typography across UI components, even where inline fonts were used. */
+body, button, input, textarea, select, p, span, h1, h2, h3, h4, h5, h6, label, a, li {
+  font-family: var(--font-serif) !important;
+}
+
+/* Keep button text visually centered and consistent across different labels. */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 #root {

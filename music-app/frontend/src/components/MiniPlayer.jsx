@@ -154,7 +154,7 @@ const MiniPlayer = () => {
                       {isPlaying ? (
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
                       ) : (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><path d="M8 5v14l11-7z" /></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
                       )}
                     </motion.button>
 
@@ -287,7 +287,7 @@ const MiniPlayer = () => {
                       {isPlaying ? (
                         <svg width="16" height="16" fill="#ffffff" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z" /></svg>
                       ) : (
-                        <svg width="16" height="16" fill="#ffffff" viewBox="0 0 24 24" style={{ marginLeft: 2 }}><path d="M8 5v14l11-7z" /></svg>
+                        <svg width="16" height="16" fill="#ffffff" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                       )}
                     </motion.button>
                   </div>

@@ -212,7 +212,7 @@ const NowPlaying = () => {
               Now Playing
             </p>
 
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button
                 onClick={saveOffline}
                 style={{
@@ -220,7 +220,9 @@ const NowPlaying = () => {
                   border: '1px solid rgba(255,255,255,0.22)',
                   background: 'rgba(255,255,255,0.08)',
                   color: '#fff',
-                  padding: '8px 11px',
+                  minWidth: 88,
+                  height: 36,
+                  padding: '0 12px',
                   cursor: 'pointer',
                   fontSize: 11,
                 }}
@@ -235,7 +237,9 @@ const NowPlaying = () => {
                   border: '1px solid rgba(255,255,255,0.22)',
                   background: 'rgba(255,255,255,0.08)',
                   color: '#fff',
-                  padding: '8px 11px',
+                  minWidth: 88,
+                  height: 36,
+                  padding: '0 12px',
                   cursor: 'pointer',
                   fontSize: 11,
                 }}
@@ -351,7 +355,7 @@ const NowPlaying = () => {
                       cursor: 'pointer',
                     }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ marginTop: 2 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ display: 'block' }}>
                       <path d="M16 3h5v5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M4 20l7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M21 3l-8 8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -375,7 +379,7 @@ const NowPlaying = () => {
                       cursor: 'pointer',
                     }}
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginTop: 2 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
                       <path d="M11 7l-7 5 7 5V7zM20 7l-7 5 7 5V7z" />
                     </svg>
                   </motion.button>
@@ -399,11 +403,11 @@ const NowPlaying = () => {
                     }}
                   >
                     {isPlaying ? (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ marginTop: 2 }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
                         <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
                       </svg>
                     ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2, marginTop: 2 }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     )}
@@ -424,7 +428,7 @@ const NowPlaying = () => {
                       cursor: 'pointer',
                     }}
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginTop: 2 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
                       <path d="M13 7l7 5-7 5V7zM4 7l7 5-7 5V7z" />
                     </svg>
                   </motion.button>
@@ -445,7 +449,7 @@ const NowPlaying = () => {
                       position: 'relative',
                     }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ marginTop: 2 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ display: 'block' }}>
                       <path d="M17 1l4 4-4 4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M3 11V9a4 4 0 014-4h14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M7 23l-4-4 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

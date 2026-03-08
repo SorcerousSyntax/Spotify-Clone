@@ -329,7 +329,8 @@ const AppInner = () => {
         style={{
           position: 'relative',
           zIndex: 2,
-          paddingBottom: showShell ? (isDesktop ? '24px' : '132px') : '24px',
+          // Extra mobile spacing keeps list rows visible above MiniPlayer + BottomNav.
+          paddingBottom: showShell ? (isDesktop ? '24px' : '170px') : '24px',
           paddingRight: showShell ? (isDesktop ? '360px' : '0px') : '0px',
           transition: 'padding-right 0.25s ease',
         }}
