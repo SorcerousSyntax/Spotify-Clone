@@ -1,13 +1,31 @@
 const axios = require('axios');
 
-const JIOSAAVN_BASE = process.env.JIOSAAVN_URL || 'http://localhost:3000';
+const configuredBase = process.env.JIOSAAVN_URL;
+const JIOSAAVN_BASES = [
+  configuredBase,
+  'https://jiosavan-api2.vercel.app',
+  'http://localhost:3000',
+].filter(Boolean);
+
+async function getWithFallback(path, params = {}) {
+  for (const base of JIOSAAVN_BASES) {
+    try {
+      const response = await axios.get(`${base}${path}`, {
+        params,
+        timeout: 10000,
+      });
+      return response;
+    } catch (err) {
+      console.error(`JioSaavn request failed for ${base}${path}:`, err.message);
+    }
+  }
+  return null;
+}
 
 async function searchSongs(query) {
   try {
-    const response = await axios.get(`${JIOSAAVN_BASE}/api/search/songs`, {
-      params: { query, limit: 10 },
-      timeout: 10000,
-    });
+    const response = await getWithFallback('/api/search/songs', { query, limit: 10 });
+    if (!response) return null;
 
     const results = response.data?.data?.results;
     if (!results || results.length === 0) return null;
@@ -49,9 +67,8 @@ async function searchSongs(query) {
 
 async function getSongById(id) {
   try {
-    const response = await axios.get(`${JIOSAAVN_BASE}/api/songs/${id}`, {
-      timeout: 10000,
-    });
+    const response = await getWithFallback(`/api/songs/${id}`);
+    if (!response) return null;
     const song = response.data?.data?.[0];
     if (!song) return null;
 

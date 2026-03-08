@@ -5,6 +5,9 @@ import SkeletonLoader from '../components/SkeletonLoader';
 import useCardTilt from '../hooks/useCardTilt';
 import { decodeSongTitle } from '../lib/text';
 
+const API_BASE = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
+const buildApiUrl = (path) => `${API_BASE}${path}`;
+
 const SearchResultRow = ({ song, index, onClick }) => {
   const tilt = useCardTilt(5);
   const isChoice = Boolean(song.is_choice);
@@ -103,7 +106,7 @@ const Search = () => {
     if (!q.trim()) { setResults([]); setLoading(false); return; }
     setLoading(true); setFetchingTelegram(false);
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(buildApiUrl(`/api/search?q=${encodeURIComponent(q)}`));
       const data = await res.json();
       const firstPassResults = extractResults(data);
       if (firstPassResults.length > 0) {
@@ -112,7 +115,7 @@ const Search = () => {
         setFetchingTelegram(true);
         const poll = setInterval(async () => {
           try {
-            const r = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/search?q=${encodeURIComponent(q)}`);
+            const r = await fetch(buildApiUrl(`/api/search?q=${encodeURIComponent(q)}`));
             const d = await r.json();
             const pollResults = extractResults(d);
             if (pollResults.length > 0) {
