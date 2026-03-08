@@ -70,13 +70,9 @@ const MiniPlayer = () => {
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const toggleLike = usePlayerStore((s) => s.toggleLike);
   const likedSongIds = usePlayerStore((s) => s.likedSongIds);
-  const recentlyPlayed = usePlayerStore((s) => s.recentlyPlayed);
 
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
   const isLiked = currentSong ? likedSongIds.has(currentSong.id) : false;
-  const related = recentlyPlayed
-    .filter((song) => song?.id && song.id !== currentSong?.id)
-    .slice(0, 3);
 
   return (
     <AnimatePresence>
@@ -220,42 +216,6 @@ const MiniPlayer = () => {
                     </button>
                   </div>
 
-                  <div style={{ marginTop: 16, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12 }}>
-                    <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 26, color: '#fff', letterSpacing: '0.03em' }}>
-                      Related Music
-                    </p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
-                      {related.length > 0 ? related.map((song) => (
-                        <button
-                          key={song.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            usePlayerStore.getState().setCurrentSong(song);
-                          }}
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: '44px 1fr',
-                            gap: 10,
-                            alignItems: 'center',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                            borderRadius: 10,
-                            background: 'rgba(255,255,255,0.04)',
-                            padding: 6,
-                            color: '#fff',
-                            textAlign: 'left',
-                          }}
-                        >
-                          <img src={song.album_art_url || '/placeholder-album.svg'} alt={decodeSongTitle(song.title || '')} style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover' }} />
-                          <div style={{ minWidth: 0 }}>
-                            <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 17, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{decodeSongTitle(song.title || '')}</p>
-                            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(song.primaryArtists || song.artist || '').replace(/&amp;/g, '&')}</p>
-                          </div>
-                        </button>
-                      )) : (
-                        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Play more songs to see recommendations.</p>
-                      )}
-                    </div>
-                  </div>
                 </div>
               ) : (
                 <>

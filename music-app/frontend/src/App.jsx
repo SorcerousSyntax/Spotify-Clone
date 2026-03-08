@@ -322,7 +322,8 @@ const AppInner = () => {
 
   const isPublicAuthPage = location.pathname === '/login' || location.pathname === '/register';
   const showShell = authReady && session && !isPublicAuthPage;
-  const isNowPlayingRoute = location.pathname === '/now-playing';
+  const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
+  const isNowPlayingRoute = normalizedPath === '/now-playing';
   const showMiniPlayer = showShell && !isNowPlayingRoute;
 
   return (
