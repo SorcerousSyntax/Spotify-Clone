@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import usePlayerStore from '../store/playerStore';
 import { SongRow } from '../components/MusicCards';
 import SkeletonLoader from '../components/SkeletonLoader';
@@ -103,6 +104,7 @@ const PlaylistCard = ({ playlist, index, onOpen, onRename, onDelete }) => (
 );
 
 const Library = () => {
+  const location = useLocation();
   const [activeFilter, setActiveFilter] = useState('All');
   const [loading, setLoading] = useState(true);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
@@ -124,6 +126,17 @@ const Library = () => {
   useEffect(() => {
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    const requestedPlaylistId = location.state?.openPlaylistId;
+    if (!requestedPlaylistId) return;
+
+    const exists = playlists.some((playlist) => playlist.id === requestedPlaylistId);
+    if (!exists) return;
+
+    setActiveFilter('Playlists');
+    setSelectedPlaylistId(requestedPlaylistId);
+  }, [location.state, playlists]);
 
   const savedSongIds = useMemo(() => {
     const ids = new Set(likedSongIds);

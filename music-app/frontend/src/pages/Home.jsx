@@ -77,13 +77,6 @@ const getMoodConfig = (hour) => {
   };
 };
 
-const HOME_PLAYLISTS = [
-  { id: 'liked', name: 'Liked Songs', icon: '💚', gradient: 'linear-gradient(135deg, #0f3f1f, #1db954)' },
-  { id: 'punjabi', name: 'Punjabi Hits', icon: '🎵', gradient: 'linear-gradient(135deg, #1b1230, #4a2f8a)' },
-  { id: 'late-night', name: 'Late Night', icon: '🌙', gradient: 'linear-gradient(135deg, #0b1f36, #1f4f7a)' },
-  { id: 'chill', name: 'Chill Vibes', icon: '✨', gradient: 'linear-gradient(135deg, #10261f, #2d6a4f)' },
-];
-
 const Home = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -341,40 +334,54 @@ const Home = () => {
 
       <section style={{ width: 'min(980px, calc(100vw - 24px))', margin: '20px auto 0' }}>
         <SectionTitle text="Your Playlists" />
-        <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }} className="hide-scrollbar">
-          {HOME_PLAYLISTS.map((playlist) => (
-            <div key={playlist.id} style={{ width: 120, flexShrink: 0 }}>
-              <div
-                style={{
-                  width: 120,
-                  height: 120,
-                  borderRadius: 12,
-                  background: playlist.gradient,
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  boxShadow: '0 14px 30px rgba(0,0,0,0.45)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 34,
-                }}
-              >
-                {playlist.icon}
+        {playlists.length > 0 ? (
+          <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }} className="hide-scrollbar">
+            {playlists.map((playlist, index) => (
+              <div key={playlist.id} style={{ width: 120, flexShrink: 0 }}>
+                <button
+                  onClick={() => navigate('/library', { state: { openPlaylistId: playlist.id } })}
+                  style={{
+                    width: 120,
+                    height: 120,
+                    borderRadius: 12,
+                    background: `linear-gradient(135deg, hsl(${(index * 57) % 360} 55% 18%), hsl(${((index * 57) + 48) % 360} 62% 34%))`,
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    boxShadow: '0 14px 30px rgba(0,0,0,0.45)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 34,
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                  title={`Open ${playlist.name}`}
+                >
+                  {playlist.emoji || '🎵'}
+                </button>
+                <p
+                  style={{
+                    marginTop: 8,
+                    fontFamily: "'Bebas Neue', cursive",
+                    fontSize: 14,
+                    letterSpacing: '0.05em',
+                    color: '#fff',
+                    lineHeight: 1.15,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                  title={playlist.name}
+                >
+                  {playlist.name}
+                </p>
               </div>
-              <p
-                style={{
-                  marginTop: 8,
-                  fontFamily: "'Bebas Neue', cursive",
-                  fontSize: 14,
-                  letterSpacing: '0.05em',
-                  color: '#fff',
-                  lineHeight: 1.15,
-                }}
-              >
-                {playlist.name}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '12px 4px' }}>
+            No playlists yet. Create one in Library.
+          </p>
+        )}
       </section>
 
       <section style={{ width: 'min(980px, calc(100vw - 24px))', margin: '20px auto 0', padding: '0 16px', boxSizing: 'border-box' }}>
