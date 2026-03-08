@@ -85,9 +85,16 @@ const BottomNav = () => {
               style={{
                 flex: 1, height: '100%', display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center', position: 'relative',
-                background: 'transparent', border: 'none', outline: 'none',
+                background: isActive ? 'rgba(0,255,65,0.08)' : 'rgba(255,255,255,0.02)',
+                border: isActive ? '1px solid rgba(0,255,65,0.28)' : '1px solid rgba(255,255,255,0.06)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                borderRadius: 10,
+                outline: 'none',
                 gap: 4,
                 cursor: 'pointer',
+                margin: '8px 4px 6px',
+                transition: 'all 0.18s ease',
               }}
             >
               {/* Active dot at bottom */}
@@ -121,11 +128,12 @@ const BottomNav = () => {
               </motion.div>
 
               <span style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: 9,
+                fontFamily: "'Bebas Neue', cursive",
+                fontSize: 11,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 color: isActive ? '#00ff41' : 'rgba(255,255,255,0.25)',
+                fontWeight: 700,
                 transition: 'color 0.15s ease',
               }}>
                 {tab.label}

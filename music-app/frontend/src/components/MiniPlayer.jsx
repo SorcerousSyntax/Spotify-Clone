@@ -16,10 +16,10 @@ const ScrollingTitle = ({ title, fontSize = 18 }) => {
           animate={{ x: ['0%', '-50%'] }}
           transition={{ duration: 9, ease: 'linear', repeat: Infinity }}
         >
-          <span style={{ fontSize, letterSpacing: '0.04em', color: '#ffffff', lineHeight: 1.15 }}>
+          <span style={{ fontSize, letterSpacing: '0.04em', color: '#ffffff', lineHeight: 1.15, fontFamily: "'Bebas Neue', cursive", fontWeight: 700 }}>
             {safeTitle}
           </span>
-          <span style={{ fontSize, letterSpacing: '0.04em', color: '#ffffff', lineHeight: 1.15 }}>
+          <span style={{ fontSize, letterSpacing: '0.04em', color: '#ffffff', lineHeight: 1.15, fontFamily: "'Bebas Neue', cursive", fontWeight: 700 }}>
             {safeTitle}
           </span>
         </motion.div>
@@ -29,6 +29,8 @@ const ScrollingTitle = ({ title, fontSize = 18 }) => {
             fontSize,
             letterSpacing: '0.04em',
             color: '#ffffff',
+            fontFamily: "'Bebas Neue', cursive",
+            fontWeight: 700,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -78,18 +80,27 @@ const MiniPlayer = () => {
           transition={{ type: 'spring', stiffness: 350, damping: 30 }}
         >
           <div style={{
-            background: 'rgba(10,10,10,0.97)',
+            background: 'linear-gradient(135deg, rgba(0,255,65,0.12), rgba(0,0,0,0.95) 38%, rgba(0,0,0,0.98) 100%)',
             backdropFilter: 'blur(30px)',
             WebkitBackdropFilter: 'blur(30px)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid rgba(0,255,65,0.22)',
             borderRadius: 8,
-            boxShadow: '0 -4px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,255,65,0.05)',
+            boxShadow: '0 -4px 40px rgba(0,0,0,0.8), 0 0 26px rgba(0,255,65,0.16)',
             height: 'auto',
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
             transition: 'all 0.2s ease',
           }}>
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                pointerEvents: 'none',
+                borderRadius: 8,
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.08), transparent 38%, rgba(0,0,0,0.22) 100%)',
+              }}
+            />
             <div
               style={{
                 position: 'absolute',
@@ -129,8 +140,10 @@ const MiniPlayer = () => {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <ScrollingTitle title={currentSong.title || ''} fontSize={15} />
                     <p style={{
-                      fontFamily: "'DM Mono', monospace",
+                      fontFamily: "'Space Grotesk', sans-serif",
                       fontSize: 10, color: 'rgba(255,255,255,0.3)',
+                      fontWeight: 700,
+                      letterSpacing: '0.02em',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2,
                     }}>
                       {(currentSong.primaryArtists || currentSong.artist || '').replace(/&amp;/g, '&')}
