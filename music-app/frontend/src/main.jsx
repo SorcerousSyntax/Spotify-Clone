@@ -3,28 +3,22 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-// Keep service worker only for production builds.
-// In dev, unregister stale workers to avoid cache-related blank screens.
+// Disable SW for now and clean stale caches to prevent deploy hash mismatch blank screens.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
-    if (import.meta.env.PROD) {
-      navigator.serviceWorker
-        .register('/service-worker.js')
-        .then((reg) => {
-          console.log('Service Worker registered:', reg.scope);
-        })
-        .catch((err) => {
-          console.warn('Service Worker registration failed:', err);
-        });
-      return;
-    }
-
+    const cleanupKey = 'raabta-sw-cleanup-v1';
+    if (sessionStorage.getItem(cleanupKey)) return;
     const regs = await navigator.serviceWorker.getRegistrations();
     await Promise.all(regs.map((reg) => reg.unregister()));
     if (window.caches?.keys) {
       const keys = await caches.keys();
-      await Promise.all(keys.map((key) => caches.delete(key)));
+      await Promise.all(
+        keys
+          .filter((key) => key.startsWith('music-app-') || key.startsWith('music-audio-'))
+          .map((key) => caches.delete(key))
+      );
     }
+    sessionStorage.setItem(cleanupKey, '1');
   });
 }
 
