@@ -375,8 +375,17 @@ const Library = () => {
               Playlist Songs
             </p>
             {playlistSongs.length > 0 ? playlistSongs.map((song, i) => (
-              <div key={song.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ flex: 1 }}>
+              <div
+                key={song.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: selectedPlaylist.id !== LIKED_SONGS_PLAYLIST_ID ? 'minmax(0,1fr) auto' : 'minmax(0,1fr)',
+                  alignItems: 'center',
+                  columnGap: 10,
+                  marginBottom: 8,
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
                   <SongRow song={song} index={i} showIndex onClick={(s, idx) => playSong(s, idx, playlistSongs)} />
                 </div>
                 {selectedPlaylist.id !== LIKED_SONGS_PLAYLIST_ID && (
@@ -387,9 +396,11 @@ const Library = () => {
                       background: 'transparent',
                       color: 'rgba(255,120,120,0.9)',
                       borderRadius: 999,
-                      padding: '6px 9px',
+                      padding: '6px 12px',
                       cursor: 'pointer',
                       fontSize: 11,
+                      height: 32,
+                      minWidth: 74,
                     }}
                   >
                     Remove
@@ -408,8 +419,17 @@ const Library = () => {
                   Add Songs
                 </p>
                 {addableSongs.slice(0, 20).map((song) => (
-                  <div key={`add-${song.id}`} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ flex: 1 }}>
+                  <div
+                    key={`add-${song.id}`}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'minmax(0,1fr) auto',
+                      alignItems: 'center',
+                      columnGap: 10,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
                       <SongRow song={song} />
                     </div>
                     <button
@@ -419,9 +439,11 @@ const Library = () => {
                         background: 'rgba(0,255,65,0.08)',
                         color: '#00ff6a',
                         borderRadius: 999,
-                        padding: '6px 10px',
+                        padding: '6px 12px',
                         cursor: 'pointer',
                         fontSize: 11,
+                        height: 32,
+                        minWidth: 64,
                       }}
                     >
                       Add

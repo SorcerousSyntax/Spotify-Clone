@@ -318,7 +318,7 @@ const Home = () => {
                 key={song.id}
                 song={song}
                 index={i}
-                size={128}
+                size={98}
                 onClick={(s, idx) => playSong(s, idx, recentSongs)}
               />
             ))}

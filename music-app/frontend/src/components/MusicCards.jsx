@@ -110,6 +110,7 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
 
   const handleClick = () => onClick ? onClick(song, index) : setCurrentSong(song);
   const safeTitle = decodeSongTitle(song?.title || '');
+  const pxSize = `${Number(size) || 110}px`;
 
   return (
     <motion.div
@@ -120,7 +121,11 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
       whileTap={{ scale: 0.94 }}
       onClick={handleClick}
       style={{
-        width: size, flexShrink: 0, cursor: 'pointer',
+        width: pxSize,
+        minWidth: pxSize,
+        maxWidth: pxSize,
+        flexShrink: 0,
+        cursor: 'pointer',
         borderRadius: 10, overflow: 'hidden',
         background: 'var(--surface)',
         border: '1px solid var(--green-border)',
@@ -129,7 +134,7 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
       }}
     >
       {/* Art */}
-      <div style={{ position: 'relative', width: size, height: size, overflow: 'hidden', flexShrink: 0 }}>
+      <div style={{ position: 'relative', width: pxSize, height: pxSize, overflow: 'hidden', flexShrink: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
           background: `radial-gradient(circle at 10% 0%, rgba(0,255,65,0.08), transparent 55%), radial-gradient(circle at 90% 120%, rgba(0,255,65,0.06), transparent 55%)`,
