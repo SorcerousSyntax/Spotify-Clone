@@ -7,6 +7,23 @@ import { decodeSongTitle } from '../lib/text';
 
 const API_BASE = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
 const buildApiUrl = (path) => `${API_BASE}${path}`;
+const PUBLIC_JIOSAAVN_SEARCH = 'https://jiosavan-api2.vercel.app/api/search/songs';
+
+const mapJioSongToAppSong = (song = {}) => ({
+  id: song.id,
+  title: song.name,
+  artist:
+    song.primaryArtists ||
+    song.artists?.primary?.map((artist) => artist?.name).filter(Boolean).join(', ') ||
+    'Unknown Artist',
+  album: song.album?.name || '',
+  duration: song.duration || 0,
+  album_art_url: song.image?.[2]?.url || song.image?.[1]?.url || song.image?.[0]?.url || '/placeholder-album.svg',
+  url: song.downloadUrl?.[4]?.url || song.downloadUrl?.[3]?.url || song.downloadUrl?.[2]?.url || '',
+  stream_url: song.downloadUrl?.[4]?.url || song.downloadUrl?.[3]?.url || song.downloadUrl?.[2]?.url || '',
+  r2_url: song.downloadUrl?.[4]?.url || song.downloadUrl?.[3]?.url || song.downloadUrl?.[2]?.url || '',
+  source: 'jiosaavn-public-fallback',
+});
 
 const SearchResultRow = ({ song, index, onClick }) => {
   const tilt = useCardTilt(5);
@@ -106,12 +123,38 @@ const Search = () => {
     if (!q.trim()) { setResults([]); setLoading(false); return; }
     setLoading(true); setFetchingTelegram(false);
     try {
+      let firstPassResults = [];
+      let data = {};
+
       const res = await fetch(buildApiUrl(`/api/search?q=${encodeURIComponent(q)}`));
-      const data = await res.json();
-      const firstPassResults = extractResults(data);
+      if (res.ok) {
+        data = await res.json();
+        firstPassResults = extractResults(data);
+      }
+
       if (firstPassResults.length > 0) {
-        setResults(firstPassResults); setLoading(false);
-      } else if (data.fetching) {
+        setResults(firstPassResults); setLoading(false); return;
+      }
+
+      // If backend is unavailable or returns no results, query public JioSaavn API directly.
+      try {
+        const directRes = await fetch(`${PUBLIC_JIOSAAVN_SEARCH}?query=${encodeURIComponent(q)}&limit=10`);
+        if (directRes.ok) {
+          const directData = await directRes.json();
+          const mapped = (directData?.data?.results || [])
+            .map(mapJioSongToAppSong)
+            .filter((song) => song.url || song.stream_url);
+          if (mapped.length > 0) {
+            setResults(mapped);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // Fall through to existing loading/error handling if direct fallback fails.
+      }
+
+      if (data.fetching) {
         setFetchingTelegram(true);
         const poll = setInterval(async () => {
           try {
