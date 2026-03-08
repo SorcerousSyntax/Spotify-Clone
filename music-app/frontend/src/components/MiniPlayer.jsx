@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import usePlayerStore from '../store/playerStore';
@@ -53,10 +53,45 @@ const MiniPlayer = () => {
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const toggleLike = usePlayerStore((s) => s.toggleLike);
   const likedSongIds = usePlayerStore((s) => s.likedSongIds);
+  const getFrequencyData = usePlayerStore((s) => s.playerControls.getFrequencyData);
   const { rgbaString } = useColorExtract(currentSong?.album_art_url);
+  const [beatLevel, setBeatLevel] = useState(0.25);
 
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
   const isLiked = currentSong ? likedSongIds.has(currentSong.id) : false;
+
+  useEffect(() => {
+    if (!currentSong) {
+      setBeatLevel(0.25);
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      const frequencyData = typeof getFrequencyData === 'function' ? getFrequencyData() : null;
+
+      if (!frequencyData || !frequencyData.length) {
+        setBeatLevel((prev) => prev * 0.88 + 0.22 * 0.12);
+        return;
+      }
+
+      const sampleBins = Math.min(24, frequencyData.length);
+      let total = 0;
+      for (let i = 0; i < sampleBins; i += 1) {
+        total += frequencyData[i] || 0;
+      }
+
+      const energy = total / (sampleBins * 255);
+      const target = isPlaying ? energy : 0.18;
+      setBeatLevel((prev) => prev * 0.72 + target * 0.28);
+    }, 90);
+
+    return () => window.clearInterval(timer);
+  }, [currentSong?.id, isPlaying, getFrequencyData]);
+
+  const glowAlpha = useMemo(() => {
+    const normalized = Math.max(0.16, Math.min(0.95, beatLevel));
+    return normalized;
+  }, [beatLevel]);
 
   return (
     <AnimatePresence>
@@ -86,19 +121,21 @@ const MiniPlayer = () => {
             WebkitBackdropFilter: 'blur(40px)',
             border: `1px solid ${rgbaString(0.42)}`,
             borderRadius: 16,
-            boxShadow: `0 18px 44px rgba(0,0,0,0.55), 0 0 34px ${rgbaString(0.45)}`,
+            boxShadow: `0 18px 44px rgba(0,0,0,0.55), 0 0 ${22 + Math.round(glowAlpha * 26)}px ${rgbaString(0.26 + glowAlpha * 0.42)}`,
             height: 'auto',
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
+            transition: 'background 560ms ease, border-color 560ms ease, box-shadow 180ms linear',
           }}>
             <div
               style={{
                 position: 'absolute',
                 inset: 0,
                 pointerEvents: 'none',
-                background: `radial-gradient(circle at 15% 50%, ${rgbaString(0.30)} 0%, transparent 58%)`,
+                background: `radial-gradient(circle at 15% 50%, ${rgbaString(0.20 + glowAlpha * 0.26)} 0%, transparent 58%)`,
                 borderRadius: 16,
+                transition: 'background 220ms linear',
               }}
             />
             {/* Top progress bar — full width green line */}
@@ -121,7 +158,8 @@ const MiniPlayer = () => {
                   {/* Slowly rotating album art */}
                   <div style={{
                     width: 48, height: 48, borderRadius: 10, overflow: 'hidden', flexShrink: 0,
-                    boxShadow: '0 0 16px rgba(0,255,65,0.25)',
+                    boxShadow: `0 0 ${10 + Math.round(glowAlpha * 18)}px ${rgbaString(0.28 + glowAlpha * 0.28)}`,
+                    transition: 'box-shadow 180ms linear',
                   }}>
                     <img
                       src={currentSong.album_art_url || '/placeholder-album.svg'}
