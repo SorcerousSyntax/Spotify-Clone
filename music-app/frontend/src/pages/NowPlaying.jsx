@@ -73,14 +73,12 @@ const NowPlaying = () => {
   const [offlineStatus, setOfflineStatus] = useState('idle'); // idle | saving | saved | error
   const [downloadStatus, setDownloadStatus] = useState('idle'); // idle | downloading | done | error
   const progressBarRef = useRef(null);
-  const [isCompact, setIsCompact] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < 900 : true
-  );
+  const [isCompact, setIsCompact] = useState(true);
 
   const isLiked = currentSong ? likedSongIds.has(currentSong.id) : false;
 
   useEffect(() => {
-    const onResize = () => setIsCompact(window.innerWidth < 900);
+    const onResize = () => setIsCompact(true);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
@@ -240,7 +238,7 @@ const NowPlaying = () => {
         />
 
         <div style={{ position: 'relative', zIndex: 2, width: 'min(820px, calc(100vw - 24px))', margin: '0 auto', paddingTop: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr auto', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <button
               onClick={() => navigate(-1)}
               style={{
@@ -256,7 +254,7 @@ const NowPlaying = () => {
               ←
             </button>
 
-            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.16em', color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', flexShrink: 0 }}>
+            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.16em', color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', textAlign: 'center' }}>
               Now Playing
             </p>
 
@@ -310,8 +308,8 @@ const NowPlaying = () => {
               overflow: 'hidden',
             }}
           >
-            <div style={{ display: 'grid', gridTemplateColumns: isCompact ? '1fr' : 'minmax(240px, 360px) 1fr', gap: 20, alignItems: 'center' }}>
-              <div style={{ margin: '0 auto', width: '100%', maxWidth: 340 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, alignItems: 'center' }}>
+              <div style={{ margin: '0 auto', width: '100%', maxWidth: 320 }}>
                 <img
                   src={currentSong.album_art_url || '/placeholder-album.svg'}
                   alt={decodeSongTitle(currentSong.title || '')}
@@ -326,7 +324,7 @@ const NowPlaying = () => {
               </div>
 
               <div style={{ minWidth: 0 }}>
-                <ScrollingTitle text={safeTitle} fontSize={isCompact ? 22 : 52} />
+                <ScrollingTitle text={safeTitle} fontSize={22} />
                 <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: 'rgba(255,255,255,0.66)', marginTop: 8 }}>
                   {currentSong.artist}
                 </p>
