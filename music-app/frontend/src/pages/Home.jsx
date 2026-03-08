@@ -26,12 +26,12 @@ const SectionTitle = ({ text }) => (
   </p>
 );
 
-const getMoodConfig = (hour) => {
+const getMoodConfig = (hour, userName = 'there') => {
   if (hour >= 5 && hour < 11) {
     return {
       key: 'morning',
       icon: '🌅',
-      message: 'Good morning, Harsh. Start slow.',
+      message: `Good morning, ${userName}. Start slow.`,
       query: 'peaceful morning hindi',
       gradient: 'linear-gradient(135deg, #0a1628, #0d2137)',
       glow: 'rgba(74, 146, 240, 0.35)',
@@ -41,7 +41,7 @@ const getMoodConfig = (hour) => {
     return {
       key: 'afternoon',
       icon: '☀️',
-      message: 'Good afternoon, Harsh. Keep the energy up.',
+      message: `Good afternoon, ${userName}. Keep the energy up.`,
       query: 'upbeat punjabi',
       gradient: 'linear-gradient(135deg, #0a1a0a, #0d2d0d)',
       glow: 'rgba(64, 201, 112, 0.35)',
@@ -51,7 +51,7 @@ const getMoodConfig = (hour) => {
     return {
       key: 'evening',
       icon: '🌆',
-      message: 'Good evening, Harsh. Wind it down.',
+      message: `Good evening, ${userName}. Wind it down.`,
       query: 'romantic hindi evening',
       gradient: 'linear-gradient(135deg, #1a0a0a, #2d1000)',
       glow: 'rgba(224, 122, 58, 0.35)',
@@ -61,7 +61,7 @@ const getMoodConfig = (hour) => {
     return {
       key: 'night',
       icon: '🌙',
-      message: "It's night, Harsh. Here's what fits.",
+      message: `It's night, ${userName}. Here's what fits.`,
       query: 'arijit singh night',
       gradient: 'linear-gradient(135deg, #080808, #0d0d1a)',
       glow: 'rgba(128, 126, 255, 0.35)',
@@ -70,7 +70,7 @@ const getMoodConfig = (hour) => {
   return {
     key: 'late night',
     icon: '✨',
-    message: 'Late night, Harsh. Just you and the music.',
+    message: `Late night, ${userName}. Just you and the music.`,
     query: 'sad lofi hindi',
     gradient: 'linear-gradient(135deg, #000000, #0a0010)',
     glow: 'rgba(190, 86, 255, 0.35)',
@@ -82,8 +82,34 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [recentFromApi, setRecentFromApi] = useState([]);
   const [suggestedSong, setSuggestedSong] = useState(null);
+  const [bannerName, setBannerName] = useState('there');
 
-  const mood = useMemo(() => getMoodConfig(new Date().getHours()), []);
+  useEffect(() => {
+    let mounted = true;
+
+    const loadBannerName = async () => {
+      if (!supabase) return;
+
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user;
+      if (!user || !mounted) return;
+
+      const candidate =
+        user.user_metadata?.full_name
+        || user.user_metadata?.name
+        || user.email?.split('@')?.[0]
+        || 'there';
+
+      setBannerName(String(candidate).trim() || 'there');
+    };
+
+    loadBannerName().catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const mood = useMemo(() => getMoodConfig(new Date().getHours(), bannerName), [bannerName]);
 
   const currentSong = usePlayerStore((s) => s.currentSong);
   const recentlyPlayed = usePlayerStore((s) => s.recentlyPlayed);
