@@ -7,6 +7,44 @@ import Waveform from '../components/Waveform';
 import LyricsPanel from '../components/LyricsPanel';
 import { decodeSongTitle } from '../lib/text';
 
+const ScrollingTitle = ({ text, fontSize }) => {
+  const safeText = decodeSongTitle(text || '');
+
+  return (
+    <div
+      style={{
+        overflow: 'hidden',
+        width: '100%',
+        maxWidth: '100%',
+        whiteSpace: 'nowrap',
+        marginBottom: 2,
+      }}
+    >
+      <motion.div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          width: 'max-content',
+          gap: 36,
+        }}
+        animate={{ x: ['0%', '-50%'] }}
+        transition={{
+          duration: 11,
+          ease: 'linear',
+          repeat: Infinity,
+        }}
+      >
+        <span style={{ fontSize, lineHeight: 0.95, letterSpacing: '0.03em', color: '#fff' }}>
+          {safeText}
+        </span>
+        <span style={{ fontSize, lineHeight: 0.95, letterSpacing: '0.03em', color: '#fff' }}>
+          {safeText}
+        </span>
+      </motion.div>
+    </div>
+  );
+};
+
 const NowPlaying = () => {
   const navigate = useNavigate();
   const currentSong = usePlayerStore((s) => s.currentSong);
@@ -151,6 +189,7 @@ const NowPlaying = () => {
 
   const currentProgress = isDragging ? dragProgress : progress;
   const progressPercent = duration > 0 ? (currentProgress / duration) * 100 : 0;
+  const safeTitle = decodeSongTitle(currentSong.title || '');
 
   if (!currentSong) {
     return (
@@ -277,9 +316,7 @@ const NowPlaying = () => {
               </div>
 
               <div>
-                <h2 style={{ fontFamily: "'Bebas Neue', system-ui", fontSize: 52, lineHeight: 0.95, letterSpacing: '0.05em', color: '#fff' }}>
-                  {decodeSongTitle(currentSong.title || '')}
-                </h2>
+                <ScrollingTitle text={safeTitle} fontSize={isCompact ? 56 : 52} />
                 <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: 'rgba(255,255,255,0.66)', marginTop: 8 }}>
                   {currentSong.artist}
                 </p>
