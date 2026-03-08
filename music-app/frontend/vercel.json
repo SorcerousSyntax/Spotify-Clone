@@ -7,6 +7,10 @@
     {
       "source": "/songs/:path*",
       "destination": "https://spotify-clone-1-o6ht.onrender.com/songs/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
