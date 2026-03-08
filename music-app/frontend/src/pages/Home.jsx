@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import usePlayerStore from '../store/playerStore';
 import { CompactCard } from '../components/MusicCards';
+import PlaylistCover from '../components/PlaylistCover';
 import { supabase } from '../lib/supabase';
 import { decodeSongTitle } from '../lib/text';
 
@@ -111,6 +112,7 @@ const Home = () => {
 
   const recentlyPlayed = usePlayerStore((s) => s.recentlyPlayed);
   const playlists = usePlayerStore((s) => s.playlists);
+  const songsById = usePlayerStore((s) => s.songsById);
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
   const setQueue = usePlayerStore((s) => s.setQueue);
 
@@ -332,7 +334,7 @@ const Home = () => {
         <SectionTitle text="Your Playlists" />
         {playlists.length > 0 ? (
           <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }} className="hide-scrollbar">
-            {playlists.map((playlist, index) => (
+            {playlists.map((playlist) => (
               <div key={playlist.id} style={{ width: 120, flexShrink: 0 }}>
                 <button
                   onClick={() => navigate('/library', { state: { openPlaylistId: playlist.id } })}
@@ -340,19 +342,18 @@ const Home = () => {
                     width: 120,
                     height: 120,
                     borderRadius: 12,
-                    background: `linear-gradient(135deg, hsl(${(index * 57) % 360} 55% 18%), hsl(${((index * 57) + 48) % 360} 62% 34%))`,
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    boxShadow: '0 14px 30px rgba(0,0,0,0.45)',
+                    background: 'transparent',
+                    border: 'none',
+                    boxShadow: 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 34,
                     cursor: 'pointer',
                     padding: 0,
                   }}
                   title={`Open ${playlist.name}`}
                 >
-                  {playlist.emoji || '🎵'}
+                  <PlaylistCover playlist={playlist} songsById={songsById} size={120} />
                 </button>
                 <p
                   style={{

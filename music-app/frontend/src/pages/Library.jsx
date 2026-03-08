@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import usePlayerStore, { LIKED_SONGS_PLAYLIST_ID } from '../store/playerStore';
 import { SongRow } from '../components/MusicCards';
+import PlaylistCover from '../components/PlaylistCover';
 
 const FILTERS = ['Playlists'];
 
@@ -10,7 +11,7 @@ const PLAYLIST_EMOJIS = ['🎵', '🔥', '🌙', '💚', '🎧', '⚡', '🎹'];
 
 const isPlayableSong = (song) => Boolean(song?.stream_url || song?.r2_url);
 
-const PlaylistCard = ({ playlist, index, onOpen, onRename, onDelete, canManage }) => (
+const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, canManage }) => (
   <motion.div
     initial={{ opacity: 0, x: -10 }}
     animate={{ opacity: 1, x: 0 }}
@@ -32,14 +33,13 @@ const PlaylistCard = ({ playlist, index, onOpen, onRename, onDelete, canManage }
         width: 44,
         height: 44,
         borderRadius: 8,
-        border: '1px solid rgba(0,255,65,0.2)',
-        background: 'rgba(0,255,65,0.08)',
-        color: '#fff',
-        fontSize: 20,
+        border: 'none',
+        background: 'transparent',
         cursor: 'pointer',
+        padding: 0,
       }}
     >
-      {playlist.emoji || '🎵'}
+      <PlaylistCover playlist={playlist} songsById={songsById} size={44} />
     </button>
 
     <button
@@ -308,6 +308,7 @@ const Library = () => {
           <PlaylistCard
             key={playlist.id}
             playlist={playlist}
+            songsById={songsById}
             index={i}
             onOpen={() => setSelectedPlaylistId(playlist.id)}
             onRename={() => onRenamePlaylist(playlist)}

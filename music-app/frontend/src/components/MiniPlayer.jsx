@@ -167,7 +167,7 @@ const MiniPlayer = () => {
                       style={{
                         width: '100%', height: '100%', objectFit: 'cover',
                         borderRadius: 10,
-                        animation: isPlaying ? 'vinylSpin 20s linear infinite' : 'none',
+                        animation: 'none',
                       }}
                     />
                   </div>

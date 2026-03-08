@@ -44,9 +44,9 @@ export default function SmokeBackground() {
       return undefined;
     }
     const smokeStops = [
-      ['rgba(43,197,255,0.30)', 'rgba(43,197,255,0.11)'],
-      ['rgba(72,246,203,0.26)', 'rgba(72,246,203,0.09)'],
-      ['rgba(255,178,92,0.22)', 'rgba(255,178,92,0.07)'],
+      ['rgba(67,232,143,0.28)', 'rgba(67,232,143,0.10)'],
+      ['rgba(87,242,161,0.24)', 'rgba(87,242,161,0.08)'],
+      ['rgba(170,255,211,0.18)', 'rgba(170,255,211,0.06)'],
     ];
 
     for (let i = 0; i < 3; i++) {
@@ -105,20 +105,20 @@ export default function SmokeBackground() {
       particles.push(mesh);
     }
 
-    const floorLight = new THREE.PointLight(0x2bc5ff, 2.5, 20);
+    const floorLight = new THREE.PointLight(0x2fd17d, 2.5, 20);
     floorLight.position.set(0, -6, 2);
     scene.add(floorLight);
 
-    const sideLight = new THREE.PointLight(0x48f6cb, 1.3, 16);
+    const sideLight = new THREE.PointLight(0x57f2a1, 1.2, 16);
     sideLight.position.set(-5, 1, 1);
     scene.add(sideLight);
 
-    const warmLight = new THREE.PointLight(0xffb25c, 0.9, 14);
-    warmLight.position.set(5, -2, 0);
-    scene.add(warmLight);
+    const topLight = new THREE.PointLight(0x8fffc7, 0.7, 14);
+    topLight.position.set(4, 3, 0);
+    scene.add(topLight);
 
-    // Subtle white ambient
-    scene.add(new THREE.AmbientLight(0xb8e6ff, 0.30));
+    // Subtle ambient
+    scene.add(new THREE.AmbientLight(0xbff8de, 0.26));
 
     let frame;
     let t = 0;
