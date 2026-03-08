@@ -343,7 +343,7 @@ const AppInner = () => {
           zIndex: 2,
           // Extra mobile spacing keeps list rows visible above MiniPlayer + BottomNav.
           paddingBottom: showShell ? (isDesktop ? '24px' : (isNowPlayingRoute ? '96px' : '170px')) : '24px',
-          paddingRight: showShell ? (isDesktop ? '360px' : '0px') : '0px',
+          paddingRight: showMiniPlayer ? (isDesktop ? '360px' : '0px') : '0px',
           transition: 'padding-right 0.25s ease',
         }}
       >

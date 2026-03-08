@@ -6,7 +6,7 @@ import './index.css';
 // Register SW in production for offline shell support.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
-    const cleanupKey = 'raabta-sw-cleanup-v2';
+    const cleanupKey = 'raabta-sw-cleanup-v3';
 
     if (!sessionStorage.getItem(cleanupKey)) {
       const regs = await navigator.serviceWorker.getRegistrations();

@@ -1,5 +1,5 @@
-const CACHE_NAME = 'music-app-v3';
-const AUDIO_CACHE = 'music-audio-v3';
+const CACHE_NAME = 'music-app-v4';
+const AUDIO_CACHE = 'music-audio-v4';
 
 const APP_SHELL = [
   '/',
