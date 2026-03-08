@@ -141,9 +141,7 @@ const Search = () => {
         const directRes = await fetch(`${PUBLIC_JIOSAAVN_SEARCH}?query=${encodeURIComponent(q)}&limit=10`);
         if (directRes.ok) {
           const directData = await directRes.json();
-          const mapped = (directData?.data?.results || [])
-            .map(mapJioSongToAppSong)
-            .filter((song) => song.url || song.stream_url);
+          const mapped = (directData?.data?.results || []).map(mapJioSongToAppSong);
           if (mapped.length > 0) {
             setResults(mapped);
             setLoading(false);
