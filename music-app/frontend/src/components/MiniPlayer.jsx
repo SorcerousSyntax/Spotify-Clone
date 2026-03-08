@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import usePlayerStore from '../store/playerStore';
@@ -44,24 +44,6 @@ const ScrollingTitle = ({ title, fontSize = 18 }) => {
 };
 
 const MiniPlayer = () => {
-  const computeDesktopMode = () => {
-    if (typeof window === 'undefined') return false;
-    if (window.matchMedia) {
-      return window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
-    }
-    return window.innerWidth >= 1024;
-  };
-
-  const [isDesktop, setIsDesktop] = useState(
-    computeDesktopMode()
-  );
-
-  useEffect(() => {
-    const onResize = () => setIsDesktop(computeDesktopMode());
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
   const navigate = useNavigate();
   const currentSong = usePlayerStore((s) => s.currentSong);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
@@ -80,30 +62,30 @@ const MiniPlayer = () => {
         <motion.div
           style={{
             position: 'fixed',
-            bottom: isDesktop ? 'auto' : 64,
-            top: isDesktop ? 16 : 'auto',
+            bottom: 64,
+            top: 'auto',
             right: 16,
-            left: isDesktop ? 'auto' : 16,
-            width: isDesktop ? 344 : 'auto',
-            height: isDesktop ? 'calc(100dvh - 32px)' : 'auto',
+            left: 16,
+            width: 'auto',
+            height: 'auto',
             zIndex: 3,
             borderRadius: 16,
             overflow: 'hidden',
           }}
-          initial={isDesktop ? { x: 60, opacity: 0 } : { y: 80, opacity: 0 }}
-          animate={isDesktop ? { x: 0, opacity: 1 } : { y: 0, opacity: 1 }}
-          exit={isDesktop ? { x: 60, opacity: 0 } : { y: 80, opacity: 0 }}
+          initial={{ y: 80, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 80, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 350, damping: 30 }}
         >
           {/* Glass bg */}
           <div style={{
-            background: isDesktop ? 'rgba(0,0,0,0.78)' : 'rgba(0,0,0,0.92)',
+            background: 'rgba(0,0,0,0.92)',
             backdropFilter: 'blur(40px)',
             WebkitBackdropFilter: 'blur(40px)',
             border: '1px solid rgba(255,255,255,0.16)',
             borderRadius: 16,
             boxShadow: '0 18px 44px rgba(0,0,0,0.5)',
-            height: isDesktop ? '100%' : 'auto',
+            height: 'auto',
             display: 'flex',
             flexDirection: 'column',
           }}>
@@ -119,106 +101,11 @@ const MiniPlayer = () => {
             <div
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: isDesktop ? '16px' : '10px 14px', cursor: 'pointer',
+                padding: '10px 14px', cursor: 'pointer',
               }}
               onClick={() => navigate('/now-playing')}
             >
-              {isDesktop ? (
-                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                      Now Playing
-                    </p>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate('/now-playing'); }}
-                      style={{ border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.72)', cursor: 'pointer' }}
-                    >
-                      ↗
-                    </button>
-                  </div>
-
-                  <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)' }}>
-                    <img
-                      src={currentSong.album_art_url || '/placeholder-album.svg'}
-                      alt={decodeSongTitle(currentSong.title || '')}
-                      style={{ width: '100%', aspectRatio: '1', objectFit: 'cover' }}
-                    />
-                  </div>
-
-                  <div style={{ marginTop: 12 }}>
-                    <ScrollingTitle title={currentSong.title || ''} fontSize={34} />
-                    <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: 6 }}>
-                      {(currentSong.primaryArtists || currentSong.artist || '').replace(/&amp;/g, '&')}
-                    </p>
-                  </div>
-
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ height: 4, borderRadius: 999, background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
-                      <motion.div style={{ width: `${progressPercent}%`, height: '100%', background: '#fff' }} />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => { e.stopPropagation(); toggleLike(currentSong.id, currentSong); }}
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
-                        border: '1px solid rgba(255,255,255,0.18)',
-                        background: isLiked ? 'rgba(255,255,255,0.22)' : 'transparent',
-                        color: '#fff',
-                        display: 'grid',
-                        placeItems: 'center',
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor">
-                        <path d="M12 21s-6.716-4.35-9.193-8.014C1.38 10.88 2.1 7.9 4.71 6.58c2.027-1.026 4.444-.43 5.934 1.22A4.79 4.79 0 0112 9.36a4.79 4.79 0 011.356-1.56c1.49-1.65 3.907-2.246 5.934-1.22 2.61 1.32 3.33 4.3 1.903 6.406C18.716 16.65 12 21 12 21z" strokeWidth="1.8" />
-                      </svg>
-                    </motion.button>
-
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                      style={{
-                        width: 46,
-                        height: 46,
-                        borderRadius: '50%',
-                        border: '1px solid rgba(255,255,255,0.22)',
-                        background: '#fff',
-                        color: '#000',
-                        display: 'grid',
-                        placeItems: 'center',
-                      }}
-                    >
-                      {isPlaying ? (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
-                      ) : (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-                      )}
-                    </motion.button>
-
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate('/library'); }}
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
-                        border: '1px solid rgba(255,255,255,0.18)',
-                        background: 'transparent',
-                        color: '#fff',
-                        display: 'grid',
-                        placeItems: 'center',
-                      }}
-                    >
-                      ≡
-                    </button>
-                  </div>
-
-                </div>
-              ) : (
-                <>
+              <>
                   {/* Slowly rotating album art */}
                   <div style={{
                     width: 48, height: 48, borderRadius: 10, overflow: 'hidden', flexShrink: 0,
@@ -289,8 +176,7 @@ const MiniPlayer = () => {
                       )}
                     </motion.button>
                   </div>
-                </>
-              )}
+              </>
             </div>
           </div>
         </motion.div>
