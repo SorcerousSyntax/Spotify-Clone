@@ -30,6 +30,13 @@ const PageTransition = ({ children }) => (
   </motion.div>
 );
 
+const isEmailRateLimitError = (message = '') => {
+  const text = String(message || '').toLowerCase();
+  return text.includes('email rate limit')
+    || text.includes('over_email_send_rate_limit')
+    || (text.includes('rate') && text.includes('email'));
+};
+
 const ProtectedRoute = ({ session, authReady, children }) => {
   if (!authReady) {
     return <PageSkeleton />;
@@ -82,7 +89,16 @@ const AuthPage = ({ mode = 'login' }) => {
       if (isRegister) {
         const { error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) {
-          setError(signUpError.message);
+          if (isEmailRateLimitError(signUpError.message)) {
+            const { error: fallbackLoginError } = await supabase.auth.signInWithPassword({ email, password });
+            if (fallbackLoginError) {
+              setError('Email send limit reached. Try logging in, or wait a few minutes before creating a new account.');
+            } else {
+              setMessage('Email limit reached, but account already exists and is now logged in.');
+            }
+          } else {
+            setError(signUpError.message);
+          }
         } else {
           setMessage('Account created. Check email if confirmation is enabled.');
         }
@@ -425,7 +441,16 @@ const ProfilePage = () => {
       if (isSignup) {
         const { error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) {
-          setError(signUpError.message);
+          if (isEmailRateLimitError(signUpError.message)) {
+            const { error: fallbackLoginError } = await supabase.auth.signInWithPassword({ email, password });
+            if (fallbackLoginError) {
+              setError('Email send limit reached. Try logging in, or wait a few minutes before creating a new account.');
+            } else {
+              setMessage('Email limit reached, but account already exists and is now logged in.');
+            }
+          } else {
+            setError(signUpError.message);
+          }
         } else {
           setMessage('Signup successful. Check your email if confirmation is enabled.');
         }
