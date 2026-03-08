@@ -5,8 +5,7 @@ import SkeletonLoader from '../components/SkeletonLoader';
 import useCardTilt from '../hooks/useCardTilt';
 import { decodeSongTitle } from '../lib/text';
 
-const API_BASE = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
-const buildApiUrl = (path) => `${API_BASE}${path}`;
+const buildApiUrl = (path) => path;
 const PUBLIC_JIOSAAVN_SEARCH = 'https://jiosavan-api2.vercel.app/api/search/songs';
 
 const mapJioSongToAppSong = (song = {}) => ({
