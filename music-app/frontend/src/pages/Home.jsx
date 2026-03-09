@@ -7,32 +7,32 @@ import PlaylistCover from '../components/PlaylistCover';
 import { supabase } from '../lib/supabase';
 import { decodeSongTitle } from '../lib/text';
 import useColorExtract from '../hooks/useColorExtract';
+import { OFFLINE_AUDIO_CACHE_NAME, getSongAudioUrlCandidates } from '../lib/offlineAudio';
 
 const isPlayableSong = (song) => Boolean(song?.stream_url || song?.r2_url);
 
-const Header = () => <div style={{ height: 18 }} />;
+const Header = () => <div style={{ height: 8 }} />;
 
-const SectionTitle = ({ text }) => (
-  <motion.p
-    initial={{ opacity: 0, x: -10 }}
+const SectionTitle = ({ text, accent }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -12 }}
     whileInView={{ opacity: 1, x: 0 }}
     viewport={{ once: true, margin: '-20px' }}
-    transition={{ duration: 0.4, ease: 'easeOut' }}
-    style={{
-      fontFamily: "'DM Mono', monospace",
-      fontSize: 10,
-      letterSpacing: '0.2em',
-      textTransform: 'uppercase',
-      color: 'rgba(255,255,255,0.45)',
-      marginBottom: 16,
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
-      paddingBottom: 8,
-      paddingLeft: 10,
-      borderLeft: '2px solid rgba(255,255,255,0.18)',
-    }}
+    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+    style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}
   >
-    {text}
-  </motion.p>
+    <div style={{ width: 3, height: 18, borderRadius: 2, background: accent || 'rgba(255,255,255,0.25)', flexShrink: 0 }} />
+    <span style={{
+      fontFamily: "'Space Grotesk', sans-serif",
+      fontSize: 11,
+      fontWeight: 600,
+      letterSpacing: '0.18em',
+      textTransform: 'uppercase',
+      color: 'rgba(255,255,255,0.5)',
+    }}>
+      {text}
+    </span>
+  </motion.div>
 );
 
 const getMoodConfig = (hour, userName = 'there') => {
@@ -113,7 +113,10 @@ const Home = () => {
         || user.email?.split('@')?.[0]
         || 'there';
 
-      setBannerName(String(candidate).trim() || 'there');
+      // Use first name only — strip numbers/dots/underscores
+      const firstName = String(candidate).trim().split(/[\s._@+\d]+/).filter(Boolean)[0] || 'there';
+      const capitalized = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+      setBannerName(capitalized);
     };
 
     loadBannerName().catch(() => {});
@@ -133,6 +136,34 @@ const Home = () => {
   const { dominantColor } = useColorExtract(currentSong?.album_art_url);
   const [dr, dg, db] = dominantColor;
   const accentA = (a) => `rgba(${dr},${dg},${db},${a})`;
+
+  // Offline songs detection
+  const [offlineSongIds, setOfflineSongIds] = useState([]);
+  const savedSongIds = useMemo(() => {
+    const ids = new Set(likedSongIds);
+    playlists.forEach((p) => p.songIds.forEach((id) => ids.add(id)));
+    return ids;
+  }, [likedSongIds, playlists]);
+  const allSongsForOffline = useMemo(
+    () => [...savedSongIds].map((id) => songsById[id]).filter(Boolean),
+    [savedSongIds, songsById]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!window.caches || allSongsForOffline.length === 0) { setOfflineSongIds([]); return; }
+    caches.open(OFFLINE_AUDIO_CACHE_NAME).then((cache) =>
+      Promise.all(allSongsForOffline.map(async (song) => {
+        for (const url of getSongAudioUrlCandidates(song)) {
+          if (await cache.match(url)) return song.id;
+        }
+        return null;
+      }))
+    ).then((ids) => {
+      if (!cancelled) setOfflineSongIds(ids.filter(Boolean));
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [allSongsForOffline]);
 
   useEffect(() => {
     let mounted = true;
@@ -227,22 +258,27 @@ const Home = () => {
 
   return (
     <div style={{ position: 'relative', zIndex: 2, paddingBottom: 30 }}>
-      {/* Ambient floating color orbs */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none', overflow: 'hidden' }}>
+      {/* Ambient floating color orbs — more visible */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
         <motion.div
-          style={{ position: 'absolute', top: '-8%', left: '-10%', width: 360, height: 360, borderRadius: '50%', background: `radial-gradient(circle, ${accentA(0.14)} 0%, transparent 70%)`, filter: 'blur(50px)' }}
-          animate={{ x: [0, 28, 0], y: [0, -18, 0] }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ position: 'absolute', top: '-5%', left: '-8%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(circle, ${accentA(0.28)} 0%, transparent 65%)`, filter: 'blur(60px)' }}
+          animate={{ x: [0, 40, 0], y: [0, -24, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
-          style={{ position: 'absolute', top: '28%', right: '-12%', width: 300, height: 300, borderRadius: '50%', background: `radial-gradient(circle, ${mood.glow} 0%, transparent 70%)`, filter: 'blur(56px)' }}
-          animate={{ x: [0, -32, 0], y: [0, 24, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
+          style={{ position: 'absolute', top: '25%', right: '-10%', width: 420, height: 420, borderRadius: '50%', background: `radial-gradient(circle, ${mood.glow.replace('0.35', '0.5')} 0%, transparent 65%)`, filter: 'blur(55px)' }}
+          animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.12, 1] }}
+          transition={{ duration: 17, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
         />
         <motion.div
-          style={{ position: 'absolute', bottom: '10%', left: '20%', width: 260, height: 260, borderRadius: '50%', background: `radial-gradient(circle, ${accentA(0.1)} 0%, transparent 70%)`, filter: 'blur(42px)' }}
-          animate={{ x: [0, 16, 0], y: [0, -14, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 8 }}
+          style={{ position: 'absolute', bottom: '8%', left: '15%', width: 380, height: 380, borderRadius: '50%', background: `radial-gradient(circle, ${accentA(0.22)} 0%, transparent 65%)`, filter: 'blur(50px)' }}
+          animate={{ x: [0, 20, 0], y: [0, -20, 0], scale: [1, 1.08, 1] }}
+          transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut', delay: 7 }}
+        />
+        <motion.div
+          style={{ position: 'absolute', top: '55%', left: '-5%', width: 300, height: 300, borderRadius: '50%', background: `radial-gradient(circle, ${mood.glow.replace('0.35', '0.3')} 0%, transparent 65%)`, filter: 'blur(44px)' }}
+          animate={{ x: [0, 28, 0], y: [0, -16, 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut', delay: 11 }}
         />
       </div>
       <Header />
@@ -254,18 +290,20 @@ const Home = () => {
         style={{
           margin: '0 auto 40px',
           width: 'min(980px, calc(100vw - 24px))',
-          borderRadius: 12,
-          background: mood.gradient,
+          borderRadius: 18,
+          background: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
           border: `1px solid ${mood.glow}`,
           borderLeft: `3px solid ${mood.glowColor}`,
           overflow: 'hidden',
-          padding: '28px 32px',
+          padding: '28px 22px',
           position: 'relative',
           display: 'grid',
           gridTemplateColumns: '3fr 2fr',
           gap: 16,
           alignItems: 'center',
-          boxShadow: `0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)`,
+          boxShadow: `0 12px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 0 1px rgba(255,255,255,0.03)`,
         }}
       >
         <motion.div
@@ -289,9 +327,10 @@ const Home = () => {
         >
           <p style={{
             margin: 0,
-            fontFamily: "'DM Mono', monospace",
-            fontSize: 10,
-            letterSpacing: '0.15em',
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: mood.glowColor,
             marginBottom: 8,
@@ -302,11 +341,12 @@ const Home = () => {
           <p style={{
             margin: '8px 0 10px',
             fontFamily: "'Bebas Neue', cursive",
-            fontSize: 'clamp(28px, 4vw, 48px)',
-            letterSpacing: '0.04em',
-            lineHeight: 1.1,
+            fontSize: 'clamp(26px, 5vw, 50px)',
+            letterSpacing: '0.03em',
+            lineHeight: 1.08,
             color: '#fff',
             marginBottom: 20,
+            textShadow: `0 0 40px ${mood.glow}`,
           }}>
             {mood.message}
           </p>
@@ -318,21 +358,23 @@ const Home = () => {
               playSong(suggestedSong, 0, list);
             }}
             style={{
-              borderRadius: 4,
+              borderRadius: 8,
               border: `1px solid ${mood.glow}`,
-              background: 'transparent',
+              background: `${mood.glow}`,
               color: mood.glowColor,
-              padding: '10px 24px',
+              padding: '11px 20px',
               cursor: suggestedSong ? 'pointer' : 'default',
-              fontFamily: "'DM Mono', monospace",
-              fontSize: 11,
-              letterSpacing: '0.1em',
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: 12,
+              fontWeight: 600,
+              letterSpacing: '0.06em',
               textTransform: 'uppercase',
               textAlign: 'left',
               maxWidth: 360,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
+              backdropFilter: 'blur(8px)',
             }}
             title={suggestedSong ? decodeSongTitle(suggestedSong.title || suggestedSong.name || '') : 'Finding recommendation...'}
           >
@@ -381,7 +423,7 @@ const Home = () => {
       </motion.section>
 
       <section style={{ width: 'min(980px, calc(100vw - 24px))', margin: '0 auto' }}>
-        <SectionTitle text="Recently Played" />
+        <SectionTitle text="Recently Played" accent={`rgb(${dr},${dg},${db})`} />
         {recentSongs.length > 0 ? (
           <motion.div
             style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }}
@@ -413,7 +455,48 @@ const Home = () => {
       </section>
 
       <section style={{ width: 'min(980px, calc(100vw - 24px))', margin: '20px auto 0' }}>
-        <SectionTitle text="Your Playlists" />
+        <SectionTitle text="Your Playlists" accent={mood.glowColor} />
+        {/* Offline Songs — pinned at top */}
+        {offlineSongIds.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ marginBottom: 16 }}
+          >
+            <motion.button
+              onClick={() => navigate('/library')}
+              whileHover={{ scale: 1.03, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '14px 16px',
+                borderRadius: 14,
+                background: 'rgba(109,40,217,0.18)',
+                border: '1px solid rgba(167,139,250,0.35)',
+                backdropFilter: 'blur(12px)',
+                width: '100%',
+                cursor: 'pointer',
+                textAlign: 'left',
+              }}
+            >
+              <div style={{
+                width: 46, height: 46, borderRadius: 10, flexShrink: 0,
+                background: 'linear-gradient(135deg, #a78bfa, #6d28d9)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 20,
+              }}>
+                📥
+              </div>
+              <div>
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 700, color: '#fff', margin: 0 }}>Saved Offline</p>
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: 'rgba(167,139,250,0.8)', margin: '2px 0 0' }}>{offlineSongIds.length} songs ready without internet</p>
+              </div>
+              <div style={{ marginLeft: 'auto', fontSize: 16, color: 'rgba(167,139,250,0.7)' }}>›</div>
+            </motion.button>
+          </motion.div>
+        )}
         {playlists.length > 0 ? (
           <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }} className="hide-scrollbar">
             {playlists.map((playlist) => (
@@ -443,11 +526,12 @@ const Home = () => {
                 <p
                   style={{
                     marginTop: 8,
-                    fontFamily: "'Bebas Neue', cursive",
-                    fontSize: 14,
-                    letterSpacing: '0.05em',
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    letterSpacing: '0.02em',
                     color: '#fff',
-                    lineHeight: 1.15,
+                    lineHeight: 1.2,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',

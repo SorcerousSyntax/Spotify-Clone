@@ -54,7 +54,7 @@ html, body {
   overflow-x: hidden;
   background: var(--bg);
   color: var(--text-primary);
-  font-family: var(--font-mono);
+  font-family: 'Space Grotesk', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   cursor: none;
@@ -62,7 +62,7 @@ html, body {
 
 /* Keep a consistent, readable default font across UI controls. */
 body, button, input, textarea, select, p, span, h1, h2, h3, h4, h5, h6, label, a, li {
-  font-family: var(--font-mono);
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 400;
 }
 

@@ -122,6 +122,7 @@ const Library = () => {
   const location = useLocation();
   const [activeFilter, setActiveFilter] = useState('Playlists');
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
+  const [offlineOpen, setOfflineOpen] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isOnline, setIsOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
@@ -224,6 +225,7 @@ const Library = () => {
   }, [allSongs]);
 
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId) || null;
+  const showingOffline = offlineOpen && !selectedPlaylist;
 
   const playlistSongs = useMemo(
     () => selectedPlaylist
@@ -380,70 +382,112 @@ const Library = () => {
       </motion.div>
 
       <section style={{ padding: '0 16px' }}>
-        {!selectedPlaylist && (
-          <div
-            style={{
-              marginBottom: 14,
-              borderRadius: 12,
-              border: isOnline ? '1px solid rgba(0,255,106,0.25)' : '1px solid rgba(255,166,0,0.35)',
-              background: isOnline ? 'rgba(0,255,106,0.08)' : 'rgba(255,166,0,0.08)',
-              padding: '10px 12px',
-            }}
-          >
-            <p
+      {/* Playlist list view */}
+        {!selectedPlaylist && !showingOffline && (
+          <>
+            {/* Pinned Offline Playlist Card */}
+            <motion.button
+              onClick={() => setOfflineOpen(true)}
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 340, damping: 26 }}
               style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: 10,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: isOnline ? '#7effb6' : '#ffcf7e',
-                marginBottom: 4,
+                display: 'flex', alignItems: 'center', gap: 16,
+                padding: '14px 16px',
+                borderRadius: 14,
+                background: offlineSongs.length > 0
+                  ? 'rgba(109,40,217,0.18)'
+                  : 'rgba(255,255,255,0.03)',
+                border: offlineSongs.length > 0
+                  ? '1px solid rgba(167,139,250,0.38)'
+                  : '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(12px)',
+                width: '100%', cursor: 'pointer', marginBottom: 8, textAlign: 'left',
               }}
             >
-              {isOnline ? 'Online' : 'Offline Mode Active'}
-            </p>
-            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
-              {offlineSongs.length} saved offline song{offlineSongs.length === 1 ? '' : 's'} ready to play.
-            </p>
-          </div>
+              <div style={{
+                width: 52, height: 52, borderRadius: 10, flexShrink: 0,
+                background: offlineSongs.length > 0
+                  ? 'linear-gradient(135deg, #a78bfa, #6d28d9)'
+                  : 'rgba(255,255,255,0.06)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 22,
+              }}>
+                📥
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 700, color: '#fff', margin: 0 }}>Saved Offline</p>
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 500, color: offlineSongs.length > 0 ? 'rgba(167,139,250,0.8)' : 'rgba(255,255,255,0.28)', margin: '3px 0 0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {offlineSongs.length} song{offlineSongs.length !== 1 ? 's' : ''} • Pinned
+                </p>
+              </div>
+              <span style={{ color: 'rgba(167,139,250,0.6)', fontSize: 18, flexShrink: 0 }}>›</span>
+            </motion.button>
+
+            {/* Small online status pill */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '5px 12px', borderRadius: 999,
+              background: isOnline ? 'rgba(0,255,106,0.08)' : 'rgba(255,166,0,0.08)',
+              border: isOnline ? '1px solid rgba(0,255,106,0.2)' : '1px solid rgba(255,166,0,0.25)',
+              marginBottom: 16,
+            }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: isOnline ? '#00ff6a' : '#ffa600', flexShrink: 0 }} />
+              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 500, color: isOnline ? '#7effb6' : '#ffcf7e' }}>
+                {isOnline ? 'Online' : 'Offline Mode'}
+              </span>
+            </div>
+
+            {playlists.map((playlist, i) => (
+              <PlaylistCard
+                key={playlist.id}
+                playlist={playlist}
+                songsById={songsById}
+                index={i}
+                onOpen={() => setSelectedPlaylistId(playlist.id)}
+                onRename={() => onRenamePlaylist(playlist)}
+                onDelete={() => onDeletePlaylist(playlist)}
+                canManage={playlist.id !== LIKED_SONGS_PLAYLIST_ID}
+              />
+            ))}
+
+            {playlists.length === 0 && (
+              <p style={{
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: 13,
+                color: 'rgba(255,255,255,0.35)',
+                textAlign: 'center',
+                padding: '30px 0',
+              }}>
+                No playlists yet. Create one from the button above.
+              </p>
+            )}
+          </>
         )}
 
-        {!selectedPlaylist && offlineSongs.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(0,255,65,0.6)', marginBottom: 8 }}>
-              Saved Offline
-            </p>
-            {offlineSongs.slice(0, 20).map((song, i) => (
+        {/* Offline Songs view */}
+        {showingOffline && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <button
+                onClick={() => setOfflineOpen(false)}
+                style={{ border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 500 }}
+              >
+                ← Back
+              </button>
+              <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 24, color: '#a78bfa' }}>SAVED OFFLINE</p>
+              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>{offlineSongs.length} songs</span>
+            </div>
+            {offlineSongs.length === 0 ? (
+              <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '30px 0' }}>
+                No offline songs yet. Save songs from the Now Playing screen.
+              </p>
+            ) : offlineSongs.map((song, i) => (
               <div key={`offline-${song.id}`} style={{ marginBottom: 8 }}>
                 <SongRow song={song} index={i} showIndex onClick={(s, idx) => playSong(s, idx, offlineSongs)} />
               </div>
             ))}
-          </div>
-        )}
-
-        {!selectedPlaylist && playlists.map((playlist, i) => (
-          <PlaylistCard
-            key={playlist.id}
-            playlist={playlist}
-            songsById={songsById}
-            index={i}
-            onOpen={() => setSelectedPlaylistId(playlist.id)}
-            onRename={() => onRenamePlaylist(playlist)}
-            onDelete={() => onDeletePlaylist(playlist)}
-            canManage={playlist.id !== LIKED_SONGS_PLAYLIST_ID}
-          />
-        ))}
-
-        {!selectedPlaylist && playlists.length === 0 && (
-          <p style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: 12,
-            color: 'rgba(255,255,255,0.4)',
-            textAlign: 'center',
-            padding: '30px 0',
-          }}>
-            No playlists yet. Create one from the button above.
-          </p>
+          </>
         )}
 
         {selectedPlaylist && (

@@ -60,10 +60,67 @@ const PublicOnlyRoute = ({ session, authReady, children }) => {
   return children;
 };
 
+const TopBar = ({ session }) => {
+  const raw =
+    session?.user?.user_metadata?.full_name ||
+    session?.user?.user_metadata?.name ||
+    session?.user?.email?.split('@')[0] ||
+    '';
+  const firstName = raw.split(/[\s._@+\d]+/).filter(Boolean)[0] || '';
+  const display = firstName
+    ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
+    : 'You';
+  const initial = display[0] || '♪';
+  return (
+    <motion.div
+      initial={{ y: -44, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 60,
+        height: 52,
+        backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
+        background: 'rgba(0,0,0,0.76)',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 20px',
+      }}
+    >
+      <span style={{
+        fontFamily: "'Bebas Neue', cursive",
+        fontSize: 22, letterSpacing: '0.14em',
+        color: '#fff', lineHeight: 1,
+      }}>
+        RAABTA
+      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: 13, fontWeight: 500,
+          color: 'rgba(255,255,255,0.5)',
+        }}>
+          {display}
+        </span>
+        <div style={{
+          width: 30, height: 30, borderRadius: '50%',
+          background: 'linear-gradient(135deg, #a78bfa, #6d28d9)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 13, fontWeight: 700, color: '#fff',
+          fontFamily: "'Space Grotesk', sans-serif",
+          flexShrink: 0, letterSpacing: 0,
+        }}>
+          {initial}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const AuthPage = ({ mode = 'login' }) => {
   const isRegister = mode === 'register';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -86,7 +143,10 @@ const AuthPage = ({ mode = 'login' }) => {
     setLoading(true);
     try {
       if (isRegister) {
-        const { error: signUpError } = await supabase.auth.signUp({ email, password });
+        const { error: signUpError } = await supabase.auth.signUp({
+          email, password,
+          options: displayName.trim() ? { data: { full_name: displayName.trim() } } : undefined,
+        });
         if (signUpError) {
           if (isEmailRateLimitError(signUpError.message)) {
             const { error: fallbackLoginError } = await supabase.auth.signInWithPassword({ email, password });
@@ -139,6 +199,19 @@ const AuthPage = ({ mode = 'login' }) => {
           {isRegister ? 'Create a new account to continue.' : 'Sign in to access Raabta.'}
         </p>
 
+        {isRegister && (
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Your name (e.g. Harsh)"
+            style={{
+              width: '100%', padding: '11px 12px', borderRadius: 10,
+              border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)',
+              color: '#fff', outline: 'none', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13,
+            }}
+          />
+        )}
         <input
           type="email"
           value={email}
@@ -147,7 +220,7 @@ const AuthPage = ({ mode = 'login' }) => {
           style={{
             width: '100%', padding: '11px 12px', borderRadius: 10,
             border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)',
-            color: '#fff', outline: 'none', fontFamily: "'DM Mono', monospace", fontSize: 12,
+            color: '#fff', outline: 'none', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13,
           }}
         />
         <input
@@ -158,7 +231,7 @@ const AuthPage = ({ mode = 'login' }) => {
           style={{
             width: '100%', padding: '11px 12px', borderRadius: 10,
             border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)',
-            color: '#fff', outline: 'none', fontFamily: "'DM Mono', monospace", fontSize: 12,
+            color: '#fff', outline: 'none', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13,
           }}
         />
 
@@ -350,11 +423,15 @@ const AppInner = () => {
       <div className="scanlines" />
       <div className="noise-overlay" />
 
+      {/* Sticky top bar */}
+      {showShell && !isNowPlayingRoute && <TopBar session={session} />}
+
       {/* z-2: Page content */}
       <main
         style={{
           position: 'relative',
           zIndex: 2,
+          paddingTop: showShell && !isNowPlayingRoute ? 52 : 0,
           // Extra mobile spacing keeps list rows visible above MiniPlayer + BottomNav.
           paddingBottom: showShell ? (isDesktop ? '24px' : (isNowPlayingRoute ? '96px' : '170px')) : '24px',
           paddingRight: '0px',
