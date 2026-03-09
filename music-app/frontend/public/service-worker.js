@@ -1,5 +1,7 @@
 const CACHE_NAME = 'music-app-v5';
 const AUDIO_CACHE = 'music-audio-v5';
+// User-saved offline songs — must NEVER be wiped by the activate cleanup
+const SAVED_SONGS_CACHE = 'saved-songs-v1';
 
 const APP_SHELL = [
   '/',
@@ -23,7 +25,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME && key !== AUDIO_CACHE)
+          .filter((key) => key !== CACHE_NAME && key !== AUDIO_CACHE && key !== SAVED_SONGS_CACHE)
           .map((key) => caches.delete(key))
       );
     })
@@ -64,18 +66,24 @@ self.addEventListener('fetch', (event) => {
 
   if (isAudioRequest) {
     event.respondWith(
-      caches.open(AUDIO_CACHE).then(async (cache) => {
-        const cached = await cache.match(request);
+      caches.open(AUDIO_CACHE).then(async (audioCache) => {
+        const cached = await audioCache.match(request);
         if (cached) return cached;
+
+        // Also check the explicit user-saved songs cache
+        const savedCache = await caches.open(SAVED_SONGS_CACHE);
+        const savedCached = await savedCache.match(request);
+        if (savedCached) return savedCached;
 
         try {
           const response = await fetch(request);
           if (response.ok) {
-            cache.put(request, response.clone());
+            audioCache.put(request, response.clone());
           }
           return response;
         } catch {
-          const fallback = await cache.match(request);
+          // Last resort: try both caches with any matching URL
+          const fallback = await caches.match(request);
           if (fallback) return fallback;
           throw new Error('Audio unavailable offline');
         }

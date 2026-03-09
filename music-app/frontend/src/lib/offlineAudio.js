@@ -85,6 +85,19 @@ export const cacheSongForOffline = async (song = {}) => {
     throw new Error(`Save failed (${response.status})`);
   }
 
-  await Promise.all(candidates.map((url) => cache.put(url, response.clone())));
+  // Read the audio into memory once, then store under every candidate URL.
+  // Using response.clone() for many parallel puts can fail once the body stream
+  // is consumed, so we materialize it as a Blob first.
+  const blob = await response.blob();
+
+  await Promise.all(
+    candidates.map((url) => {
+      const storedResponse = new Response(blob, {
+        status: 200,
+        headers: { 'Content-Type': blob.type || 'audio/mpeg' },
+      });
+      return cache.put(url, storedResponse);
+    })
+  );
   return { ok: true, reason: 'saved' };
 };
