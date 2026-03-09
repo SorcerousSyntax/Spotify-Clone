@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import usePlayerStore from '../store/playerStore';
 import { decodeSongTitle } from '../lib/text';
+import useColorExtract from '../hooks/useColorExtract';
 
-const ScrollingTitle = ({ title, fontSize = 18 }) => {
+const ScrollingTitle = ({ title, fontSize = 14 }) => {
   const safeTitle = decodeSongTitle(title || '');
   const shouldScroll = safeTitle.length > 22;
 
@@ -12,32 +13,18 @@ const ScrollingTitle = ({ title, fontSize = 18 }) => {
     <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', width: '100%' }}>
       {shouldScroll ? (
         <motion.div
-          style={{ display: 'flex', width: 'max-content', gap: 28 }}
+          style={{ display: 'flex', width: 'max-content', gap: 32 }}
           animate={{ x: ['0%', '-50%'] }}
-          transition={{ duration: 9, ease: 'linear', repeat: Infinity }}
+          transition={{ duration: 10, ease: 'linear', repeat: Infinity }}
         >
-          <span style={{ fontSize, letterSpacing: '0.04em', color: '#ffffff', lineHeight: 1.15, fontFamily: "'Bebas Neue', cursive", fontWeight: 700 }}>
-            {safeTitle}
-          </span>
-          <span style={{ fontSize, letterSpacing: '0.04em', color: '#ffffff', lineHeight: 1.15, fontFamily: "'Bebas Neue', cursive", fontWeight: 700 }}>
-            {safeTitle}
-          </span>
+          {[safeTitle, safeTitle].map((t, i) => (
+            <span key={i} style={{ fontSize, letterSpacing: '0.03em', color: '#fff', fontFamily: "'Bebas Neue', cursive", fontWeight: 700, lineHeight: 1.1 }}>
+              {t}
+            </span>
+          ))}
         </motion.div>
       ) : (
-        <p
-          style={{
-            fontSize,
-            letterSpacing: '0.04em',
-            color: '#ffffff',
-            fontFamily: "'Bebas Neue', cursive",
-            fontWeight: 700,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            lineHeight: 1.15,
-            margin: 0,
-          }}
-        >
+        <p style={{ fontSize, letterSpacing: '0.03em', color: '#fff', fontFamily: "'Bebas Neue', cursive", fontWeight: 700, lineHeight: 1.1, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {safeTitle}
         </p>
       )}
@@ -52,158 +39,179 @@ const MiniPlayer = () => {
   const progress = usePlayerStore((s) => s.progress);
   const duration = usePlayerStore((s) => s.duration);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
+  const nextSong = usePlayerStore((s) => s.nextSong);
+  const prevSong = usePlayerStore((s) => s.prevSong);
   const toggleLike = usePlayerStore((s) => s.toggleLike);
   const likedSongIds = usePlayerStore((s) => s.likedSongIds);
 
+  const { dominantColor } = useColorExtract(currentSong?.album_art_url);
+
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
   const isLiked = currentSong ? likedSongIds.has(currentSong.id) : false;
+
+  const [dr, dg, db] = dominantColor;
+  const accent = `rgb(${dr},${dg},${db})`;
+  const accentA = (a) => `rgba(${dr},${dg},${db},${a})`;
 
   return (
     <AnimatePresence>
       {currentSong && (
         <motion.div
-          style={{
-            position: 'fixed',
-            bottom: 64,
-            top: 'auto',
-            right: 8,
-            left: 8,
-            width: 'auto',
-            height: 'auto',
-            zIndex: 99,
-            borderRadius: 8,
-            overflow: 'hidden',
-          }}
-          initial={{ y: 80, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 80, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+          style={{ position: 'fixed', bottom: 70, right: 8, left: 8, zIndex: 99, borderRadius: 20 }}
+          initial={{ y: 110, opacity: 0, scale: 0.9 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 110, opacity: 0, scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 36 }}
         >
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(0,255,65,0.12), rgba(0,0,0,0.95) 38%, rgba(0,0,0,0.98) 100%)',
-            backdropFilter: 'blur(30px)',
-            WebkitBackdropFilter: 'blur(30px)',
-            border: '1px solid rgba(0,255,65,0.22)',
-            borderRadius: 8,
-            boxShadow: '0 -4px 40px rgba(0,0,0,0.8), 0 0 26px rgba(0,255,65,0.16)',
-            height: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'relative',
-            transition: 'all 0.2s ease',
-          }}>
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                pointerEvents: 'none',
-                borderRadius: 8,
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.08), transparent 38%, rgba(0,0,0,0.22) 100%)',
-              }}
+          {/* Dynamic glass background */}
+          <motion.div
+            style={{ position: 'absolute', inset: 0, borderRadius: 20, overflow: 'hidden' }}
+            animate={{
+              background: `linear-gradient(135deg, ${accentA(0.36)} 0%, rgba(8,8,12,0.97) 50%, rgba(5,5,8,0.99) 100%)`,
+              boxShadow: `0 -4px 50px rgba(0,0,0,0.8), 0 0 0 1px ${accentA(0.3)}, inset 0 1px 0 rgba(255,255,255,0.11)`,
+            }}
+            transition={{ duration: 0.85, ease: 'easeInOut' }}
+          >
+            <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(44px)', WebkitBackdropFilter: 'blur(44px)' }} />
+          </motion.div>
+
+          {/* Left accent stripe */}
+          <motion.div
+            style={{ position: 'absolute', left: 0, top: 5, bottom: 5, width: 3, borderRadius: 2, zIndex: 2 }}
+            animate={{ background: accent, boxShadow: `0 0 20px ${accentA(0.85)}` }}
+            transition={{ duration: 0.85 }}
+          />
+
+          {/* Progress bar along top edge */}
+          <div style={{ position: 'absolute', top: 0, left: 3, right: 0, height: 2.5, background: 'rgba(255,255,255,0.05)', borderRadius: '0 20px 0 0', overflow: 'hidden', zIndex: 3 }}>
+            <motion.div
+              style={{ height: '100%' }}
+              animate={{ width: `${progressPercent}%`, background: accent, boxShadow: `0 0 10px ${accentA(0.9)}` }}
+              transition={{ duration: 0.4, ease: 'linear' }}
             />
+          </div>
+
+          {/* Content */}
+          <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 10, padding: '8px 8px 8px 14px' }}>
+
+            {/* Vinyl album art */}
             <div
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: 2,
-                background: '#00ff41',
-                borderRadius: '8px 0 0 8px',
-                boxShadow: '0 0 10px rgba(0,255,65,0.5)',
-                pointerEvents: 'none',
-              }}
-            />
-            <div
-              style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 16px', cursor: 'pointer', position: 'relative', zIndex: 1,
-              }}
               onClick={() => navigate('/now-playing')}
+              style={{ position: 'relative', flexShrink: 0, width: 46, height: 46, cursor: 'pointer' }}
             >
-              <>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 4, overflow: 'hidden', flexShrink: 0,
-                  }}>
-                    <img
-                      src={currentSong.album_art_url || '/placeholder-album.svg'}
-                      alt={decodeSongTitle(currentSong.title || '')}
-                      style={{
-                        width: '100%', height: '100%', objectFit: 'cover',
-                        borderRadius: 4,
-                        animation: 'none',
-                      }}
+              <motion.div
+                style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: `2px solid ${accentA(0.55)}`, boxShadow: `0 0 16px ${accentA(0.45)}` }}
+                animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
+                transition={isPlaying ? { duration: 7, ease: 'linear', repeat: Infinity } : { duration: 0.5 }}
+              />
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#080808' }} />
+              <motion.img
+                src={currentSong.album_art_url || '/placeholder-album.svg'}
+                alt=""
+                style={{ position: 'absolute', inset: 0, width: 46, height: 46, borderRadius: '50%', objectFit: 'cover' }}
+                animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
+                transition={isPlaying ? { duration: 7, ease: 'linear', repeat: Infinity } : { duration: 0.5 }}
+                key={currentSong.id}
+              />
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 9, height: 9, borderRadius: '50%', background: '#050505', border: '1.5px solid rgba(255,255,255,0.13)', zIndex: 4 }} />
+            </div>
+
+            {/* Title / Artist */}
+            <div onClick={() => navigate('/now-playing')} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
+              <ScrollingTitle title={currentSong.title || ''} fontSize={14} />
+              <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 10, color: 'rgba(255,255,255,0.38)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '2px 0 0' }}>
+                {(currentSong.primaryArtists || currentSong.artist || '').replace(/&amp;/g, '&')}
+              </p>
+            </div>
+
+            {/* Controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
+              {/* Like */}
+              <motion.button
+                whileTap={{ scale: 0.65 }}
+                onClick={() => toggleLike(currentSong.id, currentSong)}
+                style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer' }}
+              >
+                <motion.svg
+                  width="16" height="16" viewBox="0 0 24 24"
+                  animate={isLiked ? { scale: [1, 1.45, 1] } : {}}
+                  transition={{ duration: 0.22 }}
+                >
+                  <path
+                    d="M12 21s-6.716-4.35-9.193-8.014C1.38 10.88 2.1 7.9 4.71 6.58c2.027-1.026 4.444-.43 5.934 1.22A4.79 4.79 0 0112 9.36a4.79 4.79 0 011.356-1.56c1.49-1.65 3.907-2.246 5.934-1.22 2.61 1.32 3.33 4.3 1.903 6.406C18.716 16.65 12 21 12 21z"
+                    fill={isLiked ? '#ff4f6d' : 'none'}
+                    stroke={isLiked ? '#ff4f6d' : 'rgba(255,255,255,0.3)'}
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </motion.svg>
+              </motion.button>
+
+              {/* Prev */}
+              <motion.button
+                whileTap={{ scale: 0.78, x: -1 }}
+                onClick={() => prevSong()}
+                style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer' }}
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="rgba(255,255,255,0.55)">
+                  <path d="M11 7l-7 5 7 5V7zM20 7l-7 5 7 5V7z" />
+                </svg>
+              </motion.button>
+
+              {/* Play/Pause */}
+              <motion.button
+                whileTap={{ scale: 0.84 }}
+                onClick={togglePlay}
+                style={{ position: 'relative', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer' }}
+              >
+                <AnimatePresence>
+                  {isPlaying && (
+                    <motion.div
+                      style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: `1.5px solid ${accentA(0.55)}`, pointerEvents: 'none' }}
+                      initial={{ scale: 1, opacity: 0.6 }}
+                      animate={{ scale: 1.28, opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 1.4, repeat: Infinity, ease: 'easeOut' }}
                     />
-                  </div>
+                  )}
+                </AnimatePresence>
+                <motion.div
+                  style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  animate={{
+                    background: accent,
+                    boxShadow: isPlaying ? `0 0 24px ${accentA(0.6)}, 0 4px 14px rgba(0,0,0,0.5)` : `0 4px 14px rgba(0,0,0,0.5)`,
+                  }}
+                  transition={{ duration: 0.35 }}
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    {isPlaying ? (
+                      <motion.svg key="pause" width="14" height="14" fill="#000" viewBox="0 0 24 24"
+                        initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{ duration: 0.14 }}>
+                        <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
+                      </motion.svg>
+                    ) : (
+                      <motion.svg key="play" width="14" height="14" fill="#000" viewBox="0 0 24 24" style={{ marginLeft: 2 }}
+                        initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{ duration: 0.14 }}>
+                        <path d="M8 5v14l11-7z" />
+                      </motion.svg>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              </motion.button>
 
-                  {/* Song info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <ScrollingTitle title={currentSong.title || ''} fontSize={15} />
-                    <p style={{
-                      fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: 10, color: 'rgba(255,255,255,0.3)',
-                      fontWeight: 700,
-                      letterSpacing: '0.02em',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2,
-                    }}>
-                      {(currentSong.primaryArtists || currentSong.artist || '').replace(/&amp;/g, '&')}
-                    </p>
-                    <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', borderRadius: 1, marginTop: 6 }}>
-                      <div
-                        style={{
-                          height: '100%',
-                          width: `${progressPercent}%`,
-                          background: '#00ff41',
-                          boxShadow: '0 0 4px rgba(0,255,65,0.6)',
-                          transition: 'width 1s linear',
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Controls */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                    {/* Heart */}
-                    <motion.button
-                      whileTap={{ scale: 0.75 }}
-                      onClick={(e) => { e.stopPropagation(); toggleLike(currentSong.id, currentSong); }}
-                      style={{
-                        width: 36, height: 36, display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', background: 'transparent', border: 'none', outline: 'none',
-                      }}
-                    >
-                      <svg
-                        width="18" height="18"
-                        fill={isLiked ? '#ffffff' : 'none'}
-                        stroke={isLiked ? '#ffffff' : 'rgba(255,255,255,0.4)'}
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </motion.button>
-
-                    {/* Play/Pause */}
-                    <motion.button
-                      whileTap={{ scale: 0.88 }}
-                      onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                      style={{
-                        width: 36, height: 36, borderRadius: '50%',
-                        background: '#00ff41',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: 'none',
-                        boxShadow: '0 0 16px rgba(0,255,65,0.4)',
-                        outline: 'none',
-                      }}
-                    >
-                      {isPlaying ? (
-                        <svg width="16" height="16" fill="#000" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z" /></svg>
-                      ) : (
-                        <svg width="16" height="16" fill="#000" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                      )}
-                    </motion.button>
-                  </div>
-              </>
+              {/* Next */}
+              <motion.button
+                whileTap={{ scale: 0.78, x: 1 }}
+                onClick={() => nextSong()}
+                style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer' }}
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="rgba(255,255,255,0.55)">
+                  <path d="M13 7l7 5-7 5V7zM4 7l7 5-7 5V7z" />
+                </svg>
+              </motion.button>
             </div>
           </div>
         </motion.div>
