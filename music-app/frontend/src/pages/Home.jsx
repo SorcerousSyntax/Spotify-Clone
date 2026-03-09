@@ -134,6 +134,7 @@ const Home = () => {
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
   const setQueue = usePlayerStore((s) => s.setQueue);
   const currentSong = usePlayerStore((s) => s.currentSong);
+  const isPlaying = usePlayerStore((s) => s.isPlaying);
   const { dominantColor } = useColorExtract(currentSong?.album_art_url);
   const [dr, dg, db] = dominantColor;
   const accentA = (a) => `rgba(${dr},${dg},${db},${a})`;
@@ -239,13 +240,14 @@ const Home = () => {
   const recentSongs = useMemo(() => {
     const merged = [...recentFromApi, ...recentlyPlayed];
     const seen = new Set();
-    return merged.filter((song) => {
-      if (!song?.id || seen.has(song.id) || !isPlayableSong(song)) {
-        return false;
-      }
+    const result = [];
+    for (const song of merged) {
+      if (!song?.id || seen.has(song.id) || !isPlayableSong(song)) continue;
       seen.add(song.id);
-      return true;
-    });
+      result.push(song);
+      if (result.length === 5) break;
+    }
+    return result;
   }, [recentFromApi, recentlyPlayed]);
 
   const playSong = (song, index, list) => {
@@ -352,19 +354,22 @@ const Home = () => {
             {mood.message}
           </p>
 
-          <button
+          <motion.button
             onClick={() => {
+              if (currentSong) { navigate('/now-playing'); return; }
               if (!suggestedSong) return;
               const list = [suggestedSong, ...recentSongs.filter((song) => song.id !== suggestedSong.id)];
               playSong(suggestedSong, 0, list);
             }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             style={{
               borderRadius: 8,
               border: `1px solid ${mood.glow}`,
               background: `${mood.glow}`,
               color: mood.glowColor,
               padding: '11px 20px',
-              cursor: suggestedSong ? 'pointer' : 'default',
+              cursor: (currentSong || suggestedSong) ? 'pointer' : 'default',
               fontFamily: "'Space Grotesk', sans-serif",
               fontSize: 12,
               fontWeight: 600,
@@ -376,50 +381,146 @@ const Home = () => {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
             }}
-            title={suggestedSong ? decodeSongTitle(suggestedSong.title || suggestedSong.name || '') : 'Finding recommendation...'}
+            title={currentSong ? decodeSongTitle(currentSong.title || currentSong.name || '') : (suggestedSong ? decodeSongTitle(suggestedSong.title || suggestedSong.name || '') : 'Finding recommendation...')}
           >
-            NOW PLAYING {suggestedSong ? decodeSongTitle(suggestedSong.title || suggestedSong.name || '') : '...'}
-          </button>
+            {currentSong && isPlaying && (
+              <span style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 14 }}>
+                {[0, 1, 2].map((i) => (
+                  <motion.span
+                    key={i}
+                    style={{ display: 'block', width: 3, background: mood.glowColor, borderRadius: 2 }}
+                    animate={{ height: ['4px', '12px', '4px'] }}
+                    transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
+                  />
+                ))}
+              </span>
+            )}
+            NOW PLAYING {currentSong ? decodeSongTitle(currentSong.title || currentSong.name || '') : (suggestedSong ? decodeSongTitle(suggestedSong.title || suggestedSong.name || '') : '...')}
+          </motion.button>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', perspective: 800 }}
+          style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 12, perspective: 800 }}
         >
           <div style={{ position: 'relative' }}>
+            {/* Glow bloom */}
             <motion.div
               style={{
                 position: 'absolute',
-                inset: -14,
-                borderRadius: 18,
-                background: mood.glow,
-                filter: 'blur(22px)',
+                inset: -18,
+                borderRadius: 22,
+                background: currentSong ? accentA(0.55) : mood.glow,
+                filter: 'blur(26px)',
                 zIndex: 0,
               }}
-              animate={{ opacity: [0.4, 0.9, 0.4] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+              animate={{ opacity: isPlaying ? [0.5, 1, 0.5] : [0.3, 0.5, 0.3] }}
+              transition={{ duration: isPlaying ? 2 : 4, repeat: Infinity, ease: 'easeInOut' }}
             />
+            {/* Spinning vinyl ring — only when playing */}
+            {isPlaying && (
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  inset: -6,
+                  borderRadius: 18,
+                  border: `2px solid ${currentSong ? accentA(0.6) : mood.glowColor}`,
+                  zIndex: 2,
+                  boxShadow: `0 0 14px ${currentSong ? accentA(0.45) : mood.glow}`,
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+              />
+            )}
             <motion.img
-              src={suggestedSong?.album_art_url || '/placeholder-album.svg'}
-              alt={decodeSongTitle(suggestedSong?.title || suggestedSong?.name || 'Suggested Song')}
+              src={(currentSong?.album_art_url) || suggestedSong?.album_art_url || ''}
+              alt={currentSong ? decodeSongTitle(currentSong.title || currentSong.name || 'Now Playing') : decodeSongTitle(suggestedSong?.title || suggestedSong?.name || 'Suggested')}
               style={{
                 position: 'relative',
                 zIndex: 1,
                 width: 132,
                 height: 132,
-                borderRadius: 10,
-                border: `1px solid ${mood.glow}`,
+                borderRadius: 12,
+                border: `1.5px solid ${currentSong ? accentA(0.5) : mood.glow}`,
                 objectFit: 'cover',
-                boxShadow: `0 16px 40px rgba(0,0,0,0.55)`,
+                boxShadow: `0 16px 40px rgba(0,0,0,0.6)`,
+                background: 'rgba(30,30,30,0.8)',
+                display: (currentSong?.album_art_url || suggestedSong?.album_art_url) ? 'block' : 'none',
               }}
               whileHover={{ scale: 1.07, rotateY: 6, rotateX: -3 }}
-              animate={{ y: [0, -5, 0] }}
+              animate={isPlaying ? { y: [0, -5, 0] } : { y: 0 }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             />
+            {/* Placeholder when no art at all */}
+            {!currentSong?.album_art_url && !suggestedSong?.album_art_url && (
+              <div style={{
+                position: 'relative', zIndex: 1,
+                width: 132, height: 132, borderRadius: 12,
+                border: `1.5px solid ${mood.glow}`,
+                background: 'rgba(20,20,20,0.85)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 42,
+              }}>
+                {mood.icon}
+              </div>
+            )}
+            {/* Equalizer overlay when playing */}
+            {isPlaying && (
+              <div style={{
+                position: 'absolute', bottom: 8, left: 8, zIndex: 3,
+                display: 'flex', alignItems: 'flex-end', gap: 3,
+                background: 'rgba(0,0,0,0.45)', borderRadius: 6, padding: '4px 6px',
+              }}>
+                {[0, 1, 2, 3].map((i) => (
+                  <motion.span
+                    key={i}
+                    style={{ display: 'block', width: 3, background: currentSong ? accentA(0.9) : mood.glowColor, borderRadius: 2 }}
+                    animate={{ height: ['3px', `${10 + i * 4}px`, '3px'] }}
+                    transition={{ duration: 0.55, repeat: Infinity, delay: i * 0.12, ease: 'easeInOut' }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
+          {/* Currently playing info under the art */}
+          {currentSong && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ textAlign: 'center', maxWidth: 148 }}
+            >
+              <p style={{
+                margin: 0,
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: 12,
+                fontWeight: 700,
+                color: '#fff',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                letterSpacing: '0.01em',
+              }}>
+                {decodeSongTitle(currentSong.title || currentSong.name || '')}
+              </p>
+              <p style={{
+                margin: '2px 0 0',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: 10,
+                color: 'rgba(255,255,255,0.5)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                {currentSong.artist || ''}
+              </p>
+            </motion.div>
+          )}
         </motion.div>
       </motion.section>
 
