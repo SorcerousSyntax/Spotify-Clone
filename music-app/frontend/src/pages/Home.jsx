@@ -130,6 +130,7 @@ const Home = () => {
   const recentlyPlayed = usePlayerStore((s) => s.recentlyPlayed);
   const playlists = usePlayerStore((s) => s.playlists);
   const songsById = usePlayerStore((s) => s.songsById);
+  const likedSongIds = usePlayerStore((s) => s.likedSongIds);
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
   const setQueue = usePlayerStore((s) => s.setQueue);
   const currentSong = usePlayerStore((s) => s.currentSong);
