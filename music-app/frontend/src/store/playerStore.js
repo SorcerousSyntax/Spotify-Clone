@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 import { supabase, hasSupabase } from '../lib/supabase';
+import {
+  cacheSongForOffline as cacheSongForOfflineAsset,
+  getPreferredSongStreamUrl,
+} from '../lib/offlineAudio';
 
 export const LIKED_SONGS_PLAYLIST_ID = 'liked-songs-auto';
 export const LIKED_SONGS_PLAYLIST_NAME = 'Liked Songs';
@@ -219,35 +223,14 @@ const persistOfflineLibrarySnapshot = ({ likedSongIds, recentlyPlayed, songsById
   }
 };
 
-const resolveSongCacheUrl = (songInput) => {
-  const song = normalizeSong(songInput);
-  const isInlineAudio = typeof song.r2_url === 'string' && song.r2_url.startsWith('data:');
-  const rawStreamUrl =
-    song.stream_url ||
-    song.url ||
-    (song.id && song.r2_url && !isInlineAudio ? `/api/songs/${song.id}/stream` : song.r2_url);
-
-  if (!rawStreamUrl) return '';
-  if (/^https?:\/\//i.test(rawStreamUrl)) {
-    return `/api/stream?url=${encodeURIComponent(rawStreamUrl)}`;
-  }
-  return rawStreamUrl;
-};
-
 const cacheSongForOffline = async (songInput) => {
   if (typeof window === 'undefined' || !window.caches || !navigator.onLine) return;
-  const streamUrl = resolveSongCacheUrl(songInput);
-  if (!streamUrl) return;
+
+  const song = normalizeSong(songInput);
+  if (!getPreferredSongStreamUrl(song)) return;
 
   try {
-    const cache = await caches.open('saved-songs-v1');
-    const hit = await cache.match(streamUrl);
-    if (hit) return;
-
-    const response = await fetch(streamUrl);
-    if (response.ok) {
-      await cache.put(streamUrl, response.clone());
-    }
+    await cacheSongForOfflineAsset(song);
   } catch (error) {
     console.warn('Auto cache for offline failed:', error?.message || error);
   }

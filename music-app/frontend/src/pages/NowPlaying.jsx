@@ -7,6 +7,12 @@ import useColorExtract from '../hooks/useColorExtract';
 import Waveform from '../components/Waveform';
 import LyricsPanel from '../components/LyricsPanel';
 import { decodeSongTitle } from '../lib/text';
+import {
+  OFFLINE_AUDIO_CACHE_NAME,
+  cacheSongForOffline,
+  getPreferredSongStreamUrl,
+  getSongAudioUrlCandidates,
+} from '../lib/offlineAudio';
 
 const ScrollingTitle = ({ text, fontSize }) => {
   const safeText = decodeSongTitle(text || '');
@@ -112,9 +118,8 @@ const NowPlaying = () => {
       .catch(() => {});
   }, [currentSong?.id, currentSong?.title, currentSong?.artist]);
 
-  const streamUrl = currentSong?.stream_url
-    || (currentSong?.id ? `/api/songs/${currentSong.id}/stream` : currentSong?.r2_url)
-    || '';
+  const streamUrl = getPreferredSongStreamUrl(currentSong);
+  const streamCandidates = getSongAudioUrlCandidates(currentSong);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,8 +131,15 @@ const NowPlaying = () => {
 
     (async () => {
       try {
-        const cache = await caches.open('saved-songs-v1');
-        const hit = await cache.match(streamUrl);
+        const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
+        let hit = null;
+        for (const url of streamCandidates) {
+          const match = await cache.match(url);
+          if (match) {
+            hit = match;
+            break;
+          }
+        }
         if (!cancelled) {
           setOfflineStatus(hit ? 'saved' : 'idle');
         }
@@ -141,7 +153,7 @@ const NowPlaying = () => {
     return () => {
       cancelled = true;
     };
-  }, [streamUrl, currentSong?.id]);
+  }, [streamUrl, currentSong?.id, currentSong?.url, currentSong?.stream_url, currentSong?.r2_url]);
 
   const saveOffline = async () => {
     if (!streamUrl || offlineStatus === 'saving') return;
@@ -153,12 +165,7 @@ const NowPlaying = () => {
 
     try {
       setOfflineStatus('saving');
-      const cache = await caches.open('saved-songs-v1');
-      const response = await fetch(streamUrl);
-      if (!response.ok) {
-        throw new Error(`Save failed (${response.status})`);
-      }
-      await cache.put(streamUrl, response.clone());
+      await cacheSongForOffline(currentSong);
       setOfflineStatus('saved');
     } catch (err) {
       console.warn('Offline save failed:', err?.message || err);

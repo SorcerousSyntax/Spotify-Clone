@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import usePlayerStore, { LIKED_SONGS_PLAYLIST_ID } from '../store/playerStore';
 import { SongRow } from '../components/MusicCards';
 import PlaylistCover from '../components/PlaylistCover';
+import { OFFLINE_AUDIO_CACHE_NAME, getSongAudioUrlCandidates } from '../lib/offlineAudio';
 
 const FILTERS = ['Playlists'];
 
@@ -123,6 +124,8 @@ const Library = () => {
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [isOnline, setIsOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
+  const [offlineSongIds, setOfflineSongIds] = useState([]);
 
   const likedSongIds = usePlayerStore((s) => s.likedSongIds);
   const songsById = usePlayerStore((s) => s.songsById);
@@ -146,6 +149,19 @@ const Library = () => {
     setSelectedPlaylistId(requestedPlaylistId);
   }, [location.state, playlists]);
 
+  useEffect(() => {
+    const onOnline = () => setIsOnline(true);
+    const onOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
+
   const savedSongIds = useMemo(() => {
     const ids = new Set(likedSongIds);
     playlists.forEach((playlist) => {
@@ -160,6 +176,52 @@ const Library = () => {
       .filter((song) => song && isPlayableSong(song)),
     [savedSongIds, songsById]
   );
+
+  const offlineSongs = useMemo(() => {
+    const set = new Set(offlineSongIds);
+    return allSongs.filter((song) => set.has(song.id));
+  }, [allSongs, offlineSongIds]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!window.caches || allSongs.length === 0) {
+      setOfflineSongIds([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const detectOfflineSongs = async () => {
+      try {
+        const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
+        const checks = await Promise.all(
+          allSongs.map(async (song) => {
+            const candidates = getSongAudioUrlCandidates(song);
+            for (const url of candidates) {
+              const hit = await cache.match(url);
+              if (hit) return song.id;
+            }
+            return null;
+          })
+        );
+
+        if (!cancelled) {
+          setOfflineSongIds(checks.filter(Boolean));
+        }
+      } catch {
+        if (!cancelled) {
+          setOfflineSongIds([]);
+        }
+      }
+    };
+
+    detectOfflineSongs();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [allSongs]);
 
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId) || null;
 
@@ -318,6 +380,47 @@ const Library = () => {
       </motion.div>
 
       <section style={{ padding: '0 16px' }}>
+        {!selectedPlaylist && (
+          <div
+            style={{
+              marginBottom: 14,
+              borderRadius: 12,
+              border: isOnline ? '1px solid rgba(0,255,106,0.25)' : '1px solid rgba(255,166,0,0.35)',
+              background: isOnline ? 'rgba(0,255,106,0.08)' : 'rgba(255,166,0,0.08)',
+              padding: '10px 12px',
+            }}
+          >
+            <p
+              style={{
+                fontFamily: "'DM Mono', monospace",
+                fontSize: 10,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: isOnline ? '#7effb6' : '#ffcf7e',
+                marginBottom: 4,
+              }}
+            >
+              {isOnline ? 'Online' : 'Offline Mode Active'}
+            </p>
+            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
+              {offlineSongs.length} saved offline song{offlineSongs.length === 1 ? '' : 's'} ready to play.
+            </p>
+          </div>
+        )}
+
+        {!selectedPlaylist && offlineSongs.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(0,255,65,0.6)', marginBottom: 8 }}>
+              Saved Offline
+            </p>
+            {offlineSongs.slice(0, 20).map((song, i) => (
+              <div key={`offline-${song.id}`} style={{ marginBottom: 8 }}>
+                <SongRow song={song} index={i} showIndex onClick={(s, idx) => playSong(s, idx, offlineSongs)} />
+              </div>
+            ))}
+          </div>
+        )}
+
         {!selectedPlaylist && playlists.map((playlist, i) => (
           <PlaylistCard
             key={playlist.id}

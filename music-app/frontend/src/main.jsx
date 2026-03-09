@@ -8,12 +8,10 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const cleanupKey = 'raabta-sw-cleanup-v3';
 
-    if (!sessionStorage.getItem(cleanupKey)) {
+    if (!sessionStorage.getItem(cleanupKey) && !import.meta.env.PROD) {
       const regs = await navigator.serviceWorker.getRegistrations();
 
-      if (!import.meta.env.PROD) {
-        await Promise.all(regs.map((reg) => reg.unregister()));
-      }
+      await Promise.all(regs.map((reg) => reg.unregister()));
 
       if (window.caches?.keys) {
         const keys = await caches.keys();

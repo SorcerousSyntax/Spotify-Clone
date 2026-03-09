@@ -1,6 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { Howl } from 'howler';
 import usePlayerStore from '../store/playerStore';
+import {
+  OFFLINE_AUDIO_CACHE_NAME,
+  getPreferredSongStreamUrl,
+  getSongAudioUrlCandidates,
+} from '../lib/offlineAudio';
 
 const usePlayer = () => {
   const howlRef = useRef(null);
@@ -33,20 +38,8 @@ const usePlayer = () => {
       const requestedUrl = currentSong?.url || currentSong?.stream_url || '';
       console.log('[Player] requested song.url:', requestedUrl);
 
-      const isInlineAudio =
-        typeof currentSong?.r2_url === 'string' &&
-        currentSong.r2_url.startsWith('data:');
-      const rawStreamUrl =
-        currentSong?.stream_url ||
-        currentSong?.url ||
-        (currentSong?.id && currentSong?.r2_url && !isInlineAudio
-          ? `/api/songs/${currentSong.id}/stream`
-          : currentSong?.r2_url);
-
-      const streamUrl =
-        typeof rawStreamUrl === 'string' && /^https?:\/\//i.test(rawStreamUrl)
-          ? `/api/stream?url=${encodeURIComponent(rawStreamUrl)}`
-          : rawStreamUrl;
+      const streamUrl = getPreferredSongStreamUrl(currentSong);
+      const candidateUrls = getSongAudioUrlCandidates(currentSong);
 
       let songSrc = streamUrl;
 
@@ -54,11 +47,18 @@ const usePlayer = () => {
 
       if (streamUrl && window.caches) {
         try {
-          const cache = await caches.open('saved-songs-v1');
-          let offline = await cache.match(streamUrl);
-          if (!offline && rawStreamUrl && rawStreamUrl !== streamUrl) {
-            offline = await cache.match(rawStreamUrl);
+          const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
+          let offline = null;
+
+          for (const url of candidateUrls) {
+            // Find any cached variant for this song before falling back to network.
+            const hit = await cache.match(url);
+            if (hit) {
+              offline = hit;
+              break;
+            }
           }
+
           if (offline) {
             const blob = await offline.blob();
             if (objectUrlRef.current) {
@@ -133,7 +133,7 @@ const usePlayer = () => {
         objectUrlRef.current = null;
       }
     };
-  }, [currentSong?.id, currentSong?.r2_url, currentSong?.stream_url]);
+  }, [currentSong?.id, currentSong?.r2_url, currentSong?.stream_url, currentSong?.url]);
 
   // Sync play/pause state
   useEffect(() => {

@@ -1,5 +1,5 @@
-const CACHE_NAME = 'music-app-v4';
-const AUDIO_CACHE = 'music-audio-v4';
+const CACHE_NAME = 'music-app-v5';
+const AUDIO_CACHE = 'music-audio-v5';
 
 const APP_SHELL = [
   '/',
@@ -93,7 +93,18 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(async () => {
+          const cached = await caches.match(request);
+          if (cached) return cached;
+
+          return new Response(
+            JSON.stringify({ error: 'Offline and no cached data available.' }),
+            {
+              status: 503,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        })
     );
     return;
   }
@@ -108,6 +119,16 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => caches.match(request))
+      .catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+
+        if (request.destination === 'document') {
+          const indexHtml = await caches.match('/index.html');
+          if (indexHtml) return indexHtml;
+        }
+
+        return new Response('Offline resource unavailable.', { status: 503 });
+      })
   );
 });
