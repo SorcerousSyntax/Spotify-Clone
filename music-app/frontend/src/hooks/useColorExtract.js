@@ -9,28 +9,47 @@ const useColorExtract = (imageUrl) => {
   useEffect(() => {
     if (!imageUrl) return;
 
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.src = imageUrl;
+    let cancelled = false;
+    let blobUrl = null;
 
-    img.onload = () => {
-      try {
-        const colorThief = new ColorThief();
-        const dominant = colorThief.getColor(img);
-        const colors = colorThief.getPalette(img, 5);
-        setDominantColor(dominant);
-        setPalette(colors);
-      } catch (e) {
-        console.warn('Color extraction failed:', e.message);
-        setDominantColor([29, 185, 84]);
-      }
+    const tryExtract = (src, withCors) => {
+      const img = new Image();
+      if (withCors) img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        if (cancelled) return;
+        try {
+          const ct = new ColorThief();
+          setDominantColor(ct.getColor(img));
+          setPalette(ct.getPalette(img, 5));
+        } catch (_) {
+          // canvas tainted or extraction failed — keep existing color
+        }
+        if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
+      };
+      img.onerror = () => {
+        if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
+      };
+      img.src = src;
+      imgRef.current = img;
     };
 
-    img.onerror = () => {
-      setDominantColor([29, 185, 84]);
-    };
+    // Primary: fetch → blob URL (same-origin, no CORS canvas taint)
+    fetch(imageUrl)
+      .then((r) => r.blob())
+      .then((blob) => {
+        if (cancelled) return;
+        blobUrl = URL.createObjectURL(blob);
+        tryExtract(blobUrl, false);
+      })
+      .catch(() => {
+        // Fallback: direct load with crossOrigin header
+        if (!cancelled) tryExtract(imageUrl, true);
+      });
 
-    imgRef.current = img;
+    return () => {
+      cancelled = true;
+      if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
+    };
   }, [imageUrl]);
 
   const rgbString = `rgb(${dominantColor[0]}, ${dominantColor[1]}, ${dominantColor[2]})`;

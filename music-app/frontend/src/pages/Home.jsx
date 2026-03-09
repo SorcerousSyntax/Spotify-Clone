@@ -6,26 +6,33 @@ import { CompactCard } from '../components/MusicCards';
 import PlaylistCover from '../components/PlaylistCover';
 import { supabase } from '../lib/supabase';
 import { decodeSongTitle } from '../lib/text';
+import useColorExtract from '../hooks/useColorExtract';
 
 const isPlayableSong = (song) => Boolean(song?.stream_url || song?.r2_url);
 
 const Header = () => <div style={{ height: 18 }} />;
 
 const SectionTitle = ({ text }) => (
-  <p
+  <motion.p
+    initial={{ opacity: 0, x: -10 }}
+    whileInView={{ opacity: 1, x: 0 }}
+    viewport={{ once: true, margin: '-20px' }}
+    transition={{ duration: 0.4, ease: 'easeOut' }}
     style={{
       fontFamily: "'DM Mono', monospace",
       fontSize: 10,
       letterSpacing: '0.2em',
       textTransform: 'uppercase',
-      color: 'rgba(255,255,255,0.3)',
+      color: 'rgba(255,255,255,0.45)',
       marginBottom: 16,
-      borderBottom: '1px solid rgba(255,255,255,0.04)',
+      borderBottom: '1px solid rgba(255,255,255,0.06)',
       paddingBottom: 8,
+      paddingLeft: 10,
+      borderLeft: '2px solid rgba(255,255,255,0.18)',
     }}
   >
     {text}
-  </p>
+  </motion.p>
 );
 
 const getMoodConfig = (hour, userName = 'there') => {
@@ -37,6 +44,7 @@ const getMoodConfig = (hour, userName = 'there') => {
       query: 'peaceful morning hindi',
       gradient: 'linear-gradient(135deg, #0a1628, #0d2137)',
       glow: 'rgba(74, 146, 240, 0.35)',
+      glowColor: '#4a92f0',
     };
   }
   if (hour >= 11 && hour < 15) {
@@ -47,6 +55,7 @@ const getMoodConfig = (hour, userName = 'there') => {
       query: 'upbeat punjabi',
       gradient: 'linear-gradient(135deg, #0a1a0a, #0d2d0d)',
       glow: 'rgba(64, 201, 112, 0.35)',
+      glowColor: '#40c970',
     };
   }
   if (hour >= 15 && hour < 19) {
@@ -57,6 +66,7 @@ const getMoodConfig = (hour, userName = 'there') => {
       query: 'romantic hindi evening',
       gradient: 'linear-gradient(135deg, #1a0a0a, #2d1000)',
       glow: 'rgba(224, 122, 58, 0.35)',
+      glowColor: '#e07a3a',
     };
   }
   if (hour >= 19 && hour < 23) {
@@ -67,6 +77,7 @@ const getMoodConfig = (hour, userName = 'there') => {
       query: 'arijit singh night',
       gradient: 'linear-gradient(135deg, #080808, #0d0d1a)',
       glow: 'rgba(128, 126, 255, 0.35)',
+      glowColor: '#807eff',
     };
   }
   return {
@@ -76,6 +87,7 @@ const getMoodConfig = (hour, userName = 'there') => {
     query: 'sad lofi hindi',
     gradient: 'linear-gradient(135deg, #000000, #0a0010)',
     glow: 'rgba(190, 86, 255, 0.35)',
+    glowColor: '#be56ff',
   };
 };
 
@@ -117,6 +129,10 @@ const Home = () => {
   const songsById = usePlayerStore((s) => s.songsById);
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
   const setQueue = usePlayerStore((s) => s.setQueue);
+  const currentSong = usePlayerStore((s) => s.currentSong);
+  const { dominantColor } = useColorExtract(currentSong?.album_art_url);
+  const [dr, dg, db] = dominantColor;
+  const accentA = (a) => `rgba(${dr},${dg},${db},${a})`;
 
   useEffect(() => {
     let mounted = true;
@@ -211,6 +227,24 @@ const Home = () => {
 
   return (
     <div style={{ position: 'relative', zIndex: 2, paddingBottom: 30 }}>
+      {/* Ambient floating color orbs */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none', overflow: 'hidden' }}>
+        <motion.div
+          style={{ position: 'absolute', top: '-8%', left: '-10%', width: 360, height: 360, borderRadius: '50%', background: `radial-gradient(circle, ${accentA(0.14)} 0%, transparent 70%)`, filter: 'blur(50px)' }}
+          animate={{ x: [0, 28, 0], y: [0, -18, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          style={{ position: 'absolute', top: '28%', right: '-12%', width: 300, height: 300, borderRadius: '50%', background: `radial-gradient(circle, ${mood.glow} 0%, transparent 70%)`, filter: 'blur(56px)' }}
+          animate={{ x: [0, -32, 0], y: [0, 24, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
+        />
+        <motion.div
+          style={{ position: 'absolute', bottom: '10%', left: '20%', width: 260, height: 260, borderRadius: '50%', background: `radial-gradient(circle, ${accentA(0.1)} 0%, transparent 70%)`, filter: 'blur(42px)' }}
+          animate={{ x: [0, 16, 0], y: [0, -14, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 8 }}
+        />
+      </div>
       <Header />
 
       <motion.section
@@ -220,10 +254,10 @@ const Home = () => {
         style={{
           margin: '0 auto 40px',
           width: 'min(980px, calc(100vw - 24px))',
-          borderRadius: 4,
-          background: 'rgba(255,255,255,0.02)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderLeft: '3px solid #00ff41',
+          borderRadius: 12,
+          background: mood.gradient,
+          border: `1px solid ${mood.glow}`,
+          borderLeft: `3px solid ${mood.glowColor}`,
           overflow: 'hidden',
           padding: '28px 32px',
           position: 'relative',
@@ -231,18 +265,21 @@ const Home = () => {
           gridTemplateColumns: '3fr 2fr',
           gap: 16,
           alignItems: 'center',
+          boxShadow: `0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)`,
         }}
       >
-        <div
+        <motion.div
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
-            width: 200,
-            height: 200,
-            background: 'radial-gradient(circle, rgba(0,255,65,0.06) 0%, transparent 70%)',
+            width: 280,
+            height: 280,
+            background: `radial-gradient(circle, ${mood.glow} 0%, transparent 70%)`,
             pointerEvents: 'none',
           }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -256,7 +293,7 @@ const Home = () => {
             fontSize: 10,
             letterSpacing: '0.15em',
             textTransform: 'uppercase',
-            color: '#00ff41',
+            color: mood.glowColor,
             marginBottom: 8,
           }}>
             {mood.icon} FOR YOU TODAY
@@ -282,9 +319,9 @@ const Home = () => {
             }}
             style={{
               borderRadius: 4,
-              border: '1px solid rgba(0,255,65,0.4)',
+              border: `1px solid ${mood.glow}`,
               background: 'transparent',
-              color: '#00ff41',
+              color: mood.glowColor,
               padding: '10px 24px',
               cursor: suggestedSong ? 'pointer' : 'default',
               fontFamily: "'DM Mono', monospace",
@@ -307,39 +344,67 @@ const Home = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+          style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', perspective: 800 }}
         >
-          <motion.img
-            src={suggestedSong?.album_art_url || '/placeholder-album.svg'}
-            alt={decodeSongTitle(suggestedSong?.title || suggestedSong?.name || 'Suggested Song')}
-            style={{
-              width: 132,
-              height: 132,
-              borderRadius: 6,
-              border: '1px solid rgba(255,255,255,0.08)',
-              objectFit: 'cover',
-              boxShadow: `0 0 20px rgba(0,255,65,0.12)`,
-            }}
-            animate={{ scale: [1, 1.03, 1] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          />
+          <div style={{ position: 'relative' }}>
+            <motion.div
+              style={{
+                position: 'absolute',
+                inset: -14,
+                borderRadius: 18,
+                background: mood.glow,
+                filter: 'blur(22px)',
+                zIndex: 0,
+              }}
+              animate={{ opacity: [0.4, 0.9, 0.4] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.img
+              src={suggestedSong?.album_art_url || '/placeholder-album.svg'}
+              alt={decodeSongTitle(suggestedSong?.title || suggestedSong?.name || 'Suggested Song')}
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                width: 132,
+                height: 132,
+                borderRadius: 10,
+                border: `1px solid ${mood.glow}`,
+                objectFit: 'cover',
+                boxShadow: `0 16px 40px rgba(0,0,0,0.55)`,
+              }}
+              whileHover={{ scale: 1.07, rotateY: 6, rotateX: -3 }}
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
         </motion.div>
       </motion.section>
 
       <section style={{ width: 'min(980px, calc(100vw - 24px))', margin: '0 auto' }}>
         <SectionTitle text="Recently Played" />
         {recentSongs.length > 0 ? (
-          <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }} className="hide-scrollbar">
+          <motion.div
+            style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }}
+            className="hide-scrollbar"
+            variants={{ show: { transition: { staggerChildren: 0.06 } } }}
+            initial="hidden"
+            animate="show"
+          >
             {recentSongs.map((song, i) => (
-              <CompactCard
+              <motion.div
                 key={song.id}
-                song={song}
-                index={i}
-                size={98}
-                onClick={(s, idx) => playSong(s, idx, recentSongs)}
-              />
+                variants={{ hidden: { opacity: 0, y: 14, scale: 0.93 }, show: { opacity: 1, y: 0, scale: 1 } }}
+                transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <CompactCard
+                  song={song}
+                  index={i}
+                  size={98}
+                  onClick={(s, idx) => playSong(s, idx, recentSongs)}
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '12px 4px' }}>
             No recent tracks yet. Play something from Search.
@@ -353,8 +418,11 @@ const Home = () => {
           <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }} className="hide-scrollbar">
             {playlists.map((playlist) => (
               <div key={playlist.id} style={{ width: 120, flexShrink: 0 }}>
-                <button
+                <motion.button
                   onClick={() => navigate('/library', { state: { openPlaylistId: playlist.id } })}
+                  whileHover={{ scale: 1.06, y: -4 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 28 }}
                   style={{
                     width: 120,
                     height: 120,
@@ -371,7 +439,7 @@ const Home = () => {
                   title={`Open ${playlist.name}`}
                 >
                   <PlaylistCover playlist={playlist} songsById={songsById} size={120} />
-                </button>
+                </motion.button>
                 <p
                   style={{
                     marginTop: 8,
@@ -417,7 +485,11 @@ const Home = () => {
         }}
       >
         <span>Made with love for you</span>
-        <span style={{ color: '#ff6464', fontSize: 13 }}>♥</span>
+        <motion.span
+          style={{ color: '#ff6464', fontSize: 13, display: 'inline-block' }}
+          animate={{ scale: [1, 1.35, 1] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+        >♥</motion.span>
       </motion.div>
     </div>
   );
