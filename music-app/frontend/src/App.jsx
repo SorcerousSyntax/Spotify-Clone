@@ -19,10 +19,10 @@ const Library = React.lazy(() => import('./pages/Library'));
 const PageTransition = ({ children }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.97 }}
-    animate={{ opacity: 1, scale: 1.03 }}
+    animate={{ opacity: 1, scale: 1 }}
     exit={{ opacity: 0, scale: 0.97 }}
     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-    style={{ minHeight: '100dvh' }}
+    style={{ minHeight: '100dvh', willChange: 'opacity' }}
   >
     {children}
   </motion.div>
@@ -419,7 +419,7 @@ const AppInner = () => {
   const showMiniPlayer = showShell && !isNowPlayingRoute;
 
   return (
-    <div style={{ position: 'relative', minHeight: '100dvh', background: 'var(--bg)' }}>
+    <div style={{ position: 'relative', minHeight: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
       {/* Ambient gradient background (no smoke) */}
       <div
         style={{

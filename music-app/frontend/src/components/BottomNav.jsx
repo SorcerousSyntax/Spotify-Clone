@@ -68,15 +68,15 @@ const BottomNav = () => {
 
   return (
     <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      {/* Floating frosted pill bar */}
+      {/* Glass floating pill bar */}
       <div style={{
         margin: '0 12px 10px',
         borderRadius: 26,
-        background: 'rgba(13,0,30,0.88)',
-        backdropFilter: 'blur(32px)',
-        WebkitBackdropFilter: 'blur(32px)',
-        border: '1px solid rgba(139,92,246,0.22)',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.06), inset 0 1px 0 rgba(255,255,255,0.05)',
+        background: 'rgba(18,4,40,0.55)',
+        backdropFilter: 'blur(48px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(48px) saturate(180%)',
+        border: '1px solid rgba(167,139,250,0.28)',
+        boxShadow: '0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(139,92,246,0.08)',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-around',
