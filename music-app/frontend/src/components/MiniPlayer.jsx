@@ -18,13 +18,13 @@ const ScrollingTitle = ({ title, fontSize = 14 }) => {
           transition={{ duration: 10, ease: 'linear', repeat: Infinity }}
         >
           {[safeTitle, safeTitle].map((t, i) => (
-            <span key={i} style={{ fontSize, letterSpacing: '0.03em', color: '#fff', fontFamily: "'Bebas Neue', cursive", fontWeight: 700, lineHeight: 1.1 }}>
+            <span key={i} style={{ fontSize, letterSpacing: '-0.01em', color: '#fff', fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, lineHeight: 1.2 }}>
               {t}
             </span>
           ))}
         </motion.div>
       ) : (
-        <p style={{ fontSize, letterSpacing: '0.03em', color: '#fff', fontFamily: "'Bebas Neue', cursive", fontWeight: 700, lineHeight: 1.1, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <p style={{ fontSize, letterSpacing: '-0.01em', color: '#fff', fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, lineHeight: 1.2, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {safeTitle}
         </p>
       )}
@@ -57,22 +57,22 @@ const MiniPlayer = () => {
     <AnimatePresence>
       {currentSong && (
         <motion.div
-          style={{ position: 'fixed', bottom: 70, right: 8, left: 8, zIndex: 99, borderRadius: 20 }}
+          style={{ position: 'fixed', bottom: 78, right: 12, left: 12, zIndex: 99, borderRadius: 22 }}
           initial={{ y: 110, opacity: 0, scale: 0.9 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: 110, opacity: 0, scale: 0.9 }}
-          transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 34 }}
         >
           {/* Dynamic glass background */}
           <motion.div
-            style={{ position: 'absolute', inset: 0, borderRadius: 20, overflow: 'hidden' }}
+            style={{ position: 'absolute', inset: 0, borderRadius: 22, overflow: 'hidden' }}
             animate={{
-              background: `linear-gradient(135deg, ${accentA(0.36)} 0%, rgba(8,8,12,0.97) 50%, rgba(5,5,8,0.99) 100%)`,
-              boxShadow: `0 -4px 50px rgba(0,0,0,0.8), 0 0 0 1px ${accentA(0.3)}, inset 0 1px 0 rgba(255,255,255,0.11)`,
+              background: `linear-gradient(135deg, ${accentA(0.28)} 0%, rgba(13,0,30,0.95) 55%, rgba(9,0,20,0.98) 100%)`,
+              boxShadow: `0 -2px 40px rgba(0,0,0,0.7), 0 0 0 1px ${accentA(0.25)}, inset 0 1px 0 rgba(255,255,255,0.08)`,
             }}
             transition={{ duration: 0.85, ease: 'easeInOut' }}
           >
-            <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(44px)', WebkitBackdropFilter: 'blur(44px)' }} />
+            <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }} />
           </motion.div>
 
           {/* Left accent stripe */}

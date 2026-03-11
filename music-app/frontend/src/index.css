@@ -11,26 +11,36 @@
 @tailwind utilities;
 
 /* ==========================================
-   CSS VARIABLES — PHANTOM STAGE
+   CSS VARIABLES — RAABTA PREMIUM
    ========================================== */
 :root {
-  --bg: #000000;
-  --surface: rgba(255, 255, 255, 0.03);
-  --surface-hover: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.06);
-  --border-active: rgba(0, 255, 65, 0.3);
-  --green: #00ff41;
-  --green-dim: rgba(0, 255, 65, 0.15);
-  --green-glow: 0 0 20px rgba(0, 255, 65, 0.2);
+  --bg: #0b0015;
+  --bg2: #0d001e;
+  --surface: rgba(139, 92, 246, 0.07);
+  --surface-hover: rgba(139, 92, 246, 0.13);
+  --border: rgba(139, 92, 246, 0.18);
+  --border-active: rgba(139, 92, 246, 0.55);
+
+  /* Violet accent palette */
+  --violet: #8b5cf6;
+  --violet-bright: #a78bfa;
+  --violet-dark: #6d28d9;
+  --violet-deep: #4c1d95;
+  --violet-dim: rgba(139, 92, 246, 0.18);
+  --violet-glow: 0 0 20px rgba(139, 92, 246, 0.35);
+
   --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.4);
-  --text-muted: rgba(255, 255, 255, 0.15);
-  --font-display: 'Bebas Neue', cursive;
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.2);
+  --font-display: 'Space Grotesk', sans-serif;
   --font-mono: 'DM Mono', monospace;
 
-  /* Back-compat tokens used by existing components */
+  /* Back-compat tokens for existing components */
+  --green: var(--violet);
+  --green-dim: var(--violet-dim);
+  --green-glow: var(--violet-glow);
   --green-border: var(--border);
-  --green-neon: var(--green);
+  --green-neon: var(--violet-bright);
   --white-full: var(--text-primary);
   --white-smoke: var(--text-primary);
   --white-mid: var(--text-secondary);
@@ -60,6 +70,26 @@ html, body {
   cursor: none;
 }
 
+/* Animated gradient mesh background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(109,40,217,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(76,29,149,0.08) 0%, transparent 65%);
+  animation: ambientShift 18s ease-in-out infinite alternate;
+}
+
+@keyframes ambientShift {
+  0%   { opacity: 0.7; transform: scale(1); }
+  50%  { opacity: 1;   transform: scale(1.04); }
+  100% { opacity: 0.75; transform: scale(1.01); }
+}
+
 /* Keep a consistent, readable default font across UI controls. */
 body, button, input, textarea, select, p, span, h1, h2, h3, h4, h5, h6, label, a, li {
   font-family: 'Space Grotesk', sans-serif;
@@ -79,7 +109,7 @@ button {
   min-height: 100dvh;
   position: relative;
   overflow: hidden;
-  background: #000000;
+  background: var(--bg);
 }
 
 /* Hide default cursor everywhere */
@@ -100,22 +130,13 @@ button {
   font-family: var(--font-mono);
 }
 
-/* ==========================================
-   GREEN SCANLINE TEXTURE
-   ========================================== */
+/* Scanlines — very subtle, kept for texture */
 .scanlines {
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(255, 255, 255, 0.008) 2px,
-    rgba(255, 255, 255, 0.008) 4px
-  );
-  opacity: 1;
+  opacity: 0;
 }
 
 /* ==========================================
@@ -160,15 +181,25 @@ button {
   border: 1px solid var(--border);
 }
 
-/* ==========================================
-   NEON GREEN GRADIENT
-   ========================================== */
+/* Violet gradient classes */
+.violet-gradient {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+}
+
+.violet-gradient-text {
+  background: linear-gradient(135deg, #c4b5fd, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Back-compat */
 .green-gradient {
-  background: linear-gradient(135deg, #00ff41, #00cc34);
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
 }
 
 .green-gradient-text {
-  background: linear-gradient(135deg, #00ff41, #00cc34);
+  background: linear-gradient(135deg, #c4b5fd, #8b5cf6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -177,21 +208,30 @@ button {
 /* ==========================================
    GLOW EFFECTS
    ========================================== */
-.text-glow-green {
+.text-glow-violet {
   text-shadow:
-    0 0 10px rgba(0,255,65,0.35),
-    0 0 20px rgba(0,255,65,0.2);
+    0 0 10px rgba(139,92,246,0.5),
+    0 0 20px rgba(139,92,246,0.25);
 }
+
+/* back-compat alias */
+.text-glow-green { text-shadow: 0 0 10px rgba(139,92,246,0.5), 0 0 20px rgba(139,92,246,0.25); }
 
 .text-glow {
   text-shadow:
     0 0 8px rgba(255,255,255,0.18);
 }
 
+.box-glow-violet {
+  box-shadow:
+    0 0 20px rgba(139,92,246,0.28),
+    0 0 40px rgba(139,92,246,0.14);
+}
+
 .box-glow-green {
   box-shadow:
-    0 0 20px rgba(0,255,65,0.2),
-    0 0 40px rgba(0,255,65,0.12);
+    0 0 20px rgba(139,92,246,0.25),
+    0 0 40px rgba(139,92,246,0.12);
 }
 
 /* ==========================================
@@ -223,19 +263,19 @@ button {
 }
 
 /* ==========================================
-   GLOW PULSE (album art)
+   GLOW PULSE (album art) — violet
    ========================================== */
 @keyframes glowPulse {
   0%, 100% {
     box-shadow:
-      0 0 40px var(--green-pure),
-      0 0 80px rgba(0,255,65,0.3);
+      0 0 40px rgba(139,92,246,0.5),
+      0 0 80px rgba(109,40,217,0.3);
   }
   50% {
     box-shadow:
-      0 0 60px var(--green-pure),
-      0 0 120px rgba(0,255,65,0.5),
-      0 0 200px rgba(0,255,65,0.15);
+      0 0 60px rgba(167,139,250,0.65),
+      0 0 120px rgba(139,92,246,0.45),
+      0 0 200px rgba(109,40,217,0.2);
   }
 }
 
@@ -244,13 +284,68 @@ button {
 }
 
 /* ==========================================
+   FLOATING ANIMATION
+   ========================================== */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.float {
+  animation: float 5s ease-in-out infinite;
+}
+
+/* ==========================================
+   CARD HOVER LIFT
+   ========================================== */
+.card-lift {
+  transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+.card-lift:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.25);
+}
+
+/* ==========================================
+   PILL CHIP
+   ========================================== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+.chip.active {
+  background: var(--violet);
+  border-color: var(--violet);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(139,92,246,0.4);
+}
+
+.chip:hover:not(.active) {
+  background: var(--surface-hover);
+  border-color: var(--border-active);
+  color: var(--text-primary);
+}
+
+/* ==========================================
    SCROLLBAR (SPEC)
    ========================================== */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,255,65,0.2); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0,255,65,0.4); }
-* { scrollbar-width: thin; scrollbar-color: rgba(0,255,65,0.32) transparent; }
+::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.25); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.45); }
+* { scrollbar-width: thin; scrollbar-color: rgba(139,92,246,0.3) transparent; }
 
 /* ==========================================
    HIDE SCROLLBAR
@@ -268,8 +363,8 @@ button {
    PROGRESS BAR
    ========================================== */
 .progress-fill {
-  background: #00ff41;
-  box-shadow: 0 0 8px rgba(0,255,65,0.5);
+  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+  box-shadow: 0 0 8px rgba(139,92,246,0.6);
   border-radius: 9999px;
 }
 
@@ -277,10 +372,10 @@ button {
    LYRICS
    ========================================== */
 .lyrics-active {
-  color: var(--green-neon) !important;
+  color: var(--violet-bright) !important;
   text-shadow:
-    0 0 10px var(--green-neon),
-    0 0 20px rgba(0,255,106,0.5);
+    0 0 12px rgba(167,139,250,0.7),
+    0 0 24px rgba(139,92,246,0.4);
 }
 
 /* ==========================================

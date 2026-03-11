@@ -48,15 +48,16 @@ export default function LoadingScreen({ onComplete }) {
                   ease: [0.16, 1, 0.3, 1],
                 }}
                 style={{
-                  fontFamily: "'Bebas Neue', cursive",
+                  fontFamily: "'Space Grotesk', sans-serif",
                   fontSize: 'clamp(56px, 12vw, 96px)',
-                  letterSpacing: '0.08em',
-                  color: '#00ff6a',
+                  fontWeight: 800,
+                  letterSpacing: '-0.02em',
+                  color: phase === 'glow' ? '#c4b5fd' : '#8b5cf6',
                   display: 'inline-block',
                   textShadow: phase === 'glow'
-                    ? '0 0 20px #00ff6a, 0 0 50px #00ff6a, 0 0 100px rgba(0,255,106,0.5)'
-                    : '0 0 10px rgba(0,255,106,0.4)',
-                  transition: 'text-shadow 0.4s ease',
+                    ? '0 0 30px rgba(167,139,250,0.9), 0 0 80px rgba(139,92,246,0.6)'
+                    : '0 0 14px rgba(139,92,246,0.4)',
+                  transition: 'text-shadow 0.4s ease, color 0.4s ease',
                 }}
               >
                 {letter}
@@ -70,10 +71,10 @@ export default function LoadingScreen({ onComplete }) {
             animate={{ opacity: phase === 'glow' ? 0.4 : 0.2 }}
             transition={{ delay: 0.8, duration: 0.5 }}
             style={{
-              fontFamily: "'Share Tech Mono', monospace",
-              fontSize: '11px',
-              letterSpacing: '0.3em',
-              color: 'rgba(0,255,106,0.6)',
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: '12px', fontWeight: 500,
+              letterSpacing: '0.22em',
+              color: 'rgba(167,139,250,0.55)',
               marginTop: '16px',
               textTransform: 'uppercase',
             }}
@@ -92,8 +93,8 @@ export default function LoadingScreen({ onComplete }) {
               left: 0,
               right: 0,
               height: '2px',
-              background: 'linear-gradient(90deg, transparent, #00ff6a, transparent)',
-              boxShadow: '0 0 20px #00ff6a',
+              background: 'linear-gradient(90deg, transparent, #8b5cf6, transparent)',
+              boxShadow: '0 0 20px rgba(139,92,246,0.8)',
             }}
           />
         </motion.div>

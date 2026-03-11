@@ -75,12 +75,12 @@ export const SongRow = ({ song, index = 0, showIndex = false, onClick }) => {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{
-          fontFamily: "'Bebas Neue', cursive",
-          fontSize: 16, letterSpacing: '0.04em',
-          color: isActive ? '#00ff41' : '#fff',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: 15, fontWeight: 600,
+          color: isActive ? '#c4b5fd' : '#fff',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          lineHeight: 1.2,
-          textShadow: isActive ? '0 0 8px rgba(0,255,65,0.3)' : 'none',
+          lineHeight: 1.25,
+          textShadow: 'none',
         }}>
           {safeTitle}
         </p>
@@ -155,8 +155,8 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
       {/* Text */}
       <div style={{ padding: '7px 8px 8px' }}>
         <p style={{
-          fontFamily: "'Bebas Neue', cursive",
-          fontSize: 12, letterSpacing: '0.05em',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: 11, fontWeight: 600,
           color: '#fff', overflow: 'hidden',
           textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2,
         }}>
@@ -191,7 +191,7 @@ export const PlaylistCard = ({ playlist, index = 0, onClick }) => {
         display: 'flex', alignItems: 'center', gap: 10,
         borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
         background: `linear-gradient(135deg, ${palette[0]}bb, ${palette[1]}66)`,
-        border: '1px solid rgba(0,255,65,0.14)',
+        border: '1px solid rgba(139,92,246,0.15)',
         boxShadow: '0 16px 40px rgba(0,0,0,0.8)',
         willChange: 'transform',
       }}
@@ -199,15 +199,15 @@ export const PlaylistCard = ({ playlist, index = 0, onClick }) => {
       {/* Left colour block */}
       <div style={{
         width: 52, height: 52, flexShrink: 0,
-        background: `radial-gradient(circle at 30% 10%, rgba(0,255,65,0.4), transparent 60%), radial-gradient(circle at 90% 120%, rgba(0,255,65,0.2), transparent 60%)`,
+        background: `radial-gradient(circle at 30% 10%, rgba(139,92,246,0.4), transparent 60%), radial-gradient(circle at 90% 120%, rgba(109,40,217,0.2), transparent 60%)`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         <span style={{ fontSize: 20 }}>{playlist.emoji || '🎵'}</span>
       </div>
       {/* Label */}
       <p style={{
-        fontFamily: "'Bebas Neue', cursive",
-        fontSize: 13, letterSpacing: '0.04em',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: 12, fontWeight: 600,
         color: '#fff', paddingRight: 10,
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         flex: 1,

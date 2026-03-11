@@ -6,7 +6,7 @@ import { SongRow } from '../components/MusicCards';
 import PlaylistCover from '../components/PlaylistCover';
 import { OFFLINE_AUDIO_CACHE_NAME, getSongAudioUrlCandidates } from '../lib/offlineAudio';
 
-const FILTERS = ['Playlists'];
+const FILTERS = ['All', 'Liked Songs', 'Playlists', 'Downloads'];
 
 const PLAYLIST_EMOJIS = ['🎵', '🔥', '🌙', '💚', '🎧', '⚡', '🎹'];
 
@@ -21,31 +21,25 @@ const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, 
       display: 'flex',
       alignItems: 'center',
       gap: 16,
-      padding: '16px 20px',
-      borderRadius: 4,
-      border: '1px solid rgba(255,255,255,0.04)',
+      padding: '14px 16px',
+      borderRadius: 14,
+      border: '1px solid rgba(255,255,255,0.07)',
       background: 'rgba(255,255,255,0.02)',
-      marginBottom: 2,
+      marginBottom: 6,
     }}
-    onHoverStart={(e) => {
-      e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-      e.currentTarget.style.borderColor = 'rgba(0,255,65,0.2)';
-    }}
-    onHoverEnd={(e) => {
-      e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
-      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)';
-    }}
+    whileHover={{ background: 'rgba(139,92,246,0.08)' }}
   >
     <button
       onClick={onOpen}
       style={{
         width: 48,
         height: 48,
-        borderRadius: 4,
+        borderRadius: 10,
         border: 'none',
         background: 'transparent',
         cursor: 'pointer',
         padding: 0,
+        flexShrink: 0,
       }}
     >
       <PlaylistCover playlist={playlist} songsById={songsById} size={48} />
@@ -62,9 +56,9 @@ const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, 
       }}
     >
       <p style={{
-        fontFamily: "'Bebas Neue', cursive",
-        fontSize: 16,
-        letterSpacing: '0.04em',
+        fontFamily: "'Space Grotesk', sans-serif",
+        fontSize: 15,
+        fontWeight: 600,
         color: '#fff',
       }}>
         {playlist.name}
@@ -120,7 +114,7 @@ const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, 
 
 const Library = () => {
   const location = useLocation();
-  const [activeFilter, setActiveFilter] = useState('Playlists');
+  const [activeFilter, setActiveFilter] = useState('All');
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
   const [offlineOpen, setOfflineOpen] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -290,23 +284,23 @@ const Library = () => {
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 48, letterSpacing: '0.06em', color: '#fff', paddingLeft: 16 }}
+          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 36, fontWeight: 800, letterSpacing: '-0.02em', color: '#fff', paddingLeft: 4 }}
         >
-          YOUR LIBRARY
+          Your Library
         </motion.h1>
 
-        <button
+        <motion.button
+          whileTap={{ scale: 0.92 }}
           onClick={() => setShowCreate((v) => !v)}
           style={{
-            display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px',
-            borderRadius: 4, background: 'transparent',
-            border: '1px solid rgba(0,255,106,0.2)', color: '#00ff6a', cursor: 'pointer',
-            fontFamily: "'Share Tech Mono', monospace", fontSize: 10, letterSpacing: '0.06em',
-            textTransform: 'uppercase',
+            display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+            borderRadius: 999, background: 'rgba(139,92,246,0.12)',
+            border: '1px solid rgba(139,92,246,0.3)', color: '#a78bfa', cursor: 'pointer',
+            fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 600,
           }}
         >
-          New Playlist
-        </button>
+          + New Playlist
+        </motion.button>
       </div>
 
       {showCreate && (
@@ -318,23 +312,27 @@ const Library = () => {
             style={{
               flex: 1,
               background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(0,255,65,0.2)',
+              border: '1px solid rgba(139,92,246,0.25)',
               borderRadius: 999,
               color: '#fff',
-              padding: '10px 14px',
-              fontFamily: "'DM Mono', monospace",
-              fontSize: 12,
+              padding: '10px 16px',
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: 13,
+              outline: 'none',
             }}
           />
           <button
             onClick={onCreatePlaylist}
             style={{
-              border: '1px solid rgba(0,255,65,0.25)',
+              border: 'none',
               borderRadius: 999,
-              background: 'rgba(0,255,65,0.12)',
-              color: '#00ff6a',
-              padding: '10px 14px',
+              background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+              color: '#fff',
+              padding: '10px 18px',
               cursor: 'pointer',
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: 13, fontWeight: 600,
+              boxShadow: '0 4px 14px rgba(139,92,246,0.4)',
             }}
           >
             Create
@@ -356,8 +354,11 @@ const Library = () => {
               key={f}
               onClick={() => {
                 setActiveFilter(f);
-                if (f !== 'Playlists') {
-                  setSelectedPlaylistId(null);
+                setSelectedPlaylistId(null);
+                if (f === 'Downloads') {
+                  setOfflineOpen(true);
+                } else {
+                  setOfflineOpen(false);
                 }
               }}
               style={{
@@ -365,14 +366,13 @@ const Library = () => {
                 borderRadius: 50,
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
-                fontFamily: "'Share Tech Mono', monospace",
-                fontSize: 10,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-                background: isActive ? 'linear-gradient(135deg, #00ff6a, #00c44f)' : 'var(--surface)',
-                color: isActive ? '#000' : 'rgba(255,255,255,0.45)',
-                border: isActive ? 'none' : '1px solid rgba(0,255,106,0.12)',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: 13, fontWeight: 500,
+                background: isActive ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : 'rgba(255,255,255,0.04)',
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
+                border: isActive ? 'none' : '1px solid rgba(255,255,255,0.1)',
                 cursor: 'pointer',
+                boxShadow: isActive ? '0 4px 14px rgba(139,92,246,0.4)' : 'none',
               }}
             >
               {f}
@@ -382,8 +382,40 @@ const Library = () => {
       </motion.div>
 
       <section style={{ padding: '0 16px' }}>
-      {/* Playlist list view */}
-        {!selectedPlaylist && !showingOffline && (
+      {/* All Songs view */}
+        {!selectedPlaylist && !showingOffline && activeFilter === 'All' && (
+          <div>
+            {allSongs.length === 0 ? (
+              <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '30px 0' }}>No saved songs yet.</p>
+            ) : allSongs.map((song, i) => (
+              <div key={song.id} style={{ marginBottom: 4 }}>
+                <SongRow song={song} index={i} showIndex onClick={(s, idx) => playSong(s, idx, allSongs)} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Liked Songs view */}
+        {!selectedPlaylist && !showingOffline && activeFilter === 'Liked Songs' && (
+          <div>
+            {(() => {
+              const likedPlaylist = playlists.find((p) => p.id === LIKED_SONGS_PLAYLIST_ID);
+              const likedSongs = likedPlaylist
+                ? likedPlaylist.songIds.map((id) => songsById[id]).filter((s) => s && isPlayableSong(s))
+                : [];
+              return likedSongs.length === 0 ? (
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '30px 0' }}>No liked songs yet.</p>
+              ) : likedSongs.map((song, i) => (
+                <div key={song.id} style={{ marginBottom: 4 }}>
+                  <SongRow song={song} index={i} showIndex onClick={(s, idx) => playSong(s, idx, likedSongs)} />
+                </div>
+              ));
+            })()}
+          </div>
+        )}
+
+        {/* Playlist list view */}
+        {!selectedPlaylist && !showingOffline && activeFilter === 'Playlists' && (
           <>
             {/* Pinned Offline Playlist Card */}
             <motion.button
@@ -475,7 +507,7 @@ const Library = () => {
               >
                 ← Back
               </button>
-              <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 24, color: '#a78bfa' }}>SAVED OFFLINE</p>
+              <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, fontWeight: 700, color: '#a78bfa' }}>Saved Offline</p>
               <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>{offlineSongs.length} songs</span>
             </div>
             {offlineSongs.length === 0 ? (
@@ -504,7 +536,7 @@ const Library = () => {
               >
                 Back
               </button>
-              <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 26, color: '#fff' }}>
+              <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, fontWeight: 700, color: '#fff' }}>
                 {selectedPlaylist.name}
               </p>
               <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>
@@ -532,7 +564,7 @@ const Library = () => {
               Shuffle Play Playlist
             </button>
 
-            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(0,255,65,0.6)', marginBottom: 8 }}>
+            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(167,139,250,0.7)', marginBottom: 8 }}>
               Playlist Songs
             </p>
             {playlistSongs.length > 0 ? playlistSongs.map((song, i) => (
@@ -576,7 +608,7 @@ const Library = () => {
 
             {selectedPlaylist.id !== LIKED_SONGS_PLAYLIST_ID && (
               <>
-                <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(0,255,65,0.6)', margin: '16px 0 8px' }}>
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(167,139,250,0.7)', margin: '16px 0 8px' }}>
                   Add Songs
                 </p>
                 {addableSongs.slice(0, 20).map((song) => (
@@ -596,9 +628,9 @@ const Library = () => {
                     <button
                       onClick={() => addSongToPlaylist(selectedPlaylist.id, song)}
                       style={{
-                        border: '1px solid rgba(0,255,65,0.3)',
-                        background: 'rgba(0,255,65,0.08)',
-                        color: '#00ff6a',
+                        border: '1px solid rgba(139,92,246,0.35)',
+                        background: 'rgba(139,92,246,0.1)',
+                        color: '#a78bfa',
                         borderRadius: 999,
                         padding: '6px 12px',
                         cursor: 'pointer',

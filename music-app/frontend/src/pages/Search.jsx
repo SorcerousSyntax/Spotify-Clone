@@ -49,7 +49,8 @@ const SearchResultRow = ({ song, index, onClick }) => {
         marginBottom: 0,
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+        e.currentTarget.style.background = 'rgba(139,92,246,0.06)';
+        e.currentTarget.style.borderRadius = '14px';
       }}
       onMouseLeave={e => {
         e.currentTarget.style.background = 'transparent';
@@ -61,8 +62,8 @@ const SearchResultRow = ({ song, index, onClick }) => {
 
       {/* Album art */}
       <div style={{
-        width: 44, height: 44, borderRadius: 2, overflow: 'hidden', flexShrink: 0,
-        border: '1px solid rgba(255,255,255,0.06)',
+        width: 44, height: 44, borderRadius: 10, overflow: 'hidden', flexShrink: 0,
+        border: '1px solid rgba(255,255,255,0.08)',
       }}>
         <img
           src={albumArt}
@@ -75,8 +76,8 @@ const SearchResultRow = ({ song, index, onClick }) => {
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{
-          fontFamily: "'Bebas Neue', cursive",
-          fontSize: 16, letterSpacing: '0.04em',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: 15, fontWeight: 600,
           color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {title}
@@ -203,12 +204,12 @@ const Search = () => {
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 'clamp(48px, 8vw, 80px)', letterSpacing: '0.06em', color: '#ffffff', marginBottom: 8, paddingLeft: 16, lineHeight: 1 }}
+        style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 'clamp(36px, 8vw, 48px)', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff', marginBottom: 4, paddingLeft: 16, lineHeight: 1 }}
       >
-        SEARCH
+        Search
       </motion.h1>
-      <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', paddingLeft: 16, marginBottom: 24 }}>
-        ANY SONG. ANY MOOD. ANY MEMORY.
+      <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.3)', paddingLeft: 16, marginBottom: 20 }}>
+        Any song, any mood, any memory.
       </p>
 
       {/* Search bar */}
@@ -220,21 +221,21 @@ const Search = () => {
       >
         {/* Scanning line when focused */}
         <div
-          className={focused ? 'scan-line' : ''}
+          className={''}
           style={{
             position: 'relative',
             display: 'flex', alignItems: 'center', gap: 12,
             padding: '14px 20px',
-            background: 'rgba(255,255,255,0.02)',
-            border: focused ? '1px solid rgba(0,255,65,0.5)' : '1px solid rgba(255,255,255,0.06)',
-            borderRadius: 4,
-            boxShadow: focused ? '0 0 0 3px rgba(0,255,65,0.08), inset 0 0 20px rgba(0,255,65,0.03)' : 'none',
+            background: 'rgba(255,255,255,0.03)',
+            border: focused ? '1px solid rgba(139,92,246,0.55)' : '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 16,
+            boxShadow: focused ? '0 0 0 3px rgba(139,92,246,0.12)' : 'none',
             transition: 'all 0.25s ease',
             overflow: 'hidden',
             margin: '0 16px 24px',
           }}
         >
-          <svg width="18" height="18" fill="none" stroke={focused ? '#00ff6a' : 'rgba(255,255,255,0.25)'} viewBox="0 0 24 24" style={{ flexShrink: 0, transition: 'stroke 0.2s' }}>
+          <svg width="18" height="18" fill="none" stroke={focused ? '#a78bfa' : 'rgba(255,255,255,0.3)'} viewBox="0 0 24 24" style={{ flexShrink: 0, transition: 'stroke 0.2s' }}>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
@@ -277,20 +278,18 @@ const Search = () => {
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             style={{ textAlign: 'center', padding: '48px 0' }}
           >
-            <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 22, letterSpacing: '0.08em', color: '#00ff6a', marginBottom: 16 }}>
+            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 18, fontWeight: 700, color: '#a78bfa', marginBottom: 16 }}>
               Finding Your Song
             </p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-              {[0, 1, 2].map(i => (
-                <span key={i} className="wave-dot" style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: '#00ff6a', display: 'block',
-                  boxShadow: '0 0 8px #00ff6a',
-                }} />
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'center', alignItems: 'flex-end', height: 20 }}>
+              {[0, 1, 2].map((i) => (
+                <motion.span key={i} style={{ width: 4, background: '#8b5cf6', borderRadius: 2, display: 'block' }}
+                  animate={{ height: ['4px', '18px', '4px'] }}
+                  transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }} />
               ))}
             </div>
-            <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 16 }}>
-              Searching across Telegram sources...
+            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.25)', marginTop: 16 }}>
+              Searching across sources...
             </p>
           </motion.div>
         )}
@@ -316,10 +315,10 @@ const Search = () => {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           style={{ textAlign: 'center', padding: '60px 0' }}
         >
-          <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 22, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.2)' }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.3)' }}>
             Nothing Found
           </p>
-          <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: 'rgba(255,255,255,0.15)', marginTop: 8 }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.18)', marginTop: 6 }}>
             Try a different search
           </p>
         </motion.div>
@@ -333,18 +332,19 @@ const Search = () => {
         >
           <div style={{
             width: 64, height: 64, borderRadius: '50%',
-            border: '1px solid rgba(0,255,106,0.15)',
+            border: '1px solid rgba(139,92,246,0.2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 20px',
+            background: 'rgba(139,92,246,0.06)',
           }}>
-            <svg width="28" height="28" fill="none" stroke="rgba(0,255,106,0.4)" viewBox="0 0 24 24">
+            <svg width="28" height="28" fill="none" stroke="rgba(139,92,246,0.5)" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
             </svg>
           </div>
-          <p style={{ fontFamily: "'Bebas Neue', cursive", fontSize: 20, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.2)' }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.25)' }}>
             Search Any Song
           </p>
-          <p style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 11, color: 'rgba(255,255,255,0.12)', marginTop: 6 }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.15)', marginTop: 6 }}>
             We'll find it from anywhere
           </p>
         </motion.div>

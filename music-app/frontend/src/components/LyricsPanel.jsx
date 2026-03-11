@@ -39,12 +39,12 @@ const LyricsPanel = ({ lyrics, onSeek }) => {
           <motion.div
             style={{
               position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-              background: 'rgba(0,8,3,0.96)',
+              background: 'rgba(11,0,30,0.97)',
               backdropFilter: 'blur(40px)',
-              borderTop: '3px solid #00ff6a',
+              borderTop: '2px solid rgba(139,92,246,0.5)',
               borderRadius: '20px 20px 0 0',
               maxHeight: '70vh',
-              boxShadow: '0 -20px 60px rgba(0,255,106,0.08)',
+              boxShadow: '0 -20px 60px rgba(109,40,217,0.15)',
             }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -53,14 +53,14 @@ const LyricsPanel = ({ lyrics, onSeek }) => {
           >
             {/* Handle */}
             <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(0,255,106,0.3)' }} />
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(139,92,246,0.4)' }} />
             </div>
 
             <p style={{
-              fontFamily: "'Bebas Neue', cursive",
-              fontSize: 14, letterSpacing: '0.2em',
-              color: 'rgba(0,255,106,0.5)',
-              textAlign: 'center', padding: '4px 0 16px',
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: 12, fontWeight: 600, letterSpacing: '0.16em',
+              color: 'rgba(167,139,250,0.6)',
+              textAlign: 'center', padding: '4px 0 16px', textTransform: 'uppercase',
             }}>LYRICS</p>
 
             {/* Lyrics list */}
@@ -85,15 +85,15 @@ const LyricsPanel = ({ lyrics, onSeek }) => {
                     style={{
                       padding: '10px 0',
                       cursor: 'pointer',
-                      fontFamily: "'Share Tech Mono', monospace",
+                      fontFamily: "'Space Grotesk', sans-serif",
                       fontSize: i === activeLine ? 17 : 14,
                       lineHeight: 1.5,
-                      color: i === activeLine ? '#00ff6a' : '#fff',
+                      color: i === activeLine ? '#c4b5fd' : '#fff',
                       textShadow: i === activeLine
-                        ? '0 0 10px #00ff6a, 0 0 20px rgba(0,255,106,0.5)'
+                        ? '0 0 16px rgba(167,139,250,0.8)'
                         : 'none',
                       transition: 'font-size 0.3s, color 0.3s, text-shadow 0.3s',
-                      borderLeft: i === activeLine ? '3px solid #00ff6a' : '3px solid transparent',
+                      borderLeft: i === activeLine ? '3px solid #a78bfa' : '3px solid transparent',
                       paddingLeft: 16,
                       marginLeft: -16,
                     }}

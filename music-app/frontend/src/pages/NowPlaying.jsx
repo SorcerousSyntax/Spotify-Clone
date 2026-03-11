@@ -239,7 +239,7 @@ const NowPlaying = () => {
     return (
       <div style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', position: 'relative', zIndex: 10 }}>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontFamily: "'Bebas Neue', system-ui", fontSize: 36, color: '#fff', letterSpacing: '0.05em' }}>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>
             No song playing
           </p>
           <button
@@ -264,6 +264,9 @@ const NowPlaying = () => {
   return (
     <>
       {/* Full-bleed ambient background — multi-layer colour wash */}
+      <motion.div
+        style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'var(--bg)' }}
+      />
       <motion.div
         style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}
         animate={{
