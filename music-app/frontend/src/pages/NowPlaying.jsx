@@ -15,8 +15,9 @@ import {
   getSongAudioUrlCandidates,
 } from '../lib/offlineAudio';
 
-const ScrollingTitle = ({ text, fontSize }) => {
+const ScrollingTitle = ({ text, fontSize, accentColor }) => {
   const safeText = decodeSongTitle(text || '');
+  const isLong = safeText.length > 18;
 
   return (
     <div
@@ -29,30 +30,57 @@ const ScrollingTitle = ({ text, fontSize }) => {
         marginBottom: 2,
       }}
     >
-      <motion.div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          width: 'max-content',
-          gap: 36,
-        }}
-        animate={{ x: ['0%', '-50%'] }}
-        transition={{
-          duration: 11,
-          ease: 'linear',
-          repeat: Infinity,
-        }}
-      >
-        <span style={{ fontSize, lineHeight: 0.95, letterSpacing: '0.03em', color: '#fff' }}>
+      {isLong ? (
+        <motion.div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            width: 'max-content',
+            gap: 48,
+          }}
+          animate={{ x: ['0%', '-50%'] }}
+          transition={{ duration: 13, ease: 'linear', repeat: Infinity }}
+        >
+          <span style={{
+            fontSize, lineHeight: 0.95, letterSpacing: '-0.02em', fontWeight: 800,
+            background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 70%, #f472b6 100%)`,
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>
+            {safeText}
+          </span>
+          <span style={{
+            fontSize, lineHeight: 0.95, letterSpacing: '-0.02em', fontWeight: 800,
+            background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 70%, #f472b6 100%)`,
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>
+            {safeText}
+          </span>
+        </motion.div>
+      ) : (
+        <span style={{
+          fontSize, lineHeight: 0.95, letterSpacing: '-0.02em', fontWeight: 800, display: 'block',
+          background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 70%, #f472b6 100%)`,
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+        }}>
           {safeText}
         </span>
-        <span style={{ fontSize, lineHeight: 0.95, letterSpacing: '0.03em', color: '#fff' }}>
-          {safeText}
-        </span>
-      </motion.div>
+      )}
     </div>
   );
 };
+
+// Ambient floating particle
+const FloatOrb = ({ size, x, y, color, duration, delay }) => (
+  <motion.div
+    style={{
+      position: 'absolute', width: size, height: size, borderRadius: '50%',
+      background: color, filter: `blur(${size * 0.6}px)`, pointerEvents: 'none',
+      left: `${x}%`, top: `${y}%`,
+    }}
+    animate={{ y: [-12, 12, -12], x: [-8, 8, -8], opacity: [0.3, 0.55, 0.3] }}
+    transition={{ duration, ease: 'easeInOut', repeat: Infinity, delay }}
+  />
+);
 
 const NowPlaying = () => {
   const navigate = useNavigate();
@@ -261,36 +289,68 @@ const NowPlaying = () => {
     );
   }
 
+  // Blend album accent with violet for a mixed color that avoids pure-green screens
+  const mixR = Math.round(dr * 0.45 + 139 * 0.55);
+  const mixG = Math.round(dg * 0.45 + 92 * 0.55);
+  const mixB = Math.round(db * 0.45 + 246 * 0.55);
+  const blendAccent = `rgb(${mixR},${mixG},${mixB})`;
+  const blendA = (a) => `rgba(${mixR},${mixG},${mixB},${a})`;
+
   return (
     <>
-      {/* Full-bleed ambient background — multi-layer colour wash */}
-      <motion.div
-        style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'var(--bg)' }}
-      />
-      <motion.div
-        style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}
-        animate={{
-          background: [
-            `radial-gradient(ellipse at 30% 20%, ${accentA(0.22)} 0%, transparent 55%)`,
-            `radial-gradient(ellipse at 70% 80%, ${accentA(0.18)} 0%, transparent 55%)`,
-          ].join(', '),
-        }}
-        transition={{ duration: 2, ease: 'easeInOut' }}
-      />
+      {/* ── Background layers ── */}
+      {/* Base dark */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'var(--bg)' }} />
 
-      <div style={{ position: 'relative', zIndex: 10, minHeight: '100dvh', paddingBottom: 32 }}>
+      {/* Violet constant orbs — always purple regardless of album */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <FloatOrb size={320} x={-8} y={-10} color="rgba(139,92,246,0.18)" duration={8} delay={0} />
+        <FloatOrb size={260} x={72} y={5} color="rgba(167,139,250,0.12)" duration={11} delay={2} />
+        <FloatOrb size={200} x={15} y={68} color="rgba(99,102,241,0.14)" duration={9} delay={1.5} />
+        <FloatOrb size={180} x={80} y={70} color="rgba(244,114,182,0.10)" duration={12} delay={3} />
+      </div>
+
+      {/* Album-tinted orbs — blended with violet, softer */}
+      <motion.div
+        key={currentSong.id + '-bg'}
+        style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.4, ease: 'easeInOut' }}
+      >
+        <motion.div
+          style={{ position: 'absolute', inset: 0 }}
+          animate={{
+            background: [
+              `radial-gradient(ellipse 70% 60% at 25% 15%, ${blendA(0.28)} 0%, transparent 65%)`,
+              `radial-gradient(ellipse 70% 60% at 75% 85%, ${blendA(0.22)} 0%, transparent 65%)`,
+              `radial-gradient(ellipse 70% 60% at 25% 15%, ${blendA(0.28)} 0%, transparent 65%)`,
+            ],
+          }}
+          transition={{ duration: 7, ease: 'easeInOut', repeat: Infinity }}
+        />
+      </motion.div>
+
+      {/* ── Main content ── */}
+      <div style={{ position: 'relative', zIndex: 10, minHeight: '100dvh', paddingBottom: 36 }}>
+
         {/* ── Top bar ── */}
-        <div style={{ position: 'relative', zIndex: 2, width: 'min(820px, calc(100vw - 24px))', margin: '0 auto', paddingTop: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 18 }}>
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+          style={{ width: 'min(820px, calc(100vw - 24px))', margin: '0 auto', paddingTop: 20 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 22 }}>
             {/* Back */}
             <motion.button
-              whileTap={{ scale: 0.88 }}
+              whileTap={{ scale: 0.85 }}
               onClick={() => navigate(-1)}
               style={{
                 width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                border: '1px solid rgba(255,255,255,0.15)',
-                background: 'rgba(255,255,255,0.06)',
-                color: '#fff', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid rgba(167,139,250,0.3)',
+                background: 'rgba(139,92,246,0.12)',
+                color: '#a78bfa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -298,9 +358,16 @@ const NowPlaying = () => {
               </svg>
             </motion.button>
 
-            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-              Now Playing
-            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: '0.22em', color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', margin: 0 }}>
+                Now Playing
+              </p>
+              <motion.div
+                style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(167,139,250,0.5), transparent)' }}
+                animate={{ width: ['20px', '60px', '20px'] }}
+                transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity }}
+              />
+            </div>
 
             {/* Offline + Download */}
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
@@ -308,64 +375,90 @@ const NowPlaying = () => {
                 whileTap={{ scale: 0.9 }}
                 onClick={saveOffline}
                 style={{
-                  height: 34, padding: '0 14px', borderRadius: 999, cursor: 'pointer', fontSize: 10,
+                  height: 34, padding: '0 12px', borderRadius: 999, cursor: 'pointer', fontSize: 10,
                   fontFamily: "'DM Mono', monospace", letterSpacing: '0.06em', textTransform: 'uppercase',
-                  border: offlineStatus === 'saved' ? `1px solid ${accentA(0.5)}` : '1px solid rgba(255,255,255,0.18)',
-                  background: offlineStatus === 'saved' ? accentA(0.18) : 'rgba(255,255,255,0.06)',
-                  color: offlineStatus === 'saved' ? accent : '#fff',
+                  border: offlineStatus === 'saved' ? '1px solid rgba(52,211,153,0.5)' : '1px solid rgba(255,255,255,0.15)',
+                  background: offlineStatus === 'saved' ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.06)',
+                  color: offlineStatus === 'saved' ? '#34d399' : 'rgba(255,255,255,0.7)',
                 }}
               >
-                {offlineStatus === 'saved' ? '✓ Saved' : offlineStatus === 'saving' ? '...' : 'Offline'}
+                {offlineStatus === 'saved' ? '✓ Saved' : offlineStatus === 'saving' ? '…' : 'Offline'}
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={downloadToDevice}
                 style={{
-                  height: 34, padding: '0 14px', borderRadius: 999, cursor: 'pointer', fontSize: 10,
-                  fontFamily: "'DM Mono', monospace", letterSpacing: '0.06em', textTransform: 'uppercase',
-                  border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.06)', color: '#fff',
+                  width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: downloadStatus === 'done' ? '1px solid rgba(52,211,153,0.5)' : '1px solid rgba(255,255,255,0.15)',
+                  background: downloadStatus === 'done' ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.06)',
+                  color: downloadStatus === 'done' ? '#34d399' : 'rgba(255,255,255,0.7)',
                 }}
               >
-                {downloadStatus === 'downloading' ? '...' : downloadStatus === 'done' ? '✓' : '↓'}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  {downloadStatus === 'done' ? <path d="M20 6L9 17l-5-5" /> : <><path d="M12 3v13M5 16l7 5 7-5" /></>}
+                </svg>
               </motion.button>
             </div>
           </div>
 
-          {/* ── Album Art (3D tilt card) ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+          {/* ── Album Art ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <motion.div
               {...tiltHandlers}
               key={currentSong.id}
-              initial={{ opacity: 0, scale: 0.88, y: 18 }}
+              initial={{ opacity: 0, scale: 0.82, y: 28 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+              transition={{ type: 'spring', stiffness: 240, damping: 22, delay: 0.08 }}
               style={{
-                width: 'min(88vw, 310px)',
+                width: 'min(86vw, 300px)',
                 aspectRatio: '1',
-                borderRadius: 22,
+                borderRadius: 24,
                 position: 'relative',
                 willChange: 'transform',
                 transformStyle: 'preserve-3d',
-                marginBottom: 10,
+                marginBottom: 14,
               }}
             >
-              {/* Floating ambient glow behind art */}
+              {/* Deep glow blob */}
               <motion.div
-                style={{ position: 'absolute', inset: -18, borderRadius: 38, filter: 'blur(28px)', zIndex: 0, pointerEvents: 'none' }}
-                animate={{ background: accentA(0.45), opacity: isPlaying ? 1 : 0.45 }}
-                transition={{ duration: 1.2 }}
+                style={{ position: 'absolute', inset: -26, borderRadius: 50, zIndex: 0, pointerEvents: 'none' }}
+                animate={{
+                  background: blendA(0.5),
+                  filter: `blur(${isPlaying ? 36 : 22}px)`,
+                  opacity: isPlaying ? 0.9 : 0.5,
+                }}
+                transition={{ duration: 1.4, ease: 'easeInOut' }}
               />
 
-              {/* Playing halo ring */}
+              {/* Violet corner accent glow */}
+              <motion.div
+                style={{
+                  position: 'absolute', inset: -12, borderRadius: 36, zIndex: 0, pointerEvents: 'none',
+                  background: 'radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.35) 0%, transparent 60%)',
+                }}
+                animate={{ opacity: [0.5, 0.9, 0.5] }}
+                transition={{ duration: 4, ease: 'easeInOut', repeat: Infinity }}
+              />
+
+              {/* Pulse ring when playing */}
               <AnimatePresence>
                 {isPlaying && (
-                  <motion.div
-                    style={{ position: 'absolute', inset: -6, borderRadius: 28, border: `1.5px solid ${accentA(0.5)}`, zIndex: 1, pointerEvents: 'none' }}
-                    initial={{ opacity: 0, scale: 0.92 }}
-                    animate={{ opacity: [0.5, 0, 0.5], scale: [1, 1.03, 1] }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-                  />
+                  <>
+                    <motion.div
+                      style={{ position: 'absolute', inset: -8, borderRadius: 32, border: `1.5px solid ${blendA(0.5)}`, zIndex: 1, pointerEvents: 'none' }}
+                      initial={{ opacity: 0.6, scale: 1 }}
+                      animate={{ opacity: 0, scale: 1.08 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
+                    />
+                    <motion.div
+                      style={{ position: 'absolute', inset: -4, borderRadius: 28, border: '1px solid rgba(167,139,250,0.4)', zIndex: 1, pointerEvents: 'none' }}
+                      initial={{ opacity: 0.5, scale: 1 }}
+                      animate={{ opacity: 0, scale: 1.05 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeOut', delay: 0.6 }}
+                    />
+                  </>
                 )}
               </AnimatePresence>
 
@@ -373,32 +466,55 @@ const NowPlaying = () => {
                 src={currentSong.album_art_url || '/placeholder-album.svg'}
                 alt={decodeSongTitle(currentSong.title || '')}
                 style={{
-                  width: '100%', height: '100%', borderRadius: 22, objectFit: 'cover',
-                  boxShadow: `0 28px 70px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08)`,
+                  width: '100%', height: '100%', borderRadius: 24, objectFit: 'cover',
+                  boxShadow: `0 32px 80px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.09)`,
                   position: 'relative', zIndex: 2, display: 'block',
                 }}
               />
+
+              {/* Overlay shimmer when playing */}
+              <AnimatePresence>
+                {isPlaying && (
+                  <motion.div
+                    style={{
+                      position: 'absolute', inset: 0, borderRadius: 24, zIndex: 3, pointerEvents: 'none',
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 50%, rgba(167,139,250,0.06) 100%)',
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                )}
+              </AnimatePresence>
             </motion.div>
 
             {/* ── Title + Artist ── */}
-            <div style={{ width: 'min(88vw, 310px)', marginBottom: 4 }}>
-              <ScrollingTitle text={safeTitle} fontSize={26} />
-              <motion.p
-                key={currentSong.id + '-artist'}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: 'rgba(255,255,255,0.52)', marginTop: 4 }}
-              >
+            <motion.div
+              key={currentSong.id + '-meta'}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.4 }}
+              style={{ width: 'min(86vw, 300px)', marginBottom: 6 }}
+            >
+              <ScrollingTitle text={safeTitle} fontSize={28} accentColor={blendAccent} />
+              <p style={{
+                fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 500,
+                color: 'rgba(255,255,255,0.48)', marginTop: 5, letterSpacing: '0.01em',
+              }}>
                 {currentSong.artist}
-              </motion.p>
-            </div>
+              </p>
+            </motion.div>
 
             {/* ── Progress Bar ── */}
-            <div style={{ width: 'min(88vw, 310px)', marginTop: 14, marginBottom: 6 }}>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.22 }}
+              style={{ width: 'min(86vw, 300px)', marginTop: 16, marginBottom: 4 }}
+            >
               <div
                 ref={progressBarRef}
-                style={{ position: 'relative', height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                style={{ position: 'relative', height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.1)', cursor: 'pointer' }}
                 onMouseDown={(e) => { setIsDragging(true); handleProgressDrag(e); }}
                 onMouseMove={(e) => isDragging && handleProgressDrag(e)}
                 onMouseUp={handleProgressEnd}
@@ -407,137 +523,134 @@ const NowPlaying = () => {
                 onTouchMove={(e) => isDragging && handleProgressDrag(e)}
                 onTouchEnd={handleProgressEnd}
               >
-                {/* Filled track */}
+                {/* Track fill — gradient */}
                 <motion.div
                   style={{ position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 999 }}
-                  animate={{ width: `${progressPercent}%`, background: accent, boxShadow: `0 0 8px ${accentA(0.7)}` }}
-                  transition={{ duration: 0.35, ease: 'linear' }}
+                  animate={{
+                    width: `${progressPercent}%`,
+                    background: `linear-gradient(90deg, #8b5cf6, ${blendAccent})`,
+                    boxShadow: `0 0 10px ${blendA(0.6)}`,
+                  }}
+                  transition={{ duration: 0.3, ease: 'linear' }}
                 />
-                {/* Thumb */}
+                {/* Glowing thumb */}
                 <motion.div
                   style={{
                     position: 'absolute', top: '50%',
                     left: `${progressPercent}%`,
                     transform: 'translate(-50%, -50%)',
-                    width: isDragging ? 18 : 14, height: isDragging ? 18 : 14,
-                    borderRadius: '50%',
-                    zIndex: 2,
+                    borderRadius: '50%', zIndex: 2,
+                    width: isDragging ? 18 : 13, height: isDragging ? 18 : 13,
                     transition: 'width 0.15s, height 0.15s',
+                    background: '#fff',
                   }}
-                  animate={{ background: accent, boxShadow: `0 0 ${isDragging ? 14 : 8}px ${accentA(0.8)}` }}
-                  transition={{ duration: 0.3 }}
+                  animate={{ boxShadow: `0 0 ${isDragging ? 18 : 10}px ${blendA(0.9)}` }}
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
+                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>
                   {formatTime(currentProgress)}
                 </span>
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
+                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>
                   -{formatTime(Math.max(0, duration - currentProgress))}
                 </span>
               </div>
-            </div>
+            </motion.div>
 
-            {/* ── Main Controls ── */}
-            <div style={{ width: 'min(92vw, 340px)', marginTop: 8 }}>
-              {/* Top row: Shuffle | Prev | Play | Next | Repeat */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 0 }}>
+            {/* ── Controls ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.28 }}
+              style={{ width: 'min(92vw, 320px)', marginTop: 10 }}
+            >
+              {/* Shuffle | Prev | Play | Next | Repeat */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 
                 {/* Shuffle */}
                 <motion.button
-                  whileTap={{ scale: 0.85 }}
+                  whileTap={{ scale: 0.82 }}
                   onClick={toggleShuffle}
-                  title="Shuffle"
                   style={{
-                    width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', position: 'relative',
+                    width: 42, height: 42, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', gap: 3,
                   }}
                 >
-                  <motion.div
-                    animate={{ color: shuffle ? accent : 'rgba(255,255,255,0.4)', filter: shuffle ? `drop-shadow(0 0 6px ${accentA(0.8)})` : 'none' }}
-                    transition={{ duration: 0.25 }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <motion.div animate={{
+                    color: shuffle ? '#fbbf24' : 'rgba(255,255,255,0.38)',
+                    filter: shuffle ? 'drop-shadow(0 0 7px rgba(251,191,36,0.85))' : 'none',
+                  }} transition={{ duration: 0.2 }}>
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M16 3h5v5M4 20l7-7M21 3l-8 8M4 4l5 5M16 21h5v-5" />
-                      <path d="M21 16l-7-5" strokeOpacity="0.6" />
+                      <path d="M21 16l-7-5" strokeOpacity="0.5" />
                     </svg>
                   </motion.div>
-                  {shuffle && <motion.div style={{ position: 'absolute', bottom: 7, width: 4, height: 4, borderRadius: '50%' }} animate={{ background: accent }} />}
+                  {shuffle && <motion.div layoutId="shuffle-dot" style={{ width: 4, height: 4, borderRadius: '50%', background: '#fbbf24' }} />}
                 </motion.button>
 
                 {/* Prev */}
                 <motion.button
-                  whileTap={{ scale: 0.88, x: -2 }}
+                  whileTap={{ scale: 0.86, x: -3 }}
                   onClick={prevSong}
-                  title="Previous"
                   style={{
-                    width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: 50, height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.11)',
                     borderRadius: '50%', outline: 'none', cursor: 'pointer', color: '#fff',
                   }}
                 >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11 7l-7 5 7 5V7zM20 7l-7 5 7 5V7z" />
                   </svg>
                 </motion.button>
 
-                {/* Play / Pause — main focal button */}
+                {/* Play / Pause */}
                 <motion.button
-                  whileTap={{ scale: 0.91 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={togglePlay}
-                  title={isPlaying ? 'Pause' : 'Play'}
-                  style={{
-                    position: 'relative', width: 72, height: 72, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer',
-                  }}
+                  style={{ position: 'relative', width: 76, height: 76, background: 'none', border: 'none', outline: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                  {/* Outer pulsing ring */}
+                  {/* Outer pulse rings */}
                   <AnimatePresence>
                     {isPlaying && (
-                      <motion.div
-                        style={{ position: 'absolute', inset: -6, borderRadius: '50%', border: `1.5px solid ${accentA(0.5)}`, pointerEvents: 'none' }}
-                        initial={{ scale: 1, opacity: 0.7 }}
-                        animate={{ scale: 1.3, opacity: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
-                      />
-                    )}
-                  </AnimatePresence>
-                  {/* Second ring, offset timing */}
-                  <AnimatePresence>
-                    {isPlaying && (
-                      <motion.div
-                        style={{ position: 'absolute', inset: -2, borderRadius: '50%', border: `1px solid ${accentA(0.3)}`, pointerEvents: 'none' }}
-                        initial={{ scale: 1, opacity: 0.5 }}
-                        animate={{ scale: 1.18, opacity: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut', delay: 0.4 }}
-                      />
+                      <>
+                        <motion.div
+                          style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: `2px solid ${blendA(0.45)}`, pointerEvents: 'none' }}
+                          initial={{ scale: 1, opacity: 0.7 }} animate={{ scale: 1.35, opacity: 0 }} exit={{ opacity: 0 }}
+                          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                        />
+                        <motion.div
+                          style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: '1.5px solid rgba(167,139,250,0.35)', pointerEvents: 'none' }}
+                          initial={{ scale: 1, opacity: 0.6 }} animate={{ scale: 1.2, opacity: 0 }} exit={{ opacity: 0 }}
+                          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut', delay: 0.5 }}
+                        />
+                      </>
                     )}
                   </AnimatePresence>
 
-                  {/* Button disc */}
+                  {/* Disc */}
                   <motion.div
-                    style={{ width: 72, height: 72, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{ width: 76, height: 76, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     animate={{
-                      background: accent,
+                      background: isPlaying
+                        ? `linear-gradient(135deg, ${blendAccent}, #8b5cf6)`
+                        : `linear-gradient(135deg, #6d28d9, #4c1d95)`,
                       boxShadow: isPlaying
-                        ? `0 0 0 1px ${accentA(0.5)}, 0 8px 32px ${accentA(0.55)}, 0 0 60px ${accentA(0.2)}, inset 0 1px 0 rgba(255,255,255,0.25)`
-                        : `0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.2)`,
+                        ? `0 0 0 1px ${blendA(0.4)}, 0 10px 40px ${blendA(0.55)}, 0 0 70px rgba(139,92,246,0.25), inset 0 1px 0 rgba(255,255,255,0.22)`
+                        : `0 8px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.18)`,
                     }}
-                    transition={{ duration: 0.4 }}
+                    transition={{ duration: 0.45 }}
                   >
                     <AnimatePresence mode="wait" initial={false}>
                       {isPlaying ? (
-                        <motion.svg key="pause" width="24" height="24" fill="#000" viewBox="0 0 24 24"
-                          initial={{ scale: 0.4, opacity: 0, rotate: -15 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ scale: 0.4, opacity: 0, rotate: 15 }}
-                          transition={{ duration: 0.18 }}>
+                        <motion.svg key="pause" width="24" height="24" fill="#fff" viewBox="0 0 24 24"
+                          initial={{ scale: 0.3, opacity: 0, rotate: -20 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ scale: 0.3, opacity: 0, rotate: 20 }}
+                          transition={{ duration: 0.16 }}>
                           <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
                         </motion.svg>
                       ) : (
-                        <motion.svg key="play" width="26" height="26" fill="#000" viewBox="0 0 24 24" style={{ marginLeft: 3 }}
-                          initial={{ scale: 0.4, opacity: 0, rotate: 15 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ scale: 0.4, opacity: 0, rotate: -15 }}
-                          transition={{ duration: 0.18 }}>
+                        <motion.svg key="play" width="26" height="26" fill="#fff" viewBox="0 0 24 24" style={{ marginLeft: 3 }}
+                          initial={{ scale: 0.3, opacity: 0, rotate: 20 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} exit={{ scale: 0.3, opacity: 0, rotate: -20 }}
+                          transition={{ duration: 0.16 }}>
                           <path d="M8 5v14l11-7z" />
                         </motion.svg>
                       )}
@@ -547,108 +660,113 @@ const NowPlaying = () => {
 
                 {/* Next */}
                 <motion.button
-                  whileTap={{ scale: 0.88, x: 2 }}
+                  whileTap={{ scale: 0.86, x: 3 }}
                   onClick={nextSong}
-                  title="Next"
                   style={{
-                    width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: 50, height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.11)',
                     borderRadius: '50%', outline: 'none', cursor: 'pointer', color: '#fff',
                   }}
                 >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M13 7l7 5-7 5V7zM4 7l7 5-7 5V7z" />
                   </svg>
                 </motion.button>
 
                 {/* Repeat */}
                 <motion.button
-                  whileTap={{ scale: 0.85 }}
+                  whileTap={{ scale: 0.82 }}
                   onClick={cycleRepeat}
-                  title={`Repeat: ${repeat}`}
                   style={{
-                    width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', position: 'relative',
+                    width: 42, height: 42, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', gap: 3, position: 'relative',
                   }}
                 >
-                  <motion.div
-                    animate={{ color: repeat !== 'off' ? accent : 'rgba(255,255,255,0.4)', filter: repeat !== 'off' ? `drop-shadow(0 0 6px ${accentA(0.8)})` : 'none' }}
-                    transition={{ duration: 0.25 }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <motion.div animate={{
+                    color: repeat !== 'off' ? '#a78bfa' : 'rgba(255,255,255,0.38)',
+                    filter: repeat !== 'off' ? 'drop-shadow(0 0 7px rgba(167,139,250,0.85))' : 'none',
+                  }} transition={{ duration: 0.2 }}>
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3" />
                     </svg>
                   </motion.div>
-                  {repeat !== 'off' && <motion.div style={{ position: 'absolute', bottom: 7, width: 4, height: 4, borderRadius: '50%' }} animate={{ background: accent }} />}
+                  {repeat !== 'off' && <motion.div style={{ width: 4, height: 4, borderRadius: '50%', background: '#a78bfa' }} />}
                   {repeat === 'one' && (
-                    <span style={{ position: 'absolute', top: 6, right: 6, fontSize: 9, fontFamily: "'DM Mono', monospace", color: accent, fontWeight: 700, lineHeight: 1 }}>1</span>
+                    <span style={{ position: 'absolute', top: 4, right: 4, fontSize: 8, fontFamily: "'DM Mono', monospace", color: '#a78bfa', fontWeight: 700 }}>1</span>
                   )}
                 </motion.button>
               </div>
 
-              {/* Bottom row: Like | Waveform | Lyrics */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, gap: 8 }}>
-                {/* Like */}
+              {/* ── Like | Waveform | Lyrics ── */}
+              <motion.div
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 22, gap: 8 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.36 }}
+              >
+                {/* Like button */}
                 <motion.button
-                  whileTap={{ scale: 0.7 }}
+                  whileTap={{ scale: 0.65 }}
                   onClick={() => toggleLike(currentSong.id, currentSong)}
-                  title={isLiked ? 'Unlike' : 'Like'}
                   style={{
                     width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: isLiked ? 'rgba(255,79,109,0.18)' : 'rgba(255,255,255,0.07)',
-                    border: isLiked ? '1px solid rgba(255,79,109,0.45)' : '1px solid rgba(255,255,255,0.12)',
+                    background: isLiked ? 'rgba(244,114,182,0.18)' : 'rgba(255,255,255,0.07)',
+                    border: isLiked ? '1px solid rgba(244,114,182,0.5)' : '1px solid rgba(255,255,255,0.12)',
                     outline: 'none', cursor: 'pointer',
+                    boxShadow: isLiked ? '0 0 18px rgba(244,114,182,0.3)' : 'none',
                   }}
                 >
                   <motion.svg width="20" height="20" viewBox="0 0 24 24"
-                    animate={isLiked ? { scale: [1, 1.5, 1] } : {}}
-                    transition={{ duration: 0.24 }}
+                    animate={isLiked ? { scale: [1, 1.6, 1], rotate: [0, -12, 0] } : {}}
+                    transition={{ duration: 0.3 }}
                   >
                     <path
                       d="M12 21s-6.716-4.35-9.193-8.014C1.38 10.88 2.1 7.9 4.71 6.58c2.027-1.026 4.444-.43 5.934 1.22A4.79 4.79 0 0112 9.36a4.79 4.79 0 011.356-1.56c1.49-1.65 3.907-2.246 5.934-1.22 2.61 1.32 3.33 4.3 1.903 6.406C18.716 16.65 12 21 12 21z"
-                      fill={isLiked ? '#ff4f6d' : 'none'}
-                      stroke={isLiked ? '#ff4f6d' : 'rgba(255,255,255,0.5)'}
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      fill={isLiked ? '#f472b6' : 'none'}
+                      stroke={isLiked ? '#f472b6' : 'rgba(255,255,255,0.45)'}
+                      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
                     />
                   </motion.svg>
                 </motion.button>
 
-                {/* Waveform — expands in the middle */}
+                {/* Waveform */}
                 <div style={{ flex: 1 }}>
-                  <Waveform getFrequencyData={getFrequencyData} isPlaying={isPlaying} barCount={40} />
+                  <Waveform getFrequencyData={getFrequencyData} isPlaying={isPlaying} barCount={38} />
                 </div>
 
-                {/* Lyrics */}
+                {/* Lyrics pill */}
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   onClick={toggleLyricsPanel}
                   style={{
-                    height: 44, padding: '0 16px', borderRadius: 999, cursor: 'pointer',
-                    fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
-                    border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.07)', color: '#fff', outline: 'none',
+                    height: 44, padding: '0 18px', borderRadius: 999, cursor: 'pointer',
+                    fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+                    border: '1px solid rgba(167,139,250,0.35)',
+                    background: 'rgba(139,92,246,0.14)',
+                    color: '#a78bfa', outline: 'none',
+                    boxShadow: '0 0 14px rgba(139,92,246,0.2)',
                   }}
                 >
                   Lyrics
                 </motion.button>
-              </div>
+              </motion.div>
 
-              {/* Add to playlist */}
-              <div style={{ marginTop: 16, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* ── Add to playlist ── */}
+              <motion.div
+                style={{ marginTop: 18, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.44 }}
+              >
                 <select
                   value={selectedPlaylistId}
                   onChange={(e) => setSelectedPlaylistId(e.target.value)}
                   disabled={!customPlaylists.length}
                   style={{
                     flex: 1, height: 36, borderRadius: 999,
-                    border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.06)',
-                    color: '#fff', padding: '0 12px', minWidth: 140, fontSize: 11,
+                    border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.06)',
+                    color: customPlaylists.length ? '#fff' : 'rgba(255,255,255,0.35)', padding: '0 12px', minWidth: 140, fontSize: 11,
                     fontFamily: "'DM Mono', monospace",
                   }}
                 >
                   {customPlaylists.length === 0 ? (
-                    <option value="">No playlist found</option>
+                    <option value="">No playlist</option>
                   ) : (
                     customPlaylists.map((pl) => (
                       <option key={pl.id} value={pl.id}>{pl.name}</option>
@@ -656,32 +774,34 @@ const NowPlaying = () => {
                   )}
                 </select>
                 <motion.button
-                  whileTap={{ scale: 0.92 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={handleAddToPlaylist}
                   disabled={!selectedPlaylistId || !customPlaylists.length}
                   style={{
-                    height: 36, borderRadius: 999, padding: '0 14px', cursor: selectedPlaylistId ? 'pointer' : 'default',
-                    border: `1px solid ${selectedPlaylistId ? accentA(0.4) : 'rgba(255,255,255,0.1)'}`,
-                    background: selectedPlaylistId ? accentA(0.15) : 'rgba(255,255,255,0.04)',
-                    color: selectedPlaylistId ? accent : 'rgba(255,255,255,0.4)',
-                    fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase',
+                    height: 36, borderRadius: 999, padding: '0 16px', cursor: selectedPlaylistId ? 'pointer' : 'default',
+                    border: `1px solid ${selectedPlaylistId ? 'rgba(167,139,250,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                    background: selectedPlaylistId ? 'rgba(139,92,246,0.18)' : 'rgba(255,255,255,0.04)',
+                    color: selectedPlaylistId ? '#a78bfa' : 'rgba(255,255,255,0.3)',
+                    fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
                     fontFamily: "'DM Mono', monospace", outline: 'none',
                   }}
                 >
                   + Add
                 </motion.button>
-                {playlistAddStatus && (
-                  <motion.span
-                    initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
-                    style={{ fontSize: 11, fontFamily: "'DM Mono', monospace", color: accent }}
-                  >
-                    {playlistAddStatus}
-                  </motion.span>
-                )}
-              </div>
-            </div>
+                <AnimatePresence>
+                  {playlistAddStatus && (
+                    <motion.span
+                      initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
+                      style={{ fontSize: 11, fontFamily: "'DM Mono', monospace", color: '#34d399' }}
+                    >
+                      {playlistAddStatus}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <LyricsPanel lyrics={lyrics} onSeek={seek} />
