@@ -88,9 +88,9 @@ const LyricsPanel = ({ lyrics, onSeek }) => {
                       fontFamily: "'Space Grotesk', sans-serif",
                       fontSize: i === activeLine ? 17 : 14,
                       lineHeight: 1.5,
-                      color: i === activeLine ? '#c4b5fd' : '#fff',
+                      color: '#fff',
                       textShadow: i === activeLine
-                        ? '0 0 16px rgba(167,139,250,0.8)'
+                        ? '0 0 18px rgba(255,255,255,0.7)'
                         : 'none',
                       transition: 'font-size 0.3s, color 0.3s, text-shadow 0.3s',
                       borderLeft: i === activeLine ? '3px solid #a78bfa' : '3px solid transparent',
