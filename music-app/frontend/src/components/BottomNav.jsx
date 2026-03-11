@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
+import usePlayerStore from '../store/playerStore';
+import useColorExtract from '../hooks/useColorExtract';
 
 const HomeIcon = ({ filled }) => (
   <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
@@ -53,6 +55,16 @@ const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
+  const currentSong = usePlayerStore((s) => s.currentSong);
+  const { dominantColor } = useColorExtract(currentSong?.album_art_url);
+  const [dr, dg, db] = dominantColor;
+  // Blend album color 65% with violet 35% so the pill always looks musical
+  const mixR = Math.round(dr * 0.65 + 139 * 0.35);
+  const mixG = Math.round(dg * 0.65 + 92 * 0.35);
+  const mixB = Math.round(db * 0.65 + 246 * 0.35);
+  const pillColor = `rgb(${mixR},${mixG},${mixB})`;
+  const pillColorDark = `rgb(${Math.round(mixR*0.7)},${Math.round(mixG*0.7)},${Math.round(mixB*0.7)})`;
+  const pillGlow = `rgba(${mixR},${mixG},${mixB},0.6)`;
 
   return (
     <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, paddingBottom: 'env(safe-area-inset-bottom)' }}>
@@ -102,8 +114,8 @@ const BottomNav = () => {
                         width: isLibrary ? 54 : 46,
                         height: isLibrary ? 54 : 46,
                         borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #9333ea, #6d28d9)',
-                        boxShadow: '0 4px 22px rgba(139,92,246,0.55)',
+                        background: `linear-gradient(135deg, ${pillColor}, ${pillColorDark})`,
+                        boxShadow: `0 4px 22px ${pillGlow}`,
                         zIndex: 0,
                       }}
                     />
