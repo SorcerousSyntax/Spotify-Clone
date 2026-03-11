@@ -1,8 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import usePlayerStore from '../store/playerStore';
-import useColorExtract from '../hooks/useColorExtract';
 
 const HomeIcon = ({ filled }) => (
   <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
@@ -55,99 +52,48 @@ const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
-  const currentSong = usePlayerStore((s) => s.currentSong);
-  const { dominantColor } = useColorExtract(currentSong?.album_art_url);
-  const [dr, dg, db] = dominantColor;
-  // Blend album color 65% with violet 35% so the pill always looks musical
-  const mixR = Math.round(dr * 0.65 + 139 * 0.35);
-  const mixG = Math.round(dg * 0.65 + 92 * 0.35);
-  const mixB = Math.round(db * 0.65 + 246 * 0.35);
-  const pillColor = `rgb(${mixR},${mixG},${mixB})`;
-  const pillColorDark = `rgb(${Math.round(mixR*0.7)},${Math.round(mixG*0.7)},${Math.round(mixB*0.7)})`;
-  const pillGlow = `rgba(${mixR},${mixG},${mixB},0.6)`;
 
   return (
     <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      {/* Glass floating pill bar */}
       <div style={{
         margin: '0 12px 10px',
         borderRadius: 26,
-        background: 'rgba(18,4,40,0.55)',
-        backdropFilter: 'blur(48px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(48px) saturate(180%)',
-        border: '1px solid rgba(167,139,250,0.28)',
-        boxShadow: '0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(139,92,246,0.08)',
+        background: 'rgba(10,10,10,0.88)',
+        backdropFilter: 'blur(40px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(140%)',
+        border: '1px solid rgba(255,255,255,0.07)',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-around',
           height: 64, maxWidth: 480, margin: '0 auto', padding: '0 6px',
         }}>
-          {tabs.map((tab, idx) => {
+          {tabs.map((tab) => {
             const isActive = currentPath === tab.path;
-            const isLibrary = tab.id === 'library';
             return (
-              <motion.button
+              <button
                 key={tab.id}
                 onClick={() => navigate(tab.path)}
-                whileTap={{ scale: 0.8 }}
                 style={{
                   flex: 1, height: '100%',
                   display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center',
                   background: 'transparent', border: 'none', outline: 'none',
-                  gap: 3, cursor: 'pointer', position: 'relative', padding: 0,
+                  gap: 6, cursor: 'pointer', padding: 0,
                 }}
               >
-                {/* Active background pill */}
-                <AnimatePresence>
-                  {isActive && (
-                    <motion.div
-                      layoutId="navActivePill"
-                      initial={{ opacity: 0, scale: 0.65 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.65 }}
-                      transition={{ type: 'spring', stiffness: 460, damping: 36 }}
-                      style={{
-                        position: 'absolute',
-                        top: '50%', left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: isLibrary ? 54 : 46,
-                        height: isLibrary ? 54 : 46,
-                        borderRadius: '50%',
-                        background: `linear-gradient(135deg, ${pillColor}, ${pillColorDark})`,
-                        boxShadow: `0 4px 22px ${pillGlow}`,
-                        zIndex: 0,
-                      }}
-                    />
-                  )}
-                </AnimatePresence>
-
-                {/* Icon */}
-                <motion.div
-                  animate={isActive ? { y: 0, scale: 1.08 } : { y: 0, scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                  style={{
-                    color: isActive ? '#ffffff' : 'rgba(255,255,255,0.32)',
-                    position: 'relative', zIndex: 1,
-                    lineHeight: 0,
-                  }}
-                >
+                <div style={{
+                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.32)',
+                  lineHeight: 0,
+                }}>
                   <tab.Icon filled={isActive} />
-                </motion.div>
-
-                {/* Label — hidden when active (icon speaks for itself) */}
-                {!isActive && (
-                  <span style={{
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    fontSize: 9.5, fontWeight: 500,
-                    letterSpacing: '0.03em',
-                    color: 'rgba(255,255,255,0.25)',
-                    lineHeight: 1, position: 'relative', zIndex: 1,
-                  }}>
-                    {tab.label}
-                  </span>
-                )}
-              </motion.button>
+                </div>
+                {/* Active dot indicator */}
+                <div style={{
+                  width: 4, height: 4, borderRadius: '50%',
+                  background: isActive ? '#a78bfa' : 'transparent',
+                  transition: 'background 0.25s ease',
+                }} />
+              </button>
             );
           })}
         </div>

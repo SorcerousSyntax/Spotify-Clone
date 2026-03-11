@@ -1,7 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import usePlayerStore from '../store/playerStore';
-import useCardTilt from '../hooks/useCardTilt';
 import { decodeSongTitle } from '../lib/text';
 
 // Green/void palette only (no off-palette colours)
@@ -29,10 +27,7 @@ export const SongRow = ({ song, index = 0, showIndex = false, onClick }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.04, type: 'spring', stiffness: 300, damping: 28 }}
+    <div
       onClick={() => onClick ? onClick(song, index) : setCurrentSong(song)}
       style={{
         display: 'flex', alignItems: 'center', gap: 14,
@@ -40,17 +35,10 @@ export const SongRow = ({ song, index = 0, showIndex = false, onClick }) => {
         borderRadius: 14,
         marginBottom: 6,
         cursor: 'pointer',
-        background: isActive ? 'rgba(139,92,246,0.14)' : 'rgba(255,255,255,0.04)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: isActive ? '1px solid rgba(139,92,246,0.35)' : '1px solid rgba(255,255,255,0.09)',
-        boxShadow: isActive
-          ? '0 6px 28px rgba(139,92,246,0.28), inset 0 1px 0 rgba(167,139,250,0.12)'
-          : '0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)',
-        transition: 'background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
+        background: isActive ? 'rgba(139,92,246,0.12)' : 'transparent',
+        border: isActive ? '1px solid rgba(139,92,246,0.3)' : '1px solid transparent',
+        transition: 'background 0.2s ease, border-color 0.2s ease',
       }}
-      whileHover={{ y: -2, boxShadow: '0 10px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)' }}
-      whileTap={{ scale: 0.97 }}
     >
       {showIndex && (
         <span style={{
@@ -104,27 +92,19 @@ export const SongRow = ({ song, index = 0, showIndex = false, onClick }) => {
       }}>
         {formatDuration(song?.duration)}
       </span>
-    </motion.div>
+    </div>
   );
 };
 
 // Compact square card (for horizontal scroll rows)
 export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
   const setCurrentSong = usePlayerStore(s => s.setCurrentSong);
-  const tilt = useCardTilt(8);
-  const palette = GRADIENT_PALETTES[index % GRADIENT_PALETTES.length];
-
   const handleClick = () => onClick ? onClick(song, index) : setCurrentSong(song);
   const safeTitle = decodeSongTitle(song?.title || '');
   const pxSize = `${Number(size) || 110}px`;
 
   return (
-    <motion.div
-      {...tilt}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, type: 'spring', stiffness: 280, damping: 26 }}
-      whileTap={{ scale: 0.94 }}
+    <div
       onClick={handleClick}
       style={{
         width: pxSize,
@@ -133,12 +113,7 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
         flexShrink: 0,
         cursor: 'pointer',
         borderRadius: 14, overflow: 'hidden',
-        background: 'rgba(255,255,255,0.05)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-        willChange: 'transform',
+        background: 'transparent',
       }}
     >
       {/* Art */}
@@ -153,11 +128,6 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
           style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'relative', zIndex: 1 }}
           onError={e => { e.target.style.opacity = '0'; }}
         />
-        {/* Shine overlay */}
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 2,
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)',
-        }} />
       </div>
       {/* Text */}
       <div style={{ padding: '7px 8px 8px' }}>
@@ -177,33 +147,18 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
           {song?.artist}
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
 // Quick-pick playlist card (rectangular, used in dashboard grid)
 export const PlaylistCard = ({ playlist, index = 0, onClick }) => {
-  const palette = GRADIENT_PALETTES[index % GRADIENT_PALETTES.length];
-  const tilt = useCardTilt(7);
-
   return (
-    <motion.div
-      {...tilt}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.05 + index * 0.06, type: 'spring', stiffness: 300, damping: 28 }}
-      whileHover={{ y: -4, boxShadow: '0 16px 48px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.14)' }}
-      whileTap={{ scale: 0.94 }}
+    <div
       onClick={() => onClick?.(playlist)}
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
         borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
-        background: 'rgba(255,255,255,0.05)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08)',
-        willChange: 'transform',
       }}
     >
       {/* Left colour block */}
@@ -224,7 +179,7 @@ export const PlaylistCard = ({ playlist, index = 0, onClick }) => {
       }}>
         {playlist.name}
       </p>
-    </motion.div>
+    </div>
   );
 };
 
