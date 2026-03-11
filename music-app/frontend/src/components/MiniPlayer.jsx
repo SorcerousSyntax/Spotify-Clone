@@ -50,12 +50,8 @@ const MiniPlayer = () => {
   const isLiked = currentSong ? likedSongIds.has(currentSong.id) : false;
 
   const [dr, dg, db] = dominantColor;
-  // Blend album color 75% with violet — enough to clearly shift colour per song while staying on-brand
-  const mixR = Math.round(dr * 0.75 + 139 * 0.25);
-  const mixG = Math.round(dg * 0.75 + 92 * 0.25);
-  const mixB = Math.round(db * 0.75 + 246 * 0.25);
-  const accent = `rgb(${mixR},${mixG},${mixB})`;
-  const accentA = (a) => `rgba(${mixR},${mixG},${mixB},${a})`;
+  const accent = `rgb(${dr},${dg},${db})`;
+  const accentA = (a) => `rgba(${dr},${dg},${db},${a})`;
 
   return (
     <AnimatePresence>
@@ -71,8 +67,8 @@ const MiniPlayer = () => {
           <motion.div
             style={{ position: 'absolute', inset: 0, borderRadius: 22, overflow: 'hidden' }}
             animate={{
-              background: `linear-gradient(135deg, ${accentA(0.72)} 0%, ${accentA(0.35)} 45%, rgba(9,0,18,0.98) 100%)`,
-              boxShadow: `0 -2px 40px rgba(0,0,0,0.7), 0 0 0 1px ${accentA(0.55)}, inset 0 1px 0 rgba(255,255,255,0.09)`,
+              background: `linear-gradient(135deg, ${accentA(0.8)} 0%, ${accentA(0.4)} 45%, rgba(9,0,18,0.98) 100%)`,
+              boxShadow: `0 -2px 40px rgba(0,0,0,0.7), 0 0 0 1px ${accentA(0.65)}, 0 0 30px ${accentA(0.3)}, inset 0 1px 0 rgba(255,255,255,0.09)`,
             }}
             transition={{ duration: 0.85, ease: 'easeInOut' }}
           >

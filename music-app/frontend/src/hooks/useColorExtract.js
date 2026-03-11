@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import ColorThief from 'color-thief-browser';
 
 const useColorExtract = (imageUrl) => {
-  const [dominantColor, setDominantColor] = useState([29, 185, 84]);
+  const [dominantColor, setDominantColor] = useState([139, 92, 246]);
   const [palette, setPalette] = useState([]);
   const imgRef = useRef(null);
 
