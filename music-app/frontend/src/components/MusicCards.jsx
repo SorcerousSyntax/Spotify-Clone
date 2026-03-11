@@ -37,15 +37,20 @@ export const SongRow = ({ song, index = 0, showIndex = false, onClick }) => {
       style={{
         display: 'flex', alignItems: 'center', gap: 14,
         padding: '12px 16px',
-        borderRadius: 8,
-        marginBottom: 2,
+        borderRadius: 14,
+        marginBottom: 6,
         cursor: 'pointer',
-        background: 'transparent',
-        border: 'none',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        background: isActive ? 'rgba(139,92,246,0.14)' : 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: isActive ? '1px solid rgba(139,92,246,0.35)' : '1px solid rgba(255,255,255,0.09)',
+        boxShadow: isActive
+          ? '0 6px 28px rgba(139,92,246,0.28), inset 0 1px 0 rgba(167,139,250,0.12)'
+          : '0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)',
+        transition: 'background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
       }}
-      whileHover={{ x: 0 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -2, boxShadow: '0 10px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)' }}
+      whileTap={{ scale: 0.97 }}
     >
       {showIndex && (
         <span style={{
@@ -58,10 +63,10 @@ export const SongRow = ({ song, index = 0, showIndex = false, onClick }) => {
       )}
       <div style={{
         width: 44, height: 44, borderRadius: 6, overflow: 'hidden', flexShrink: 0,
-        border: isActive ? '1px solid rgba(0,255,65,0.3)' : '1px solid rgba(255,255,255,0.06)',
+        border: isActive ? '1px solid rgba(139,92,246,0.45)' : '1px solid rgba(255,255,255,0.08)',
         boxShadow: isActive
-          ? '0 0 16px rgba(0,255,65,0.2), 0 10px 24px rgba(0,0,0,0.7)'
-          : '0 10px 24px rgba(0,0,0,0.7)',
+          ? '0 0 18px rgba(139,92,246,0.5), 0 8px 20px rgba(0,0,0,0.6)'
+          : '0 6px 18px rgba(0,0,0,0.55)',
         transition: 'box-shadow 0.3s, border-color 0.3s',
         background: GRADIENT_PALETTES[index % GRADIENT_PALETTES.length][0],
       }}>
@@ -127,10 +132,12 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
         maxWidth: pxSize,
         flexShrink: 0,
         cursor: 'pointer',
-        borderRadius: 8, overflow: 'hidden',
-        background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.06)',
-        boxShadow: 'none',
+        borderRadius: 14, overflow: 'hidden',
+        background: 'rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
         willChange: 'transform',
       }}
     >
@@ -185,14 +192,17 @@ export const PlaylistCard = ({ playlist, index = 0, onClick }) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.05 + index * 0.06, type: 'spring', stiffness: 300, damping: 28 }}
+      whileHover={{ y: -4, boxShadow: '0 16px 48px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.14)' }}
       whileTap={{ scale: 0.94 }}
       onClick={() => onClick?.(playlist)}
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
         borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
-        background: `linear-gradient(135deg, ${palette[0]}bb, ${palette[1]}66)`,
-        border: '1px solid rgba(139,92,246,0.15)',
-        boxShadow: '0 16px 40px rgba(0,0,0,0.8)',
+        background: 'rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08)',
         willChange: 'transform',
       }}
     >

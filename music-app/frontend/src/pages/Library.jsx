@@ -23,11 +23,15 @@ const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, 
       gap: 16,
       padding: '14px 16px',
       borderRadius: 14,
-      border: '1px solid rgba(255,255,255,0.07)',
-      background: 'rgba(255,255,255,0.02)',
-      marginBottom: 6,
+      border: '1px solid rgba(255,255,255,0.09)',
+      background: 'rgba(255,255,255,0.04)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.07)',
+      marginBottom: 8,
+      transition: 'all 0.2s ease',
     }}
-    whileHover={{ background: 'rgba(139,92,246,0.08)' }}
+    whileHover={{ y: -2, boxShadow: '0 10px 36px rgba(139,92,246,0.2), inset 0 1px 0 rgba(255,255,255,0.1)', background: 'rgba(139,92,246,0.1)' }}
   >
     <button
       onClick={onOpen}

@@ -42,18 +42,23 @@ const SearchResultRow = ({ song, index, onClick }) => {
       onClick={() => onClick(song, index)}
       style={{
         display: 'flex', alignItems: 'center', gap: 14,
-        padding: '12px 16px', borderRadius: 4, cursor: 'pointer',
-        background: 'transparent', border: 'none',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
-        transition: 'background 0.15s ease',
-        marginBottom: 0,
+        padding: '12px 16px', borderRadius: 14, cursor: 'pointer',
+        background: 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        border: '1px solid rgba(255,255,255,0.09)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)',
+        transition: 'background 0.2s ease, border-color 0.2s ease',
+        marginBottom: 8,
       }}
+      whileHover={{ y: -2, boxShadow: '0 10px 36px rgba(139,92,246,0.18), inset 0 1px 0 rgba(255,255,255,0.1)' }}
       onMouseEnter={e => {
-        e.currentTarget.style.background = 'rgba(139,92,246,0.06)';
-        e.currentTarget.style.borderRadius = '14px';
+        e.currentTarget.style.background = 'rgba(139,92,246,0.1)';
+        e.currentTarget.style.borderColor = 'rgba(139,92,246,0.28)';
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.background = 'transparent';
+        e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)';
       }}
     >
       <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: 'rgba(255,255,255,0.2)', width: 20, textAlign: 'right', flexShrink: 0 }}>

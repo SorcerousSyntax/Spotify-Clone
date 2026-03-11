@@ -499,13 +499,22 @@ const Home = () => {
                   display: 'flex', alignItems: 'center', gap: 14,
                   padding: '10px 12px', borderRadius: 14,
                   cursor: 'pointer',
-                  background: currentSong?.id === song.id ? 'rgba(139,92,246,0.12)' : 'transparent',
-                  border: currentSong?.id === song.id ? '1px solid rgba(139,92,246,0.25)' : '1px solid transparent',
-                  transition: 'background 0.2s, border 0.2s',
-                  marginBottom: 4,
+                  background: currentSong?.id === song.id
+                    ? 'rgba(139,92,246,0.18)'
+                    : 'rgba(255,255,255,0.04)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: currentSong?.id === song.id
+                    ? '1px solid rgba(139,92,246,0.4)'
+                    : '1px solid rgba(255,255,255,0.09)',
+                  boxShadow: currentSong?.id === song.id
+                    ? '0 8px 32px rgba(139,92,246,0.28), inset 0 1px 0 rgba(167,139,250,0.12)'
+                    : '0 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07)',
+                  transition: 'all 0.25s ease',
+                  marginBottom: 8,
                 }}
-                whileHover={{ background: 'rgba(255,255,255,0.04)', scale: 1.005 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ y: -2, boxShadow: '0 10px 36px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.1)' }}
+                whileTap={{ scale: 0.97 }}
               >
                 {/* Album art */}
                 <div style={{ position: 'relative', flexShrink: 0 }}>
