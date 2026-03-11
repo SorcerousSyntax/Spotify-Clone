@@ -67,8 +67,8 @@ const MiniPlayer = () => {
           <motion.div
             style={{ position: 'absolute', inset: 0, borderRadius: 22, overflow: 'hidden' }}
             animate={{
-              background: `linear-gradient(135deg, ${accentA(0.8)} 0%, ${accentA(0.4)} 45%, rgba(9,0,18,0.98) 100%)`,
-              boxShadow: `0 -2px 40px rgba(0,0,0,0.7), 0 0 0 1px ${accentA(0.65)}, 0 0 30px ${accentA(0.3)}, inset 0 1px 0 rgba(255,255,255,0.09)`,
+              background: `linear-gradient(135deg, ${accentA(0.82)} 0%, rgba(236,72,153,0.24) 38%, ${accentA(0.35)} 62%, rgba(9,0,18,0.97) 100%)`,
+              boxShadow: `0 -2px 40px rgba(0,0,0,0.7), 0 0 0 1px ${accentA(0.55)}, 0 0 28px ${accentA(0.22)}, 0 0 20px rgba(236,72,153,0.2), inset 0 1px 0 rgba(255,255,255,0.11)`,
             }}
             transition={{ duration: 0.85, ease: 'easeInOut' }}
           >
@@ -78,7 +78,7 @@ const MiniPlayer = () => {
           {/* Left accent stripe */}
           <motion.div
             style={{ position: 'absolute', left: 0, top: 5, bottom: 5, width: 3, borderRadius: 2, zIndex: 2 }}
-            animate={{ background: accent, boxShadow: `0 0 24px ${accentA(1)}` }}
+            animate={{ background: `linear-gradient(to bottom, #ec4899, ${accent}, #a855f7)`, boxShadow: `0 0 18px ${accentA(0.85)}, 0 0 10px rgba(236,72,153,0.65)` }}
             transition={{ duration: 0.85 }}
           />
 
@@ -86,7 +86,7 @@ const MiniPlayer = () => {
           <div style={{ position: 'absolute', top: 0, left: 3, right: 0, height: 2.5, background: 'rgba(255,255,255,0.05)', borderRadius: '0 20px 0 0', overflow: 'hidden', zIndex: 3 }}>
             <motion.div
               style={{ height: '100%' }}
-              animate={{ width: `${progressPercent}%`, background: accent, boxShadow: `0 0 10px ${accentA(0.9)}` }}
+              animate={{ width: `${progressPercent}%`, background: `linear-gradient(90deg, #ec4899, ${accent})`, boxShadow: `0 0 8px rgba(236,72,153,0.75), 0 0 5px ${accentA(0.7)}` }}
               transition={{ duration: 0.4, ease: 'linear' }}
             />
           </div>
@@ -100,7 +100,7 @@ const MiniPlayer = () => {
               style={{ position: 'relative', flexShrink: 0, width: 46, height: 46, cursor: 'pointer' }}
             >
               <motion.div
-                style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: `2px solid ${accentA(0.55)}`, boxShadow: `0 0 16px ${accentA(0.45)}` }}
+                style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: `2px solid rgba(236,72,153,0.65)`, boxShadow: `0 0 14px rgba(236,72,153,0.45), 0 0 8px ${accentA(0.3)}` }}
                 animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
                 transition={isPlaying ? { duration: 7, ease: 'linear', repeat: Infinity } : { duration: 0.5 }}
               />
@@ -168,7 +168,7 @@ const MiniPlayer = () => {
                 <AnimatePresence>
                   {isPlaying && (
                     <motion.div
-                      style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: `1.5px solid ${accentA(0.55)}`, pointerEvents: 'none' }}
+                      style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: `1.5px solid rgba(236,72,153,0.7)`, pointerEvents: 'none' }}
                       initial={{ scale: 1, opacity: 0.6 }}
                       animate={{ scale: 1.28, opacity: 0 }}
                       exit={{ opacity: 0 }}
@@ -179,8 +179,8 @@ const MiniPlayer = () => {
                 <motion.div
                   style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   animate={{
-                    background: accent,
-                    boxShadow: isPlaying ? `0 0 24px ${accentA(0.6)}, 0 4px 14px rgba(0,0,0,0.5)` : `0 4px 14px rgba(0,0,0,0.5)`,
+                    background: `linear-gradient(135deg, #ec4899, ${accent})`,
+                    boxShadow: isPlaying ? `0 0 20px rgba(236,72,153,0.6), 0 0 14px ${accentA(0.45)}, 0 4px 14px rgba(0,0,0,0.5)` : `0 4px 14px rgba(0,0,0,0.5)`,
                   }}
                   transition={{ duration: 0.35 }}
                 >

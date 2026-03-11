@@ -18,6 +18,12 @@ import {
 const ScrollingTitle = ({ text, fontSize, accentColor }) => {
   const safeText = decodeSongTitle(text || '');
   const isLong = safeText.length > 18;
+  const titleGrad = `linear-gradient(135deg, #fff 0%, ${accentColor || '#d946ef'} 50%, #f472b6 80%, #fda4af 100%)`;
+  const spanStyle = {
+    fontSize, lineHeight: 0.95, letterSpacing: '-0.02em', fontWeight: 800,
+    background: titleGrad,
+    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+  };
 
   return (
     <div
@@ -32,38 +38,15 @@ const ScrollingTitle = ({ text, fontSize, accentColor }) => {
     >
       {isLong ? (
         <motion.div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            width: 'max-content',
-            gap: 48,
-          }}
+          style={{ display: 'flex', alignItems: 'center', width: 'max-content', gap: 48 }}
           animate={{ x: ['0%', '-50%'] }}
           transition={{ duration: 13, ease: 'linear', repeat: Infinity }}
         >
-          <span style={{
-            fontSize, lineHeight: 0.95, letterSpacing: '-0.02em', fontWeight: 800,
-            background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 80%, #c084fc 100%)`,
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>
-            {safeText}
-          </span>
-          <span style={{
-            fontSize, lineHeight: 0.95, letterSpacing: '-0.02em', fontWeight: 800,
-            background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 80%, #c084fc 100%)`,
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>
-            {safeText}
-          </span>
+          <span style={spanStyle}>{safeText}</span>
+          <span style={spanStyle}>{safeText}</span>
         </motion.div>
       ) : (
-        <span style={{
-          fontSize, lineHeight: 0.95, letterSpacing: '-0.02em', fontWeight: 800, display: 'block',
-          background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 80%, #c084fc 100%)`,
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-        }}>
-          {safeText}
-        </span>
+        <span style={{ ...spanStyle, display: 'block' }}>{safeText}</span>
       )}
     </div>
   );
@@ -302,12 +285,15 @@ const NowPlaying = () => {
       {/* Base dark */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', background: 'var(--bg)' }} />
 
-      {/* Violet constant orbs — always purple regardless of album */}
+      {/* Violet + pink constant orbs — always present regardless of album */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
         <FloatOrb size={320} x={-8} y={-10} color="rgba(139,92,246,0.18)" duration={8} delay={0} />
         <FloatOrb size={260} x={72} y={5} color="rgba(167,139,250,0.12)" duration={11} delay={2} />
         <FloatOrb size={200} x={15} y={68} color="rgba(99,102,241,0.14)" duration={9} delay={1.5} />
         <FloatOrb size={180} x={80} y={70} color="rgba(167,139,250,0.08)" duration={12} delay={3} />
+        <FloatOrb size={280} x={83} y={14} color="rgba(236,72,153,0.14)" duration={10} delay={1} />
+        <FloatOrb size={160} x={7} y={42} color="rgba(244,114,182,0.10)" duration={13} delay={4.5} />
+        <FloatOrb size={220} x={46} y={83} color="rgba(219,39,119,0.09)" duration={7} delay={2.5} />
       </div>
 
       {/* Album-tinted orbs — blended with violet, softer */}
@@ -348,9 +334,9 @@ const NowPlaying = () => {
               onClick={() => navigate(-1)}
               style={{
                 width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                border: '1px solid rgba(167,139,250,0.3)',
-                background: 'rgba(139,92,246,0.12)',
-                color: '#a78bfa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid rgba(236,72,153,0.38)',
+                background: 'linear-gradient(135deg, rgba(139,92,246,0.14) 0%, rgba(236,72,153,0.12) 100%)',
+                color: '#f472b6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -363,8 +349,8 @@ const NowPlaying = () => {
                 Now Playing
               </p>
               <motion.div
-                style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(167,139,250,0.5), transparent)' }}
-                animate={{ width: ['20px', '60px', '20px'] }}
+                style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(236,72,153,0.7), rgba(167,139,250,0.85), rgba(236,72,153,0.7), transparent)' }}
+                animate={{ width: ['20px', '72px', '20px'] }}
                 transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity }}
               />
             </div>
@@ -423,20 +409,20 @@ const NowPlaying = () => {
               <motion.div
                 style={{ position: 'absolute', inset: -26, borderRadius: 50, zIndex: 0, pointerEvents: 'none' }}
                 animate={{
-                  background: blendA(0.5),
-                  filter: `blur(${isPlaying ? 36 : 22}px)`,
-                  opacity: isPlaying ? 0.9 : 0.5,
+                  background: [blendA(0.55), `rgba(236,72,153,0.38)`, blendA(0.55)],
+                  filter: `blur(${isPlaying ? 40 : 22}px)`,
+                  opacity: isPlaying ? 0.95 : 0.5,
                 }}
-                transition={{ duration: 1.4, ease: 'easeInOut' }}
+                transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity }}
               />
 
-              {/* Violet corner accent glow */}
+              {/* Pink + violet corner accent glow */}
               <motion.div
                 style={{
                   position: 'absolute', inset: -12, borderRadius: 36, zIndex: 0, pointerEvents: 'none',
-                  background: 'radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.35) 0%, transparent 60%)',
+                  background: 'radial-gradient(ellipse at 80% 20%, rgba(236,72,153,0.45) 0%, rgba(167,139,250,0.28) 40%, transparent 65%)',
                 }}
-                animate={{ opacity: [0.5, 0.9, 0.5] }}
+                animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 4, ease: 'easeInOut', repeat: Infinity }}
               />
 
@@ -452,7 +438,7 @@ const NowPlaying = () => {
                       transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
                     />
                     <motion.div
-                      style={{ position: 'absolute', inset: -4, borderRadius: 28, border: '1px solid rgba(167,139,250,0.4)', zIndex: 1, pointerEvents: 'none' }}
+                      style={{ position: 'absolute', inset: -4, borderRadius: 28, border: '1px solid rgba(236,72,153,0.55)', zIndex: 1, pointerEvents: 'none' }}
                       initial={{ opacity: 0.5, scale: 1 }}
                       animate={{ opacity: 0, scale: 1.05 }}
                       exit={{ opacity: 0 }}
@@ -478,7 +464,7 @@ const NowPlaying = () => {
                   <motion.div
                     style={{
                       position: 'absolute', inset: 0, borderRadius: 24, zIndex: 3, pointerEvents: 'none',
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 50%, rgba(167,139,250,0.06) 100%)',
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(236,72,153,0.08) 35%, transparent 55%, rgba(167,139,250,0.09) 100%)',
                     }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0, 1, 0] }}
@@ -499,7 +485,7 @@ const NowPlaying = () => {
               <ScrollingTitle text={safeTitle} fontSize={28} accentColor={blendAccent} />
               <p style={{
                 fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 500,
-                color: 'rgba(255,255,255,0.48)', marginTop: 5, letterSpacing: '0.01em',
+                color: 'rgba(253,164,175,0.65)', marginTop: 5, letterSpacing: '0.01em',
               }}>
                 {currentSong.artist}
               </p>
@@ -528,8 +514,8 @@ const NowPlaying = () => {
                   style={{ position: 'absolute', left: 0, top: 0, height: '100%', borderRadius: 999 }}
                   animate={{
                     width: `${progressPercent}%`,
-                    background: `linear-gradient(90deg, #8b5cf6, ${blendAccent})`,
-                    boxShadow: `0 0 10px ${blendA(0.6)}`,
+                    background: `linear-gradient(90deg, #ec4899, #a855f7, ${blendAccent})`,
+                    boxShadow: `0 0 14px rgba(236,72,153,0.6), 0 0 6px ${blendA(0.5)}`,
                   }}
                   transition={{ duration: 0.3, ease: 'linear' }}
                 />
@@ -619,7 +605,7 @@ const NowPlaying = () => {
                           transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
                         />
                         <motion.div
-                          style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: '1.5px solid rgba(167,139,250,0.35)', pointerEvents: 'none' }}
+                          style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: '1.5px solid rgba(236,72,153,0.5)', pointerEvents: 'none' }}
                           initial={{ scale: 1, opacity: 0.6 }} animate={{ scale: 1.2, opacity: 0 }} exit={{ opacity: 0 }}
                           transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut', delay: 0.5 }}
                         />
@@ -632,10 +618,10 @@ const NowPlaying = () => {
                     style={{ width: 76, height: 76, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     animate={{
                       background: isPlaying
-                        ? `linear-gradient(135deg, ${blendAccent}, #8b5cf6)`
-                        : `linear-gradient(135deg, #6d28d9, #4c1d95)`,
+                        ? `linear-gradient(135deg, #ec4899 0%, ${blendAccent} 50%, #8b5cf6 100%)`
+                        : `linear-gradient(135deg, #9d174d, #6d28d9)`,
                       boxShadow: isPlaying
-                        ? `0 0 0 1px ${blendA(0.4)}, 0 10px 40px ${blendA(0.55)}, 0 0 70px rgba(139,92,246,0.25), inset 0 1px 0 rgba(255,255,255,0.22)`
+                        ? `0 0 0 1px rgba(236,72,153,0.4), 0 10px 40px ${blendA(0.5)}, 0 0 55px rgba(236,72,153,0.32), 0 0 80px rgba(139,92,246,0.2), inset 0 1px 0 rgba(255,255,255,0.25)`
                         : `0 8px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.18)`,
                     }}
                     transition={{ duration: 0.45 }}
@@ -683,16 +669,16 @@ const NowPlaying = () => {
                   }}
                 >
                   <motion.div animate={{
-                    color: repeat !== 'off' ? '#a78bfa' : 'rgba(255,255,255,0.38)',
-                    filter: repeat !== 'off' ? 'drop-shadow(0 0 7px rgba(167,139,250,0.85))' : 'none',
+                    color: repeat !== 'off' ? '#e879f9' : 'rgba(255,255,255,0.38)',
+                    filter: repeat !== 'off' ? 'drop-shadow(0 0 8px rgba(232,121,249,0.9))' : 'none',
                   }} transition={{ duration: 0.2 }}>
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3" />
                     </svg>
                   </motion.div>
-                  {repeat !== 'off' && <motion.div style={{ width: 4, height: 4, borderRadius: '50%', background: '#a78bfa' }} />}
+                  {repeat !== 'off' && <motion.div style={{ width: 4, height: 4, borderRadius: '50%', background: 'linear-gradient(135deg, #e879f9, #f472b6)' }} />}
                   {repeat === 'one' && (
-                    <span style={{ position: 'absolute', top: 4, right: 4, fontSize: 8, fontFamily: "'DM Mono', monospace", color: '#a78bfa', fontWeight: 700 }}>1</span>
+                    <span style={{ position: 'absolute', top: 4, right: 4, fontSize: 8, fontFamily: "'DM Mono', monospace", color: '#e879f9', fontWeight: 700 }}>1</span>
                   )}
                 </motion.button>
               </div>
@@ -739,18 +725,18 @@ const NowPlaying = () => {
                   title="Lyrics"
                   style={{
                     width: 88, height: 44, borderRadius: 999, cursor: 'pointer',
-                    border: '1px solid rgba(167,139,250,0.35)',
-                    background: 'rgba(139,92,246,0.12)',
+                    border: '1px solid rgba(236,72,153,0.5)',
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(236,72,153,0.18) 100%)',
                     outline: 'none', overflow: 'hidden',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 0 14px rgba(139,92,246,0.2)',
+                    boxShadow: '0 0 18px rgba(236,72,153,0.3), 0 0 28px rgba(139,92,246,0.18)',
                   }}
                 >
                   <svg viewBox="0 0 88 28" width="76" height="26">
                     {/* glow layer */}
                     <motion.path
                       d="M0,14 L20,14 L26,11 L31,5 L36,23 L39,1 L44,27 L49,14 L88,14"
-                      fill="none" stroke="rgba(167,139,250,0.5)" strokeWidth="5"
+                      fill="none" stroke="rgba(236,72,153,0.6)" strokeWidth="5"
                       strokeLinecap="round" strokeLinejoin="round"
                       style={{ filter: 'blur(4px)' }}
                       initial={{ pathLength: 0 }}
@@ -760,7 +746,7 @@ const NowPlaying = () => {
                     {/* sharp line */}
                     <motion.path
                       d="M0,14 L20,14 L26,11 L31,5 L36,23 L39,1 L44,27 L49,14 L88,14"
-                      fill="none" stroke="#a78bfa" strokeWidth="1.8"
+                      fill="none" stroke="#f472b6" strokeWidth="1.8"
                       strokeLinecap="round" strokeLinejoin="round"
                       initial={{ pathLength: 0 }}
                       animate={{ pathLength: [0, 1, 1, 0] }}
@@ -800,9 +786,9 @@ const NowPlaying = () => {
                   disabled={!selectedPlaylistId || !customPlaylists.length}
                   style={{
                     height: 36, borderRadius: 999, padding: '0 16px', cursor: selectedPlaylistId ? 'pointer' : 'default',
-                    border: `1px solid ${selectedPlaylistId ? 'rgba(167,139,250,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                    background: selectedPlaylistId ? 'rgba(139,92,246,0.18)' : 'rgba(255,255,255,0.04)',
-                    color: selectedPlaylistId ? '#a78bfa' : 'rgba(255,255,255,0.3)',
+                    border: `1px solid ${selectedPlaylistId ? 'rgba(236,72,153,0.48)' : 'rgba(255,255,255,0.1)'}`,
+                    background: selectedPlaylistId ? 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(236,72,153,0.18) 100%)' : 'rgba(255,255,255,0.04)',
+                    color: selectedPlaylistId ? '#f472b6' : 'rgba(255,255,255,0.3)',
                     fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
                     fontFamily: "'DM Mono', monospace", outline: 'none',
                   }}

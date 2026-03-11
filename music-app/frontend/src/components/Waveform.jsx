@@ -1,64 +1,124 @@
 import React, { useRef, useEffect } from 'react';
 
-const Waveform = ({ getFrequencyData, isPlaying, barCount = 50 }) => {
-  const barsRef = useRef([]);
+const HISTORY = 220; // number of data points kept in the rolling buffer
+
+const Waveform = ({ getFrequencyData, isPlaying }) => {
+  const canvasRef = useRef(null);
   const animRef = useRef(null);
+  const bufRef = useRef(new Float32Array(HISTORY).fill(0.5)); // normalised 0-1
+  const headRef = useRef(0);
   const timeRef = useRef(0);
 
   useEffect(() => {
-    const animate = () => {
-      animRef.current = requestAnimationFrame(animate);
-      timeRef.current += 0.05;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+
+    const draw = () => {
+      animRef.current = requestAnimationFrame(draw);
+      timeRef.current += 1;
+
+      const W = canvas.width;
+      const H = canvas.height;
+      const dpr = window.devicePixelRatio || 1;
+      const ctx = canvas.getContext('2d');
+
+      // --- compute new amplitude sample ---
       const freqData = getFrequencyData?.();
+      let amp = 0;
 
-      barsRef.current.forEach((bar, i) => {
-        if (!bar) return;
-        let h;
-        if (freqData && freqData.length > 0) {
-          // Map bar index to frequency bin
-          const binIndex = Math.floor((i / barCount) * freqData.length * 0.7);
-          h = (freqData[binIndex] / 255) * 48 + 3;
-        } else {
-          // Idle sine wave
-          h = 4 + Math.sin(timeRef.current * 1.5 + i * 0.4) * 3
-              + Math.sin(timeRef.current * 0.8 + i * 0.6) * 2;
-        }
+      if (freqData && freqData.length > 0 && isPlaying) {
+        // Bass-weighted average: first 30 % of bins carry the beat energy
+        const bassEnd = Math.max(1, Math.floor(freqData.length * 0.3));
+        let sum = 0;
+        for (let i = 0; i < bassEnd; i++) sum += freqData[i];
+        amp = sum / bassEnd / 255; // 0 – 1
+      } else if (!isPlaying) {
+        // flat baseline with a tiny idle flutter
+        amp = 0.04 * Math.abs(Math.sin(timeRef.current * 0.04));
+      }
 
-        bar.style.height = `${h}px`;
+      // Push into circular buffer (normalised value)
+      bufRef.current[headRef.current % HISTORY] = amp;
+      headRef.current += 1;
 
-        // Per-bar glow — brighter for taller bars
-        const glowIntensity = Math.min(h / 50, 1);
-        bar.style.boxShadow = `0 0 ${glowIntensity * 8}px rgba(0,255,106,${glowIntensity * 0.8})`;
-      });
+      // --- draw ---
+      ctx.clearRect(0, 0, W, H);
+
+      const mid = H * 0.5;
+      const maxSwing = H * 0.40; // max deflection from centre
+
+      // Glow pass (thick, blurred)
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,255,255,0.55)';
+      ctx.shadowBlur = 8 * dpr;
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 3 * dpr;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (let px = 0; px < W; px++) {
+        const bufIdx = ((headRef.current - HISTORY + Math.round((px / W) * HISTORY)) % HISTORY + HISTORY) % HISTORY;
+        const v = bufRef.current[bufIdx];
+        // ECG-style: deflect upward proportional to amplitude
+        const y = mid - v * maxSwing;
+        if (px === 0) ctx.moveTo(px, y);
+        else ctx.lineTo(px, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // Sharp white pass (thin, crisp)
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+      ctx.lineWidth = 1.6 * dpr;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (let px = 0; px < W; px++) {
+        const bufIdx = ((headRef.current - HISTORY + Math.round((px / W) * HISTORY)) % HISTORY + HISTORY) % HISTORY;
+        const v = bufRef.current[bufIdx];
+        const y = mid - v * maxSwing;
+        if (px === 0) ctx.moveTo(px, y);
+        else ctx.lineTo(px, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // Moving scan-head: a subtle bright dot at the leading edge
+      const leadX = W - 1;
+      const leadBuf = bufRef.current[(headRef.current - 1 + HISTORY) % HISTORY];
+      const leadY = mid - leadBuf * maxSwing;
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,255,255,0.9)';
+      ctx.shadowBlur = 12 * dpr;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(leadX, leadY, 2.5 * dpr, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     };
 
-    animate();
-    return () => cancelAnimationFrame(animRef.current);
-  }, [getFrequencyData, barCount]);
+    draw();
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      ro.disconnect();
+    };
+  }, [getFrequencyData, isPlaying]);
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      gap: 3, height: 56, width: '100%',
-    }}>
-      {Array.from({ length: barCount }).map((_, i) => (
-        <div
-          key={i}
-          ref={(el) => (barsRef.current[i] = el)}
-          className="waveform-bar"
-          style={{
-            flex: 1,
-            minWidth: 2,
-            maxWidth: 6,
-            height: 4,
-            borderRadius: 2,
-            background: `linear-gradient(to top, #00c44f, #00ff6a)`,
-            willChange: 'height, box-shadow',
-          }}
-        />
-      ))}
-    </div>
+    <canvas
+      ref={canvasRef}
+      style={{ width: '100%', height: 56, display: 'block' }}
+    />
   );
 };
 
