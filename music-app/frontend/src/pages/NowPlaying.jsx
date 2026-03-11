@@ -43,14 +43,14 @@ const ScrollingTitle = ({ text, fontSize, accentColor }) => {
         >
           <span style={{
             fontSize, lineHeight: 0.95, letterSpacing: '-0.02em', fontWeight: 800,
-            background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 70%, #f472b6 100%)`,
+            background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 80%, #c084fc 100%)`,
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
           }}>
             {safeText}
           </span>
           <span style={{
             fontSize, lineHeight: 0.95, letterSpacing: '-0.02em', fontWeight: 800,
-            background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 70%, #f472b6 100%)`,
+            background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 80%, #c084fc 100%)`,
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
           }}>
             {safeText}
@@ -59,7 +59,7 @@ const ScrollingTitle = ({ text, fontSize, accentColor }) => {
       ) : (
         <span style={{
           fontSize, lineHeight: 0.95, letterSpacing: '-0.02em', fontWeight: 800, display: 'block',
-          background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 70%, #f472b6 100%)`,
+          background: `linear-gradient(135deg, #fff 0%, ${accentColor || '#a78bfa'} 80%, #c084fc 100%)`,
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
         }}>
           {safeText}
@@ -307,7 +307,7 @@ const NowPlaying = () => {
         <FloatOrb size={320} x={-8} y={-10} color="rgba(139,92,246,0.18)" duration={8} delay={0} />
         <FloatOrb size={260} x={72} y={5} color="rgba(167,139,250,0.12)" duration={11} delay={2} />
         <FloatOrb size={200} x={15} y={68} color="rgba(99,102,241,0.14)" duration={9} delay={1.5} />
-        <FloatOrb size={180} x={80} y={70} color="rgba(244,114,182,0.10)" duration={12} delay={3} />
+        <FloatOrb size={180} x={80} y={70} color="rgba(167,139,250,0.08)" duration={12} delay={3} />
       </div>
 
       {/* Album-tinted orbs — blended with violet, softer */}
