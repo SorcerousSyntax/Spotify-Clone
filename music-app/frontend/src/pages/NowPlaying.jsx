@@ -713,45 +713,30 @@ const NowPlaying = () => {
                   </motion.svg>
                 </motion.button>
 
-                {/* Waveform */}
+                {/* Waveform — transparent, ECG synced */}
                 <div style={{ flex: 1 }}>
                   <Waveform getFrequencyData={getFrequencyData} isPlaying={isPlaying} barCount={38} />
                 </div>
 
-                {/* Heartbeat EKG button — opens lyrics */}
+                {/* Lyrics button */}
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   onClick={toggleLyricsPanel}
                   title="Lyrics"
                   style={{
-                    width: 88, height: 44, borderRadius: 999, cursor: 'pointer',
-                    border: '1px solid rgba(236,72,153,0.5)',
-                    background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(236,72,153,0.18) 100%)',
-                    outline: 'none', overflow: 'hidden',
+                    width: 52, height: 44, borderRadius: 999, cursor: 'pointer',
+                    border: '1px solid rgba(236,72,153,0.4)',
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(236,72,153,0.15) 100%)',
+                    outline: 'none',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 0 18px rgba(236,72,153,0.3), 0 0 28px rgba(139,92,246,0.18)',
+                    boxShadow: '0 0 14px rgba(236,72,153,0.2)',
+                    flexShrink: 0,
                   }}
                 >
-                  <svg viewBox="0 0 88 28" width="76" height="26">
-                    {/* glow layer */}
-                    <motion.path
-                      d="M0,14 L20,14 L26,11 L31,5 L36,23 L39,1 L44,27 L49,14 L88,14"
-                      fill="none" stroke="rgba(236,72,153,0.6)" strokeWidth="5"
-                      strokeLinecap="round" strokeLinejoin="round"
-                      style={{ filter: 'blur(4px)' }}
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: [0, 1, 1, 0] }}
-                      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', times: [0, 0.44, 0.66, 1] }}
-                    />
-                    {/* sharp line */}
-                    <motion.path
-                      d="M0,14 L20,14 L26,11 L31,5 L36,23 L39,1 L44,27 L49,14 L88,14"
-                      fill="none" stroke="#f472b6" strokeWidth="1.8"
-                      strokeLinecap="round" strokeLinejoin="round"
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: [0, 1, 1, 0] }}
-                      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', times: [0, 0.44, 0.66, 1] }}
-                    />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f472b6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    <line x1="9" y1="10" x2="15" y2="10" />
+                    <line x1="9" y1="14" x2="13" y2="14" />
                   </svg>
                 </motion.button>
               </motion.div>
