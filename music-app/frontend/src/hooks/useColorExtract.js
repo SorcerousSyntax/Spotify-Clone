@@ -7,6 +7,10 @@ const useColorExtract = (imageUrl) => {
   const imgRef = useRef(null);
 
   useEffect(() => {
+    // Reset to default immediately when song/URL changes so stale colour never lingers
+    setDominantColor([139, 92, 246]);
+    setPalette([]);
+
     if (!imageUrl) return;
 
     let cancelled = false;

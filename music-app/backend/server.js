@@ -46,18 +46,8 @@ app.get('/api/search', (req, res, next) => {
 });
 
 // Art-proxy — allows the frontend to fetch album-art images through the server
-// (JioSaavn CDN doesn't send CORS headers, so the browser can't read pixels for colour extraction)
-// SSRF protection: only https, only known CDN hostnames.
-const ART_PROXY_ALLOWED_HOSTS = [
-  'saavncdn.com',
-  'jiosaavn.com',
-  'r2.dev',
-  'r2.cloudflarestorage.com',
-  'backblazeb2.com',
-  'googleusercontent.com',
-  'amazonaws.com',
-];
-
+// (many CDNs don't send CORS headers, so the browser can't read pixels for colour extraction)
+// Security: only forward HTTPS requests, only return image/* content.
 app.get('/api/art-proxy', async (req, res) => {
   const { url } = req.query;
   if (!url || typeof url !== 'string') return res.status(400).end();
@@ -65,11 +55,22 @@ app.get('/api/art-proxy', async (req, res) => {
   let parsed;
   try { parsed = new URL(url); } catch { return res.status(400).end(); }
 
+  // Only allow HTTPS to public internet (block http, file, data, etc.)
   if (parsed.protocol !== 'https:') return res.status(403).end();
-  const allowed = ART_PROXY_ALLOWED_HOSTS.some(
-    (h) => parsed.hostname === h || parsed.hostname.endsWith('.' + h)
-  );
-  if (!allowed) return res.status(403).end();
+
+  // Block requests to private/loopback IP ranges (basic SSRF protection)
+  const hostname = parsed.hostname;
+  if (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.startsWith('10.') ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('172.16.') ||
+    hostname === '0.0.0.0' ||
+    hostname === '::1' ||
+    hostname.endsWith('.internal') ||
+    hostname.endsWith('.local')
+  ) return res.status(403).end();
 
   try {
     const upstream = await fetch(url, {
