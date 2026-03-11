@@ -33,17 +33,38 @@ const useColorExtract = (imageUrl) => {
       imgRef.current = img;
     };
 
-    // Primary: fetch → blob URL (same-origin, no CORS canvas taint)
-    fetch(imageUrl)
-      .then((r) => r.blob())
+    // data: URLs are already same-origin — extract directly
+    if (imageUrl.startsWith('data:')) {
+      tryExtract(imageUrl, false);
+      return () => { cancelled = true; };
+    }
+
+    // For external CDN URLs (e.g. JioSaavn) route through the backend proxy
+    // so the browser receives a same-origin blob — no canvas CORS taint
+    const proxyUrl = `/api/art-proxy?url=${encodeURIComponent(imageUrl)}`;
+    fetch(proxyUrl)
+      .then((r) => {
+        if (!r.ok) throw new Error('proxy failed');
+        return r.blob();
+      })
       .then((blob) => {
         if (cancelled) return;
         blobUrl = URL.createObjectURL(blob);
         tryExtract(blobUrl, false);
       })
       .catch(() => {
-        // Fallback: direct load with crossOrigin header
-        if (!cancelled) tryExtract(imageUrl, true);
+        // Fallback: direct fetch → blob (works if CDN sends CORS headers)
+        if (cancelled) return;
+        fetch(imageUrl)
+          .then((r) => r.blob())
+          .then((blob) => {
+            if (cancelled) return;
+            blobUrl = URL.createObjectURL(blob);
+            tryExtract(blobUrl, false);
+          })
+          .catch(() => {
+            if (!cancelled) tryExtract(imageUrl, true);
+          });
       });
 
     return () => {

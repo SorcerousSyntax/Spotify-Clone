@@ -289,10 +289,10 @@ const NowPlaying = () => {
     );
   }
 
-  // Blend album accent with violet for a mixed color that avoids pure-green screens
-  const mixR = Math.round(dr * 0.45 + 139 * 0.55);
-  const mixG = Math.round(dg * 0.45 + 92 * 0.55);
-  const mixB = Math.round(db * 0.45 + 246 * 0.55);
+  // Blend album accent with violet — 70% album so colour clearly shifts per song
+  const mixR = Math.round(dr * 0.7 + 139 * 0.3);
+  const mixG = Math.round(dg * 0.7 + 92 * 0.3);
+  const mixB = Math.round(db * 0.7 + 246 * 0.3);
   const blendAccent = `rgb(${mixR},${mixG},${mixB})`;
   const blendA = (a) => `rgba(${mixR},${mixG},${mixB},${a})`;
 
@@ -732,20 +732,41 @@ const NowPlaying = () => {
                   <Waveform getFrequencyData={getFrequencyData} isPlaying={isPlaying} barCount={38} />
                 </div>
 
-                {/* Lyrics pill */}
+                {/* Heartbeat EKG button — opens lyrics */}
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   onClick={toggleLyricsPanel}
+                  title="Lyrics"
                   style={{
-                    height: 44, padding: '0 18px', borderRadius: 999, cursor: 'pointer',
-                    fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+                    width: 88, height: 44, borderRadius: 999, cursor: 'pointer',
                     border: '1px solid rgba(167,139,250,0.35)',
-                    background: 'rgba(139,92,246,0.14)',
-                    color: '#a78bfa', outline: 'none',
+                    background: 'rgba(139,92,246,0.12)',
+                    outline: 'none', overflow: 'hidden',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                     boxShadow: '0 0 14px rgba(139,92,246,0.2)',
                   }}
                 >
-                  Lyrics
+                  <svg viewBox="0 0 88 28" width="76" height="26">
+                    {/* glow layer */}
+                    <motion.path
+                      d="M0,14 L20,14 L26,11 L31,5 L36,23 L39,1 L44,27 L49,14 L88,14"
+                      fill="none" stroke="rgba(167,139,250,0.5)" strokeWidth="5"
+                      strokeLinecap="round" strokeLinejoin="round"
+                      style={{ filter: 'blur(4px)' }}
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: [0, 1, 1, 0] }}
+                      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', times: [0, 0.44, 0.66, 1] }}
+                    />
+                    {/* sharp line */}
+                    <motion.path
+                      d="M0,14 L20,14 L26,11 L31,5 L36,23 L39,1 L44,27 L49,14 L88,14"
+                      fill="none" stroke="#a78bfa" strokeWidth="1.8"
+                      strokeLinecap="round" strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: [0, 1, 1, 0] }}
+                      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', times: [0, 0.44, 0.66, 1] }}
+                    />
+                  </svg>
                 </motion.button>
               </motion.div>
 
