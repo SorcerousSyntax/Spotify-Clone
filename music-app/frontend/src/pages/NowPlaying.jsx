@@ -318,7 +318,7 @@ const NowPlaying = () => {
       </motion.div>
 
       {/* ── Main content ── */}
-      <div style={{ position: 'relative', zIndex: 10, minHeight: '100dvh', paddingBottom: 36 }}>
+      <div style={{ position: 'relative', zIndex: 10, height: '100dvh', overflow: 'hidden', paddingBottom: 10 }}>
 
         {/* ── Top bar ── */}
         <motion.div

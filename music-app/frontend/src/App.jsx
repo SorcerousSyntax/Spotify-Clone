@@ -483,6 +483,20 @@ const AppInner = () => {
   const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
   const isNowPlayingRoute = normalizedPath === '/now-playing';
   const showMiniPlayer = showShell && !isNowPlayingRoute;
+  const ambientByVibe = {
+    subtle:
+      'radial-gradient(ellipse 80% 60% at 15% 10%, rgba(109,40,217,0.12) 0%, transparent 60%), ' +
+      'radial-gradient(ellipse 55% 45% at 85% 85%, rgba(139,92,246,0.08) 0%, transparent 55%)',
+    vibrant:
+      'radial-gradient(ellipse 78% 58% at 14% 12%, rgba(34,211,238,0.18) 0%, transparent 62%), ' +
+      'radial-gradient(ellipse 70% 52% at 42% 22%, rgba(139,92,246,0.18) 0%, transparent 62%), ' +
+      'radial-gradient(ellipse 58% 46% at 84% 84%, rgba(244,114,182,0.16) 0%, transparent 58%)',
+    neon:
+      'radial-gradient(ellipse 82% 62% at 12% 10%, rgba(34,211,238,0.28) 0%, transparent 64%), ' +
+      'radial-gradient(ellipse 76% 58% at 45% 22%, rgba(139,92,246,0.28) 0%, transparent 64%), ' +
+      'radial-gradient(ellipse 62% 50% at 86% 82%, rgba(244,114,182,0.24) 0%, transparent 60%), ' +
+      'radial-gradient(ellipse 44% 38% at 52% 88%, rgba(132,204,22,0.18) 0%, transparent 70%)',
+  };
 
   return (
     <div style={{ position: 'relative', minHeight: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
@@ -490,9 +504,8 @@ const AppInner = () => {
       <div
         style={{
           position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-          background:
-            'radial-gradient(ellipse 80% 60% at 15% 10%, rgba(109,40,217,0.2) 0%, transparent 60%), ' +
-            'radial-gradient(ellipse 55% 45% at 85% 85%, rgba(139,92,246,0.13) 0%, transparent 55%)',
+          background: ambientByVibe[vibe] || ambientByVibe.vibrant,
+          transition: 'background 260ms ease',
         }}
       />
 
@@ -538,7 +551,9 @@ const AppInner = () => {
           zIndex: 2,
           paddingTop: showShell && !isNowPlayingRoute ? 54 : 0,
           // Extra mobile spacing keeps list rows visible above MiniPlayer + BottomNav.
-          paddingBottom: showShell ? (isDesktop ? '24px' : (isNowPlayingRoute ? '96px' : '170px')) : '24px',
+          paddingBottom: showShell ? (isDesktop ? '24px' : (isNowPlayingRoute ? '0px' : '170px')) : '24px',
+          height: isNowPlayingRoute ? '100dvh' : 'auto',
+          overflow: isNowPlayingRoute ? 'hidden' : 'visible',
           paddingRight: '0px',
           transition: 'padding-right 0.25s ease',
         }}
