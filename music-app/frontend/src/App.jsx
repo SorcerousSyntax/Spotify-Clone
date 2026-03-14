@@ -59,7 +59,15 @@ const PublicOnlyRoute = ({ session, authReady, children }) => {
   return children;
 };
 
-const TopBar = ({ session }) => {
+const VIBE_LEVELS = ['subtle', 'vibrant', 'neon'];
+
+const getNextVibe = (current) => {
+  const idx = VIBE_LEVELS.indexOf(current);
+  if (idx === -1) return VIBE_LEVELS[1];
+  return VIBE_LEVELS[(idx + 1) % VIBE_LEVELS.length];
+};
+
+const TopBar = ({ session, vibe = 'vibrant', onCycleVibe }) => {
   const raw =
     session?.user?.user_metadata?.full_name ||
     session?.user?.user_metadata?.name ||
@@ -70,6 +78,17 @@ const TopBar = ({ session }) => {
     ? firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
     : 'You';
   const initial = display[0] || '♪';
+  const vibeLabel = vibe.charAt(0).toUpperCase() + vibe.slice(1);
+  const vibeColors = {
+    subtle: 'linear-gradient(135deg, rgba(167,139,250,0.2), rgba(139,92,246,0.2))',
+    vibrant: 'linear-gradient(135deg, rgba(34,211,238,0.24), rgba(139,92,246,0.22), rgba(244,114,182,0.24))',
+    neon: 'linear-gradient(135deg, rgba(34,211,238,0.34), rgba(236,72,153,0.34), rgba(132,204,22,0.3))',
+  };
+  const vibeDot = {
+    subtle: '#a78bfa',
+    vibrant: '#22d3ee',
+    neon: '#84cc16',
+  };
   return (
     <motion.div
       initial={{ y: -44, opacity: 0 }}
@@ -79,9 +98,9 @@ const TopBar = ({ session }) => {
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 60,
         height: 52,
         backdropFilter: 'blur(28px) saturate(180%)', WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-        background: 'rgba(255,255,255,0.04)',
-        borderBottom: '1px solid rgba(255,255,255,0.09)',
-        boxShadow: 'inset 0 -1px 0 rgba(139,92,246,0.12), 0 4px 28px rgba(0,0,0,0.18)',
+        background: 'linear-gradient(135deg, rgba(34,211,238,0.1) 0%, rgba(139,92,246,0.12) 45%, rgba(244,114,182,0.12) 100%)',
+        borderBottom: '1px solid rgba(255,255,255,0.14)',
+        boxShadow: 'inset 8px 8px 16px rgba(11,8,20,0.2), inset -8px -8px 14px rgba(255,255,255,0.08), 0 4px 28px rgba(0,0,0,0.18)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 20px',
       }}
@@ -89,7 +108,7 @@ const TopBar = ({ session }) => {
       <span style={{
         fontFamily: "'Space Grotesk', sans-serif",
         fontSize: 20, fontWeight: 800, letterSpacing: '-0.01em',
-        background: 'linear-gradient(135deg, #c4b5fd, #8b5cf6)',
+        background: 'linear-gradient(125deg, #22d3ee 0%, #a78bfa 34%, #f472b6 70%, #fb7185 100%)',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         backgroundClip: 'text',
         lineHeight: 1,
@@ -97,6 +116,32 @@ const TopBar = ({ session }) => {
         Raabta
       </span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button
+          onClick={onCycleVibe}
+          title="Cycle Theme Intensity"
+          style={{
+            height: 30,
+            borderRadius: 999,
+            border: '1px solid rgba(255,255,255,0.18)',
+            background: vibeColors[vibe] || vibeColors.vibrant,
+            color: '#fff',
+            padding: '0 10px',
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 10,
+            letterSpacing: '0.07em',
+            textTransform: 'uppercase',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            boxShadow: vibe === 'neon'
+              ? 'inset 0 1px 0 rgba(255,255,255,0.2), 0 0 14px rgba(34,211,238,0.25), 0 0 16px rgba(132,204,22,0.24)'
+              : 'inset 0 1px 0 rgba(255,255,255,0.16), 0 6px 20px rgba(0,0,0,0.22)',
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: vibeDot[vibe] || '#22d3ee', boxShadow: '0 0 8px currentColor' }} />
+          {vibeLabel}
+        </button>
         <span style={{
           fontFamily: "'Space Grotesk', sans-serif",
           fontSize: 13, fontWeight: 500,
@@ -347,6 +392,8 @@ const AppInner = () => {
   const location = useLocation();
   const [session, setSession] = useState(null);
   const [authReady, setAuthReady] = useState(false);
+  const [vibe, setVibe] = useState('vibrant');
+  const [vibeToast, setVibeToast] = useState('');
 
   const computeDesktopMode = () => {
     if (typeof window === 'undefined') return false;
@@ -412,6 +459,23 @@ const AppInner = () => {
     });
   }, [hydrateFromSupabase]);
 
+  useEffect(() => {
+    const saved = window.localStorage.getItem('raabta-vibe-level');
+    if (saved && VIBE_LEVELS.includes(saved)) {
+      setVibe(saved);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-vibe-level', vibe);
+    window.localStorage.setItem('raabta-vibe-level', vibe);
+
+    const label = vibe.charAt(0).toUpperCase() + vibe.slice(1);
+    setVibeToast(`${label} mode`);
+    const timer = window.setTimeout(() => setVibeToast(''), 1300);
+    return () => window.clearTimeout(timer);
+  }, [vibe]);
+
   usePlayer();
 
   const isPublicAuthPage = location.pathname === '/login' || location.pathname === '/register';
@@ -419,9 +483,14 @@ const AppInner = () => {
   const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
   const isNowPlayingRoute = normalizedPath === '/now-playing';
   const showMiniPlayer = showShell && !isNowPlayingRoute;
+  const vibeFilterMap = {
+    subtle: 'saturate(0.92) brightness(0.97)',
+    vibrant: 'saturate(1.16) brightness(1.03)',
+    neon: 'saturate(1.55) brightness(1.12) contrast(1.08) hue-rotate(2deg)',
+  };
 
   return (
-    <div style={{ position: 'relative', minHeight: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', minHeight: '100dvh', background: 'var(--bg)', overflow: 'hidden', filter: vibeFilterMap[vibe] || vibeFilterMap.vibrant, transition: 'filter 260ms ease' }}>
       {/* Ambient gradient background (no smoke) */}
       <div
         style={{
@@ -433,7 +502,39 @@ const AppInner = () => {
       />
 
       {/* Sticky top bar */}
-      {showShell && !isNowPlayingRoute && <TopBar session={session} />}
+      {showShell && !isNowPlayingRoute && <TopBar session={session} vibe={vibe} onCycleVibe={() => setVibe((prev) => getNextVibe(prev))} />}
+
+      {/* Vibe switch toast */}
+      <AnimatePresence>
+        {showShell && vibeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              position: 'fixed',
+              top: 58,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 70,
+              borderRadius: 999,
+              padding: '7px 14px',
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 10,
+              letterSpacing: '0.09em',
+              textTransform: 'uppercase',
+              color: '#fff',
+              background: 'linear-gradient(130deg, rgba(34,211,238,0.3), rgba(139,92,246,0.34), rgba(244,114,182,0.32), rgba(132,204,22,0.3))',
+              border: '1px solid rgba(255,255,255,0.22)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), 0 8px 24px rgba(0,0,0,0.34), 0 0 16px rgba(34,211,238,0.2), 0 0 18px rgba(244,114,182,0.2)',
+              pointerEvents: 'none',
+            }}
+          >
+            {vibeToast}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* z-2: Page content */}
       <main

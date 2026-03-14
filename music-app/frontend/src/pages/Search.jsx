@@ -43,22 +43,22 @@ const SearchResultRow = ({ song, index, onClick }) => {
       style={{
         display: 'flex', alignItems: 'center', gap: 14,
         padding: '12px 16px', borderRadius: 14, cursor: 'pointer',
-        background: 'rgba(255,255,255,0.05)',
+        background: 'linear-gradient(130deg, rgba(34,211,238,0.14) 0%, rgba(139,92,246,0.18) 46%, rgba(244,114,182,0.14) 100%)',
         backdropFilter: 'blur(20px) saturate(160%)',
         WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10)',
+        border: '1px solid rgba(255,255,255,0.15)',
+        boxShadow: 'inset 8px 8px 18px rgba(14,8,25,0.3), inset -6px -6px 14px rgba(255,255,255,0.07), 0 8px 26px rgba(0,0,0,0.25)',
         transition: 'background 0.2s ease, border-color 0.2s ease',
         marginBottom: 8,
       }}
-      whileHover={{ y: -2, boxShadow: '0 10px 36px rgba(139,92,246,0.18), inset 0 1px 0 rgba(255,255,255,0.1)' }}
+      whileHover={{ y: -2, boxShadow: '0 12px 36px rgba(34,211,238,0.18), 0 12px 34px rgba(244,114,182,0.2), inset 0 1px 0 rgba(255,255,255,0.16)' }}
       onMouseEnter={e => {
-        e.currentTarget.style.background = 'rgba(139,92,246,0.1)';
-        e.currentTarget.style.borderColor = 'rgba(139,92,246,0.28)';
+        e.currentTarget.style.background = 'linear-gradient(130deg, rgba(34,211,238,0.18) 0%, rgba(139,92,246,0.22) 46%, rgba(244,114,182,0.2) 100%)';
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)';
+        e.currentTarget.style.background = 'linear-gradient(130deg, rgba(34,211,238,0.14) 0%, rgba(139,92,246,0.18) 46%, rgba(244,114,182,0.14) 100%)';
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
       }}
     >
       <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: 'rgba(255,255,255,0.2)', width: 20, textAlign: 'right', flexShrink: 0 }}>
@@ -209,7 +209,19 @@ const Search = () => {
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 'clamp(36px, 8vw, 48px)', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff', marginBottom: 4, paddingLeft: 16, lineHeight: 1 }}
+        style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: 'clamp(36px, 8vw, 48px)',
+          fontWeight: 800,
+          letterSpacing: '-0.02em',
+          background: 'linear-gradient(124deg, #22d3ee 0%, #a78bfa 30%, #f472b6 62%, #fb7185 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          marginBottom: 4,
+          paddingLeft: 16,
+          lineHeight: 1,
+        }}
       >
         Search
       </motion.h1>
@@ -229,18 +241,20 @@ const Search = () => {
           style={{
             display: 'flex', alignItems: 'center', gap: 12,
             padding: '14px 20px',
-            background: 'rgba(255,255,255,0.05)',
+            background: 'linear-gradient(140deg, rgba(34,211,238,0.14) 0%, rgba(139,92,246,0.16) 46%, rgba(244,114,182,0.14) 100%)',
             backdropFilter: 'blur(24px) saturate(160%)',
             WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-            border: focused ? '1px solid rgba(139,92,246,0.55)' : '1px solid rgba(255,255,255,0.11)',
+            border: focused ? '1px solid rgba(255,255,255,0.3)' : '1px solid rgba(255,255,255,0.14)',
             borderRadius: 16,
-            boxShadow: focused ? '0 0 0 3px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.12)' : 'inset 0 1px 0 rgba(255,255,255,0.09), 0 4px 20px rgba(0,0,0,0.2)',
+            boxShadow: focused
+              ? '0 0 0 3px rgba(34,211,238,0.12), 0 0 0 6px rgba(244,114,182,0.08), inset 0 1px 0 rgba(255,255,255,0.16)'
+              : 'inset 8px 8px 20px rgba(11,8,20,0.3), inset -6px -6px 14px rgba(255,255,255,0.07), 0 6px 22px rgba(0,0,0,0.24)',
             transition: 'all 0.25s ease',
             overflow: 'hidden',
             margin: '0 16px 24px',
           }}
         >
-          <svg width="18" height="18" fill="none" stroke={focused ? '#a78bfa' : 'rgba(255,255,255,0.3)'} viewBox="0 0 24 24" style={{ flexShrink: 0, transition: 'stroke 0.2s' }}>
+          <svg width="18" height="18" fill="none" stroke={focused ? '#22d3ee' : 'rgba(255,255,255,0.4)'} viewBox="0 0 24 24" style={{ flexShrink: 0, transition: 'stroke 0.2s' }}>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input

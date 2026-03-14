@@ -298,9 +298,12 @@ const Library = () => {
           onClick={() => setShowCreate((v) => !v)}
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-            borderRadius: 999, background: 'rgba(139,92,246,0.12)',
-            border: '1px solid rgba(139,92,246,0.3)', color: '#a78bfa', cursor: 'pointer',
+            borderRadius: 999,
+            background: 'linear-gradient(132deg, rgba(34,211,238,0.2) 0%, rgba(139,92,246,0.24) 42%, rgba(244,114,182,0.22) 100%)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            color: '#ffffff', cursor: 'pointer',
             fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 600,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), 0 8px 24px rgba(0,0,0,0.26)',
           }}
         >
           + New Playlist
@@ -333,13 +336,13 @@ const Library = () => {
             style={{
               border: 'none',
               borderRadius: 999,
-              background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+              background: 'linear-gradient(132deg, #22d3ee 0%, #8b5cf6 45%, #f472b6 78%, #fb7185 100%)',
               color: '#fff',
               padding: '10px 18px',
               cursor: 'pointer',
               fontFamily: "'Space Grotesk', sans-serif",
               fontSize: 13, fontWeight: 600,
-              boxShadow: '0 4px 14px rgba(139,92,246,0.4)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3), 0 10px 26px rgba(0,0,0,0.32), 0 8px 22px rgba(244,114,182,0.24)',
             }}
           >
             Create
@@ -375,13 +378,17 @@ const Library = () => {
                 flexShrink: 0,
                 fontFamily: "'Space Grotesk', sans-serif",
                 fontSize: 13, fontWeight: 500,
-                background: isActive ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : 'rgba(255,255,255,0.06)',
+                background: isActive
+                  ? 'linear-gradient(132deg, #22d3ee 0%, #8b5cf6 45%, #f472b6 100%)'
+                  : 'rgba(255,255,255,0.06)',
                 backdropFilter: isActive ? 'none' : 'blur(14px) saturate(160%)',
                 WebkitBackdropFilter: isActive ? 'none' : 'blur(14px) saturate(160%)',
                 color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
                 border: isActive ? 'none' : '1px solid rgba(255,255,255,0.12)',
                 cursor: 'pointer',
-                boxShadow: isActive ? '0 4px 14px rgba(139,92,246,0.4)' : 'inset 0 1px 0 rgba(255,255,255,0.10)',
+                boxShadow: isActive
+                  ? '0 8px 26px rgba(34,211,238,0.2), 0 8px 24px rgba(244,114,182,0.24), inset 0 1px 0 rgba(255,255,255,0.18)'
+                  : 'inset 0 1px 0 rgba(255,255,255,0.10)',
               }}
             >
               {f}

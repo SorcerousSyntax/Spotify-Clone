@@ -291,7 +291,7 @@ const Home = () => {
           marginBottom: 20,
         }}>
           Hello, <span style={{
-            background: 'linear-gradient(135deg, #c4b5fd, #8b5cf6)',
+            background: 'linear-gradient(125deg, #22d3ee 0%, #c4b5fd 24%, #8b5cf6 50%, #f472b6 74%, #fb7185 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -314,14 +314,16 @@ const Home = () => {
                 fontSize: 13, fontWeight: 500,
                 letterSpacing: '0.01em',
                 background: activeFilter === f
-                  ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)'
+                  ? 'linear-gradient(135deg, #22d3ee 0%, #8b5cf6 45%, #f472b6 100%)'
                   : 'rgba(255,255,255,0.06)',
                 backdropFilter: activeFilter === f ? 'none' : 'blur(14px) saturate(160%)',
                 WebkitBackdropFilter: activeFilter === f ? 'none' : 'blur(14px) saturate(160%)',
                 color: activeFilter === f ? '#fff' : 'rgba(255,255,255,0.55)',
                 border: activeFilter === f ? 'none' : '1px solid rgba(255,255,255,0.11)',
                 cursor: 'pointer',
-                boxShadow: activeFilter === f ? '0 4px 16px rgba(139,92,246,0.4)' : 'inset 0 1px 0 rgba(255,255,255,0.1)',
+                boxShadow: activeFilter === f
+                  ? '0 10px 28px rgba(34,211,238,0.2), 0 8px 24px rgba(244,114,182,0.28), inset 0 1px 0 rgba(255,255,255,0.18)'
+                  : 'inset 0 1px 0 rgba(255,255,255,0.1)',
                 transition: 'all 0.2s ease',
               }}
             >
@@ -340,10 +342,10 @@ const Home = () => {
           margin: '20px auto',
           width: 'min(680px, calc(100vw - 24px))',
           borderRadius: 22,
-          background: 'linear-gradient(135deg, rgba(109,40,217,0.55) 0%, rgba(76,29,149,0.45) 50%, rgba(11,0,21,0.7) 100%)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(167,139,250,0.2)',
+          background: 'linear-gradient(132deg, rgba(34,211,238,0.24) 0%, rgba(139,92,246,0.38) 34%, rgba(244,114,182,0.32) 68%, rgba(251,113,133,0.24) 100%)',
+          backdropFilter: 'blur(30px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+          border: '1px solid rgba(255,255,255,0.16)',
           overflow: 'hidden',
           padding: '24px 22px',
           position: 'relative',
@@ -351,7 +353,7 @@ const Home = () => {
           gridTemplateColumns: '1fr auto',
           gap: 16,
           alignItems: 'center',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,92,246,0.1)',
+          boxShadow: 'inset 10px 10px 26px rgba(20, 8, 36, 0.34), inset -10px -10px 24px rgba(255,255,255,0.08), 0 20px 64px rgba(0,0,0,0.45)',
         }}
       >
         {/* Background glow */}
@@ -396,15 +398,15 @@ const Home = () => {
             style={{
               borderRadius: 999,
               border: 'none',
-              background: '#fff',
-              color: '#6d28d9',
+              background: 'linear-gradient(140deg, #22d3ee 0%, #8b5cf6 42%, #f472b6 78%, #fb7185 100%)',
+              color: '#ffffff',
               padding: '11px 22px',
               cursor: 'pointer',
               fontFamily: "'Space Grotesk', sans-serif",
               fontSize: 13, fontWeight: 700,
               letterSpacing: '0.01em',
               display: 'flex', alignItems: 'center', gap: 8,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0,0,0,0.36), 0 6px 22px rgba(244,114,182,0.3)',
             }}
           >
             {currentSong && isPlaying ? (
@@ -502,15 +504,15 @@ const Home = () => {
                   padding: '10px 12px', borderRadius: 14,
                   cursor: 'pointer',
                   background: currentSong?.id === song.id
-                    ? 'rgba(139,92,246,0.18)'
+                    ? 'linear-gradient(135deg, rgba(34,211,238,0.16) 0%, rgba(139,92,246,0.2) 50%, rgba(244,114,182,0.18) 100%)'
                     : 'rgba(255,255,255,0.05)',
                   backdropFilter: 'blur(18px) saturate(160%)',
                   WebkitBackdropFilter: 'blur(18px) saturate(160%)',
                   border: currentSong?.id === song.id
-                    ? '1px solid rgba(139,92,246,0.4)'
+                    ? '1px solid rgba(255,255,255,0.2)'
                     : '1px solid rgba(255,255,255,0.09)',
                   boxShadow: currentSong?.id === song.id
-                    ? '0 8px 32px rgba(139,92,246,0.28), inset 0 1px 0 rgba(167,139,250,0.12)'
+                    ? 'inset 8px 8px 18px rgba(16, 8, 24, 0.32), inset -8px -8px 16px rgba(255,255,255,0.08), 0 10px 30px rgba(34,211,238,0.12), 0 8px 26px rgba(244,114,182,0.2)'
                     : '0 4px 20px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.09)',
                   transition: 'all 0.25s ease',
                   marginBottom: 8,

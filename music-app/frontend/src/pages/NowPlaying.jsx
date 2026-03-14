@@ -551,11 +551,11 @@ const NowPlaying = () => {
               style={{
                 width: 'min(92vw, 320px)', marginTop: 10,
                 borderRadius: 24,
-                background: 'rgba(255,255,255,0.05)',
-                backdropFilter: 'blur(28px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-                border: '1px solid rgba(255,255,255,0.10)',
-                boxShadow: '0 12px 48px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.12)',
+                background: 'linear-gradient(132deg, rgba(34,211,238,0.14) 0%, rgba(139,92,246,0.2) 34%, rgba(244,114,182,0.18) 70%, rgba(251,113,133,0.14) 100%)',
+                backdropFilter: 'blur(30px) saturate(185%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(185%)',
+                border: '1px solid rgba(255,255,255,0.16)',
+                boxShadow: 'inset 10px 10px 24px rgba(14,8,24,0.33), inset -8px -8px 20px rgba(255,255,255,0.08), 0 14px 44px rgba(0,0,0,0.34)',
                 padding: '18px 16px 16px',
               }}
             >
@@ -707,10 +707,14 @@ const NowPlaying = () => {
                   onClick={() => toggleLike(currentSong.id, currentSong)}
                   style={{
                     width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: isLiked ? 'rgba(244,114,182,0.18)' : 'rgba(255,255,255,0.07)',
-                    border: isLiked ? '1px solid rgba(244,114,182,0.5)' : '1px solid rgba(255,255,255,0.12)',
+                    background: isLiked
+                      ? 'linear-gradient(135deg, rgba(251,113,133,0.32), rgba(244,114,182,0.32))'
+                      : 'linear-gradient(135deg, rgba(34,211,238,0.14), rgba(139,92,246,0.16))',
+                    border: isLiked ? '1px solid rgba(251,113,133,0.6)' : '1px solid rgba(255,255,255,0.16)',
                     outline: 'none', cursor: 'pointer',
-                    boxShadow: isLiked ? '0 0 18px rgba(244,114,182,0.3)' : 'none',
+                    boxShadow: isLiked
+                      ? '0 0 18px rgba(244,114,182,0.35), inset 0 1px 0 rgba(255,255,255,0.18)'
+                      : 'inset 0 1px 0 rgba(255,255,255,0.14)',
                   }}
                 >
                   <motion.svg width="20" height="20" viewBox="0 0 24 24"
@@ -738,11 +742,11 @@ const NowPlaying = () => {
                   title="Lyrics"
                   style={{
                     width: 52, height: 44, borderRadius: 999, cursor: 'pointer',
-                    border: '1px solid rgba(236,72,153,0.4)',
-                    background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(236,72,153,0.15) 100%)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    background: 'linear-gradient(135deg, rgba(34,211,238,0.18) 0%, rgba(139,92,246,0.2) 44%, rgba(236,72,153,0.24) 100%)',
                     outline: 'none',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 0 14px rgba(236,72,153,0.2)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 14px rgba(236,72,153,0.2), 0 0 16px rgba(34,211,238,0.16)',
                     flexShrink: 0,
                   }}
                 >

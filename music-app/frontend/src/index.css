@@ -29,6 +29,20 @@
   --violet-dim: rgba(139, 92, 246, 0.18);
   --violet-glow: 0 0 20px rgba(139, 92, 246, 0.35);
 
+  /* Multicolor accents for vibrant UI */
+  --cyan: #22d3ee;
+  --cyan-soft: rgba(34, 211, 238, 0.24);
+  --pink: #f472b6;
+  --pink-soft: rgba(244, 114, 182, 0.24);
+  --coral: #fb7185;
+  --coral-soft: rgba(251, 113, 133, 0.22);
+  --lime: #84cc16;
+  --lime-soft: rgba(132, 204, 22, 0.2);
+  --amber: #f59e0b;
+  --amber-soft: rgba(245, 158, 11, 0.2);
+  --aurora-gradient: linear-gradient(120deg, #22d3ee 0%, #8b5cf6 28%, #f472b6 58%, #fb7185 100%);
+  --aurora-gradient-soft: linear-gradient(120deg, rgba(34,211,238,0.2) 0%, rgba(139,92,246,0.28) 28%, rgba(244,114,182,0.24) 58%, rgba(251,113,133,0.2) 100%);
+
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.55);
   --text-muted: rgba(255, 255, 255, 0.2);
@@ -94,7 +108,10 @@ body::before {
     /* gentle violet nebula clouds */
     radial-gradient(ellipse 70% 50% at 15% 12%, rgba(109,40,217,0.15) 0%, transparent 60%),
     radial-gradient(ellipse 55% 45% at 82% 82%, rgba(139,92,246,0.10) 0%, transparent 55%),
-    radial-gradient(ellipse 40% 35% at 50% 50%, rgba(76,29,149,0.07) 0%, transparent 65%);
+    radial-gradient(ellipse 40% 35% at 50% 50%, rgba(76,29,149,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 36% at 84% 18%, rgba(34,211,238,0.08) 0%, transparent 68%),
+    radial-gradient(ellipse 40% 34% at 12% 76%, rgba(244,114,182,0.08) 0%, transparent 68%),
+    radial-gradient(ellipse 35% 30% at 52% 86%, rgba(251,113,133,0.07) 0%, transparent 70%);
   animation: premiumAmbient 22s ease-in-out infinite alternate;
 }
 
@@ -107,8 +124,8 @@ body::after {
   pointer-events: none;
   background-image: radial-gradient(circle, rgba(139,92,246,0.12) 1px, transparent 1px);
   background-size: 32px 32px;
-  mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 30%, transparent 100%);
   -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 30%, transparent 100%);
   opacity: 0.4;
 }
 
@@ -199,8 +216,8 @@ button {
 /* Base glass — frosted, light-tinted */
 .glass {
   background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255,255,255,0.11);
   box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.12);
 }
@@ -208,8 +225,8 @@ button {
 /* Strong glass — deeper panels, overlays */
 .glass-strong {
   background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
+  backdrop-filter: blur(40px) saturate(200%);
   border: 1px solid rgba(255,255,255,0.09);
   box-shadow: 0 12px 48px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.09);
 }
@@ -217,8 +234,8 @@ button {
 /* Glass card — list rows, compact items */
 .glass-card {
   background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(18px) saturate(160%);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
   border: 1px solid rgba(255,255,255,0.09);
   box-shadow: 0 4px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
 }
@@ -226,10 +243,78 @@ button {
 /* Glass panel — larger section containers */
 .glass-panel {
   background: rgba(139,92,246,0.07);
-  backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
+  backdrop-filter: blur(32px) saturate(180%);
   border: 1px solid rgba(139,92,246,0.18);
   box-shadow: 0 16px 56px rgba(0,0,0,0.32), inset 0 1px 0 rgba(167,139,250,0.15);
+}
+
+/* Claymorphism helpers */
+.clay {
+  border-radius: 22px;
+  background: var(--aurora-gradient-soft);
+  border: 1px solid rgba(255,255,255,0.12);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+  box-shadow:
+    inset 10px 10px 26px rgba(18, 8, 30, 0.35),
+    inset -8px -8px 18px rgba(255,255,255,0.08),
+    0 16px 42px rgba(0,0,0,0.35);
+}
+
+.clay-pill {
+  border-radius: 999px;
+  background: linear-gradient(140deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: inset 2px 2px 8px rgba(255,255,255,0.08), inset -4px -4px 10px rgba(7,7,10,0.35), 0 8px 22px rgba(0,0,0,0.25);
+}
+
+.neon-gradient-text {
+  background: var(--aurora-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Intensity modes toggled from TopBar */
+:root[data-vibe-level='subtle'] body::before { opacity: 0.6; }
+:root[data-vibe-level='vibrant'] body::before { opacity: 0.95; }
+:root[data-vibe-level='neon'] body::before {
+  opacity: 1;
+  filter: saturate(1.45) brightness(1.12) contrast(1.08);
+}
+
+:root[data-vibe-level='neon'] body::after {
+  opacity: 0.62;
+  background-image: radial-gradient(circle, rgba(34,211,238,0.22) 1px, transparent 1px);
+}
+
+:root[data-vibe-level='subtle'] .clay,
+:root[data-vibe-level='subtle'] .glass,
+:root[data-vibe-level='subtle'] .glass-card {
+  box-shadow: 0 6px 22px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+:root[data-vibe-level='neon'] .clay,
+:root[data-vibe-level='neon'] .glass,
+:root[data-vibe-level='neon'] .glass-card {
+  box-shadow:
+    inset 10px 10px 24px rgba(12, 8, 22, 0.35),
+    inset -8px -8px 16px rgba(255,255,255,0.08),
+    0 16px 44px rgba(0,0,0,0.34),
+    0 0 24px rgba(34,211,238,0.24),
+    0 0 28px rgba(244,114,182,0.22),
+    0 0 30px rgba(132,204,22,0.16);
+  animation: neonPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes neonPulse {
+  0%, 100% {
+    filter: saturate(1);
+  }
+  50% {
+    filter: saturate(1.18);
+  }
 }
 
 /* Violet gradient classes */

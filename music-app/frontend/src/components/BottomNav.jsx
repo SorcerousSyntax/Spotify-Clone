@@ -58,11 +58,11 @@ const BottomNav = () => {
       <div style={{
         margin: '0 12px 10px',
         borderRadius: 26,
-        background: 'rgba(255,255,255,0.05)',
+        background: 'linear-gradient(132deg, rgba(34,211,238,0.13) 0%, rgba(139,92,246,0.16) 42%, rgba(244,114,182,0.15) 100%)',
         backdropFilter: 'blur(40px) saturate(180%)',
         WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 -4px 32px rgba(0,0,0,0.18), 0 4px 20px rgba(0,0,0,0.22)',
+        border: '1px solid rgba(255,255,255,0.16)',
+        boxShadow: 'inset 10px 10px 20px rgba(12,8,20,0.28), inset -8px -8px 16px rgba(255,255,255,0.08), 0 -4px 32px rgba(0,0,0,0.18), 0 4px 20px rgba(0,0,0,0.22)',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-around',
@@ -83,15 +83,21 @@ const BottomNav = () => {
                 }}
               >
                 <div style={{
-                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.32)',
+                  color: isActive
+                    ? (tab.id === 'home' ? '#22d3ee' : tab.id === 'search' ? '#a78bfa' : tab.id === 'library' ? '#f472b6' : '#fb7185')
+                    : 'rgba(255,255,255,0.36)',
                   lineHeight: 0,
+                  filter: isActive ? 'drop-shadow(0 0 8px currentColor)' : 'none',
                 }}>
                   <tab.Icon filled={isActive} />
                 </div>
                 {/* Active dot indicator */}
                 <div style={{
                   width: 4, height: 4, borderRadius: '50%',
-                  background: isActive ? '#a78bfa' : 'transparent',
+                  background: isActive
+                    ? (tab.id === 'home' ? '#22d3ee' : tab.id === 'search' ? '#a78bfa' : tab.id === 'library' ? '#f472b6' : '#fb7185')
+                    : 'transparent',
+                  boxShadow: isActive ? '0 0 10px currentColor' : 'none',
                   transition: 'background 0.25s ease',
                 }} />
               </button>

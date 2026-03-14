@@ -67,8 +67,8 @@ const MiniPlayer = () => {
           <motion.div
             style={{ position: 'absolute', inset: 0, borderRadius: 22, overflow: 'hidden' }}
             animate={{
-              background: `linear-gradient(135deg, ${accentA(0.82)} 0%, rgba(236,72,153,0.24) 38%, ${accentA(0.35)} 62%, rgba(9,0,18,0.97) 100%)`,
-              boxShadow: `0 -2px 40px rgba(0,0,0,0.7), 0 0 0 1px ${accentA(0.55)}, 0 0 28px ${accentA(0.22)}, 0 0 20px rgba(236,72,153,0.2), inset 0 1px 0 rgba(255,255,255,0.11)`,
+              background: `linear-gradient(135deg, rgba(34,211,238,0.22) 0%, ${accentA(0.62)} 28%, rgba(244,114,182,0.26) 56%, rgba(251,113,133,0.2) 78%, rgba(9,0,18,0.95) 100%)`,
+              boxShadow: `inset 10px 10px 24px rgba(12,8,20,0.35), inset -8px -8px 16px rgba(255,255,255,0.08), 0 -2px 40px rgba(0,0,0,0.7), 0 0 0 1px ${accentA(0.55)}, 0 0 28px ${accentA(0.22)}, 0 0 20px rgba(236,72,153,0.2)`,
             }}
             transition={{ duration: 0.85, ease: 'easeInOut' }}
           >
