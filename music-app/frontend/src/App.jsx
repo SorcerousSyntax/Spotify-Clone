@@ -483,14 +483,9 @@ const AppInner = () => {
   const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
   const isNowPlayingRoute = normalizedPath === '/now-playing';
   const showMiniPlayer = showShell && !isNowPlayingRoute;
-  const vibeFilterMap = {
-    subtle: 'saturate(0.92) brightness(0.97)',
-    vibrant: 'saturate(1.16) brightness(1.03)',
-    neon: 'saturate(1.55) brightness(1.12) contrast(1.08) hue-rotate(2deg)',
-  };
 
   return (
-    <div style={{ position: 'relative', minHeight: '100dvh', background: 'var(--bg)', overflow: 'hidden', filter: vibeFilterMap[vibe] || vibeFilterMap.vibrant, transition: 'filter 260ms ease' }}>
+    <div style={{ position: 'relative', minHeight: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
       {/* Ambient gradient background (no smoke) */}
       <div
         style={{
