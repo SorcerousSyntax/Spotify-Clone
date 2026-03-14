@@ -548,7 +548,16 @@ const NowPlaying = () => {
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.28 }}
-              style={{ width: 'min(92vw, 320px)', marginTop: 10 }}
+              style={{
+                width: 'min(92vw, 320px)', marginTop: 10,
+                borderRadius: 24,
+                background: 'rgba(255,255,255,0.05)',
+                backdropFilter: 'blur(28px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                boxShadow: '0 12px 48px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.12)',
+                padding: '18px 16px 16px',
+              }}
             >
               {/* Shuffle | Prev | Play | Next | Repeat */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -580,8 +589,10 @@ const NowPlaying = () => {
                   onClick={prevSong}
                   style={{
                     width: 50, height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.11)',
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.13)',
+                    backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
                     borderRadius: '50%', outline: 'none', cursor: 'pointer', color: '#fff',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
                   }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -650,8 +661,10 @@ const NowPlaying = () => {
                   onClick={nextSong}
                   style={{
                     width: 50, height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.11)',
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.13)',
+                    backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
                     borderRadius: '50%', outline: 'none', cursor: 'pointer', color: '#fff',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
                   }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

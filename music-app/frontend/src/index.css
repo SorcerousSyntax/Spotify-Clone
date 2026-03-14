@@ -193,20 +193,43 @@ button {
 }
 
 /* ==========================================
-   GLASS EFFECTS
+   GLASS EFFECTS — Glassmorphism system
    ========================================== */
+
+/* Base glass — frosted, light-tinted */
 .glass {
-  background: rgba(0,0,0,0.72);
+  background: rgba(255,255,255,0.06);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255,255,255,0.11);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.12);
 }
 
+/* Strong glass — deeper panels, overlays */
 .glass-strong {
-  background: rgba(0,0,0,0.9);
+  background: rgba(255,255,255,0.04);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255,255,255,0.09);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.09);
+}
+
+/* Glass card — list rows, compact items */
+.glass-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.09);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+}
+
+/* Glass panel — larger section containers */
+.glass-panel {
+  background: rgba(139,92,246,0.07);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(139,92,246,0.18);
+  box-shadow: 0 16px 56px rgba(0,0,0,0.32), inset 0 1px 0 rgba(167,139,250,0.15);
 }
 
 /* Violet gradient classes */

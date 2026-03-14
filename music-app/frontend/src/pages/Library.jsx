@@ -23,11 +23,11 @@ const PlaylistCard = ({ playlist, songsById, index, onOpen, onRename, onDelete, 
       gap: 16,
       padding: '14px 16px',
       borderRadius: 14,
-      border: '1px solid rgba(255,255,255,0.09)',
-      background: 'rgba(255,255,255,0.04)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.07)',
+      border: '1px solid rgba(255,255,255,0.10)',
+      background: 'rgba(255,255,255,0.05)',
+      backdropFilter: 'blur(20px) saturate(160%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+      boxShadow: '0 4px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10)',
       marginBottom: 8,
       transition: 'all 0.2s ease',
     }}
@@ -315,14 +315,17 @@ const Library = () => {
             placeholder="Playlist name"
             style={{
               flex: 1,
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(139,92,246,0.25)',
+              background: 'rgba(255,255,255,0.06)',
+              backdropFilter: 'blur(18px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+              border: '1px solid rgba(255,255,255,0.12)',
               borderRadius: 999,
               color: '#fff',
               padding: '10px 16px',
               fontFamily: "'Space Grotesk', sans-serif",
               fontSize: 13,
               outline: 'none',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)',
             }}
           />
           <button
@@ -372,11 +375,13 @@ const Library = () => {
                 flexShrink: 0,
                 fontFamily: "'Space Grotesk', sans-serif",
                 fontSize: 13, fontWeight: 500,
-                background: isActive ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : 'rgba(255,255,255,0.04)',
-                color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
-                border: isActive ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                background: isActive ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)' : 'rgba(255,255,255,0.06)',
+                backdropFilter: isActive ? 'none' : 'blur(14px) saturate(160%)',
+                WebkitBackdropFilter: isActive ? 'none' : 'blur(14px) saturate(160%)',
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+                border: isActive ? 'none' : '1px solid rgba(255,255,255,0.12)',
                 cursor: 'pointer',
-                boxShadow: isActive ? '0 4px 14px rgba(139,92,246,0.4)' : 'none',
+                boxShadow: isActive ? '0 4px 14px rgba(139,92,246,0.4)' : 'inset 0 1px 0 rgba(255,255,255,0.10)',
               }}
             >
               {f}

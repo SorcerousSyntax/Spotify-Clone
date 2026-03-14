@@ -43,11 +43,11 @@ const SearchResultRow = ({ song, index, onClick }) => {
       style={{
         display: 'flex', alignItems: 'center', gap: 14,
         padding: '12px 16px', borderRadius: 14, cursor: 'pointer',
-        background: 'rgba(255,255,255,0.04)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        border: '1px solid rgba(255,255,255,0.09)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)',
+        background: 'rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(20px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10)',
         transition: 'background 0.2s ease, border-color 0.2s ease',
         marginBottom: 8,
       }}
@@ -226,15 +226,15 @@ const Search = () => {
       >
         {/* Scanning line when focused */}
         <div
-          className={''}
           style={{
-            position: 'relative',
             display: 'flex', alignItems: 'center', gap: 12,
             padding: '14px 20px',
-            background: 'rgba(255,255,255,0.03)',
-            border: focused ? '1px solid rgba(139,92,246,0.55)' : '1px solid rgba(255,255,255,0.1)',
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(24px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+            border: focused ? '1px solid rgba(139,92,246,0.55)' : '1px solid rgba(255,255,255,0.11)',
             borderRadius: 16,
-            boxShadow: focused ? '0 0 0 3px rgba(139,92,246,0.12)' : 'none',
+            boxShadow: focused ? '0 0 0 3px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.12)' : 'inset 0 1px 0 rgba(255,255,255,0.09), 0 4px 20px rgba(0,0,0,0.2)',
             transition: 'all 0.25s ease',
             overflow: 'hidden',
             margin: '0 16px 24px',

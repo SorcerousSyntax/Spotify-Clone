@@ -58,10 +58,11 @@ const BottomNav = () => {
       <div style={{
         margin: '0 12px 10px',
         borderRadius: 26,
-        background: 'rgba(10,10,10,0.88)',
-        backdropFilter: 'blur(40px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(140%)',
-        border: '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 -4px 32px rgba(0,0,0,0.18), 0 4px 20px rgba(0,0,0,0.22)',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-around',

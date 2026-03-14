@@ -35,9 +35,14 @@ export const SongRow = ({ song, index = 0, showIndex = false, onClick }) => {
         borderRadius: 14,
         marginBottom: 6,
         cursor: 'pointer',
-        background: isActive ? 'rgba(139,92,246,0.12)' : 'transparent',
-        border: isActive ? '1px solid rgba(139,92,246,0.3)' : '1px solid transparent',
-        transition: 'background 0.2s ease, border-color 0.2s ease',
+        background: isActive ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(18px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+        border: isActive ? '1px solid rgba(139,92,246,0.38)' : '1px solid rgba(255,255,255,0.08)',
+        boxShadow: isActive
+          ? '0 8px 32px rgba(139,92,246,0.28), inset 0 1px 0 rgba(167,139,250,0.15)'
+          : '0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
+        transition: 'background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
       }}
     >
       {showIndex && (
