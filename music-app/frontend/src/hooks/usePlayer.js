@@ -21,12 +21,10 @@ const usePlayer = () => {
     isPlaying,
     volume,
     isMuted,
-    repeat,
     progress,
     setProgress,
     setDuration,
     setIsPlaying,
-    nextSong,
     setPlayerControls,
   } = usePlayerStore();
 
@@ -99,11 +97,12 @@ const usePlayer = () => {
         },
         onend: () => {
           cancelAnimationFrame(animFrameRef.current);
-          if (repeat === 'one') {
+          const { repeat: currentRepeat, nextSong: playNextSong } = usePlayerStore.getState();
+          if (currentRepeat === 'one') {
             howl.seek(0);
             howl.play();
           } else {
-            nextSong();
+            playNextSong();
           }
         },
         onstop: () => {
