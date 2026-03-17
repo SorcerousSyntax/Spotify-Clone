@@ -7,7 +7,7 @@ import BottomNav from './components/BottomNav';
 import MiniPlayer from './components/MiniPlayer';
 import usePlayer from './hooks/usePlayer';
 import usePlayerStore from './store/playerStore';
-import { supabase } from './lib/supabase';
+import { getSupabaseConfigError, supabase } from './lib/supabase';
 
 // Lazy-loaded pages
 const Home = React.lazy(() => import('./pages/Home'));
@@ -179,7 +179,7 @@ const AuthPage = ({ mode = 'login' }) => {
     setMessage('');
 
     if (!supabase) {
-      setError('Supabase is not configured.');
+      setError(getSupabaseConfigError());
       return;
     }
 
@@ -622,7 +622,7 @@ const ProfilePage = () => {
     setMessage('');
 
     if (!supabase) {
-      setError('Supabase is not configured');
+      setError(getSupabaseConfigError());
       return;
     }
 
