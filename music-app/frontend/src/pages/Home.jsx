@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import usePlayerStore from '../store/playerStore';
 import { supabase } from '../lib/supabase';
 import { decodeSongTitle } from '../lib/text';
@@ -8,27 +8,37 @@ import { decodeSongTitle } from '../lib/text';
 const Home = () => {
   const navigate = useNavigate();
   const [trendingSongs, setTrendingSongs] = useState([]);
-  const [recentSongs, setRecentSongs] = useState([]);
   const [activeCategory, setActiveCategory] = useState('Hot');
+  const [userName, setUserName] = useState('');
 
   const currentSong = usePlayerStore((s) => s.currentSong);
+  const isPlaying = usePlayerStore((s) => s.isPlaying);
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
   const setQueue = usePlayerStore((s) => s.setQueue);
   const recentFromStore = usePlayerStore((s) => s.recentlyPlayed);
 
   useEffect(() => {
     const loadData = async () => {
-      // Mock categories from image: Hot, My Voices, New
+      // Load trending/hot songs
       const res = await fetch(`/api/search?q=Arijit Singh`);
       if (res.ok) {
         const data = await res.json();
         const results = (data?.results || data?.songs || []).slice(0, 10);
         setTrendingSongs(results);
       }
-      setRecentSongs(recentFromStore.slice(0, 6));
+
+      // Load user session for name
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '';
+          const firstName = name.split(/[\s._@+\d]+/).filter(Boolean)[0] || '';
+          setUserName(firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase());
+        }
+      }
     };
     loadData();
-  }, [recentFromStore]);
+  }, []);
 
   const playSong = (song, index, queue) => {
     setCurrentSong(song);
@@ -37,56 +47,111 @@ const Home = () => {
   };
 
   return (
-    <div style={{ padding: '20px 20px 120px 20px', background: '#000', minHeight: '100vh', color: '#fff' }}>
-      {/* Header with Circle Buttons */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }}>
-        <button style={{ width: 45, height: 45, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>⚙</button>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button style={{ width: 45, height: 45, borderRadius: '50%', background: '#5865F2', border: 'none', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.086 2.157 2.419c0 1.334-.966 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.086 2.157 2.419c0 1.334-.946 2.419-2.157 2.419z"/></svg>
-          </button>
-          <button style={{ width: 45, height: 45, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>🗑</button>
+    <div style={{ padding: '100px 20px 120px 20px', background: '#000', minHeight: '100vh', color: '#fff' }}>
+      {/* Personalized Header */}
+      <header style={{ marginBottom: 40, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1 }}>
+              HI {userName.toUpperCase() || 'THERE'}<span style={{ color: '#ff2d78' }}>.</span>
+            </h1>
+            <p className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 8, letterSpacing: '0.2em' }}>
+              WELCOME TO RAABTA SYSTEM
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button className="glass" style={{ width: 45, height: 45, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>⚙</button>
+          </div>
         </div>
-      </header>
 
-      {/* Pick a Song - Gradient Cards */}
-      <section style={{ marginBottom: 35 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 20, fontWeight: 700 }}>Pick a song</h2>
-        <div style={{ display: 'flex', gap: 15, overflowX: 'auto', paddingBottom: 10, scrollbarWidth: 'none' }}>
-          {[
-            { label: 'Recently', sub: 'Played', grad: 'linear-gradient(135deg, #fceabb 0%, #ff2d78 100%)' },
-            { label: 'Top', sub: 'Charts', grad: 'linear-gradient(135deg, #a1ffce 0%, #ff2d78 100%)' },
-            { label: 'New', sub: 'Releases', grad: 'linear-gradient(135deg, #89f7fe 0%, #ff2d78 100%)' },
-          ].map((card, i) => (
+        {/* Now Playing Animation Bar */}
+        <AnimatePresence>
+          {currentSong && (
             <motion.div
-              key={i}
-              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              onClick={() => navigate('/now-playing')}
+              className="glass"
               style={{
-                minWidth: 140, height: 160, borderRadius: 24, background: card.grad,
-                padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-                boxShadow: '0 10px 20px rgba(0,0,0,0.3)', cursor: 'pointer', position: 'relative',
+                padding: '12px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 15,
+                background: 'rgba(255, 45, 120, 0.05)',
+                borderColor: 'rgba(255, 45, 120, 0.2)',
+                cursor: 'pointer',
+                marginTop: 10,
                 overflow: 'hidden'
               }}
             >
-              {/* Folder tab look */}
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '60%', height: 30, background: 'rgba(255,255,255,0.2)', borderBottomRightRadius: 20 }} />
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{card.label}<br/>{card.sub}</p>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: isPlaying ? '#ff2d78' : '#fff', boxShadow: isPlaying ? '0 0 10px #ff2d78' : 'none' }}>
+                {isPlaying && (
+                  <motion.div
+                    animate={{ scale: [1, 2, 1], opacity: [1, 0, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    style={{ width: '100%', height: '100%', borderRadius: '50%', background: '#ff2d78' }}
+                  />
+                )}
+              </div>
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', gap: 20, whiteSpace: 'nowrap' }}>
+                  <motion.p
+                    animate={{ x: isPlaying ? [0, -200] : 0 }}
+                    transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+                    style={{ fontSize: 11, fontWeight: 800, color: '#ff2d78' }}
+                  >
+                    NOW PLAYING: {decodeSongTitle(currentSong.title).toUpperCase()} — {currentSong.artist.toUpperCase()}
+                  </motion.p>
+                </div>
+              </div>
+              <div className="font-mono" style={{ fontSize: 9, opacity: 0.5 }}>03 / 00</div>
             </motion.div>
-          ))}
-        </div>
-      </section>
+          )}
+        </AnimatePresence>
+      </header>
 
-      {/* Categories - Pill Buttons */}
-      <section style={{ marginBottom: 30 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 20, fontWeight: 700 }}>Quick Selection</h2>
+      {/* Recently Played - Real Data */}
+      {recentFromStore.length > 0 && (
+        <section style={{ marginBottom: 40 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 900 }}>RECENTLY PLAYED</h2>
+            <p className="font-mono" style={{ fontSize: 9, color: '#ff2d78', fontWeight: 800 }}>HISTORY / 001</p>
+          </div>
+          <div style={{ display: 'flex', gap: 15, overflowX: 'auto', paddingBottom: 15, scrollbarWidth: 'none' }}>
+            {recentFromStore.slice(0, 10).map((song, i) => (
+              <motion.div
+                key={song.id}
+                whileHover={{ y: -5 }}
+                onClick={() => playSong(song, 0, [song])}
+                style={{
+                  minWidth: 120,
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ width: 120, height: 120, borderRadius: 24, overflow: 'hidden', background: '#111', marginBottom: 10, border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <img src={song.album_art_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="art" />
+                </div>
+                <h3 style={{ fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{decodeSongTitle(song.title).toUpperCase()}</h3>
+                <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>{song.artist.toUpperCase()}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Pick a Song - Categories */}
+      <section style={{ marginBottom: 40 }}>
+        <h2 style={{ fontSize: 18, marginBottom: 20, fontWeight: 900 }}>PICK A MOOD</h2>
         <div style={{ display: 'flex', gap: 10, marginBottom: 25, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {['Hot', 'Recent', 'Favorites', 'New'].map((cat) => (
+          {['Hot', 'Global', 'New', 'Party'].map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={`pill-btn ${activeCategory === cat ? 'pill-btn-active' : 'pill-btn-inactive'}`}
+              style={{ borderRadius: 12, padding: '10px 25px' }}
             >
-              {cat}
+              {cat.toUpperCase()}
             </button>
           ))}
         </div>
@@ -99,14 +164,14 @@ const Home = () => {
               whileHover={{ y: -5 }}
               onClick={() => playSong(song, i, trendingSongs)}
               className="glass"
-              style={{ padding: 10, textAlign: 'center', position: 'relative' }}
+              style={{ padding: 15, textAlign: 'center', position: 'relative', borderRadius: 24 }}
             >
-              <div style={{ width: '100%', aspectRatio: '1/1', borderRadius: '50%', overflow: 'hidden', marginBottom: 10, border: '2px solid rgba(255,45,120,0.2)' }}>
+              <div style={{ width: '100%', aspectRatio: '1/1', borderRadius: '50%', overflow: 'hidden', marginBottom: 12, border: '1px solid rgba(255,45,120,0.2)' }}>
                 <img src={song.image?.[1]?.url || song.album_art_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="art" />
               </div>
-              <p style={{ fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{decodeSongTitle(song.name || song.title)}</p>
+              <h3 style={{ fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{decodeSongTitle(song.name || song.title).toUpperCase()}</h3>
               {/* Play icon on card */}
-              <div style={{ position: 'absolute', bottom: 35, right: 10, width: 24, height: 24, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', display: 'grid', placeItems: 'center', color: '#000', fontSize: 10 }}>▶</div>
+              <div style={{ position: 'absolute', bottom: 40, right: 10, width: 28, height: 28, borderRadius: '50%', background: '#fff', display: 'grid', placeItems: 'center', color: '#000', fontSize: 10, boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }}>▶</div>
             </motion.div>
           ))}
         </div>
@@ -116,18 +181,17 @@ const Home = () => {
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
+        className="btn-primary"
         style={{
-          width: '100%', height: 65, borderRadius: 32,
-          background: 'linear-gradient(to right, #ff2d78, #ff6eb4)',
-          border: 'none', color: '#000', fontWeight: 800, fontSize: 16,
-          boxShadow: '0 15px 30px rgba(255, 45, 120, 0.3)',
-          marginTop: 20, cursor: 'pointer'
+          width: '100%', height: 65, borderRadius: 20,
+          marginTop: 20, cursor: 'pointer', fontSize: 14, fontWeight: 900
         }}
       >
-        CREATE YOUR MIX
+        GENERATE AI PLAYLIST
       </motion.button>
     </div>
   );
 };
 
 export default Home;
+

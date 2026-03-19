@@ -150,48 +150,49 @@ const Library = () => {
               exit={{ opacity: 0 }}
               style={{ 
                 display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', 
-                gap: 40 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', 
+                gap: 25 
               }}
             >
               {playlists.map((playlist, i) => (
                 <motion.div 
                   key={playlist.id} 
-                  whileHover={{ y: -10 }}
+                  whileHover={{ y: -8 }}
                   onClick={() => setSelectedPlaylistId(playlist.id)}
                   style={{ 
                     cursor: 'pointer', 
                     position: 'relative'
                   }}
                 >
-                  <div style={{ 
+                  <div className="glass" style={{ 
                     aspectRatio: '1/1', 
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'rgba(255,255,255,0.03)',
                     border: '1px solid rgba(255,255,255,0.1)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginBottom: 20,
-                    overflow: 'hidden'
+                    marginBottom: 15,
+                    overflow: 'hidden',
+                    borderRadius: 24
                   }}>
                     <PlaylistCover 
                       playlist={playlist} 
                       songsById={songsById} 
-                      size={220} 
+                      size={140} 
                     />
                   </div>
                   <div>
-                    <h3 style={{ fontSize: 18, fontWeight: 900, marginBottom: 5 }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 900, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {playlist.name.toUpperCase()}
                     </h3>
-                    <p className="font-mono" style={{ fontSize: 10, color: '#ff2d78', fontWeight: 800 }}>
+                    <p className="font-mono" style={{ fontSize: 8, color: '#ff2d78', fontWeight: 800 }}>
                       {playlist.songIds.length} ITEMS
                     </p>
                   </div>
                   {playlist.id !== LIKED_SONGS_PLAYLIST_ID && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); deletePlaylist(playlist.id); }}
-                      style={{ position: 'absolute', top: 10, right: 10, background: '#000', border: '1px solid #fff', color: '#fff', width: 30, height: 30, fontSize: 12, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', width: 24, height: 24, borderRadius: '50%', fontSize: 10, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                     >
                       ✕
                     </button>

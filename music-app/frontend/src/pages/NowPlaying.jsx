@@ -101,30 +101,49 @@ const NowPlaying = () => {
       </div>
 
       {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: 15, marginBottom: 50 }}>
-        <button className="pill-btn pill-btn-inactive" style={{ flex: 1, height: 50 }}>Download</button>
-        <button className="pill-btn pill-btn-inactive" style={{ flex: 1, height: 50 }}>Share</button>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 50 }}>
+        <button 
+          onClick={() => toggleLike(currentSong.id, currentSong)}
+          className="pill-btn glass" 
+          style={{ 
+            flex: 1, height: 50, 
+            background: likedSongIds.has(currentSong.id) ? '#ff2d78' : 'rgba(255,255,255,0.05)', 
+            color: likedSongIds.has(currentSong.id) ? '#000' : '#fff', 
+            fontSize: 10, fontWeight: 900, border: '1px solid rgba(255,255,255,0.1)' 
+          }}
+        >
+          {likedSongIds.has(currentSong.id) ? 'SAVED' : 'SAVE'}
+        </button>
+        <button className="pill-btn glass" style={{ flex: 1, height: 50, background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 10, fontWeight: 900, border: '1px solid rgba(255,255,255,0.1)' }}>DOWNLOAD</button>
+        <button className="pill-btn glass" style={{ flex: 1, height: 50, background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 10, fontWeight: 900, border: '1px solid rgba(255,255,255,0.1)' }}>SHARE</button>
       </div>
 
       {/* Playback Controls */}
       <footer style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px' }}>
-        <button onClick={toggleShuffle} style={{ background: 'none', border: 'none', color: shuffle ? '#ff2d78' : '#fff', opacity: 0.6 }}>Shuffle</button>
+        <button onClick={toggleShuffle} style={{ background: 'none', border: 'none', color: shuffle ? '#ff2d78' : '#fff', opacity: 0.8, fontSize: 11, fontWeight: 900, cursor: 'pointer' }}>SHUFFLE</button>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 30 }}>
-          <button onClick={prevSong} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 24 }}>⏮</button>
+          <motion.button whileTap={{ scale: 0.8 }} onClick={prevSong} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 28, cursor: 'pointer' }}>⏮</motion.button>
           
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={togglePlay}
-            style={{ width: 80, height: 80, borderRadius: '50%', background: '#ff2d78', border: 'none', display: 'grid', placeItems: 'center', color: '#000', fontSize: 32, boxShadow: '0 0 30px rgba(255, 45, 120, 0.4)' }}
+            style={{ 
+              width: 85, height: 85, borderRadius: '50%', 
+              background: '#fff', 
+              border: 'none', display: 'grid', placeItems: 'center', 
+              color: '#000', fontSize: 24, 
+              boxShadow: '0 15px 40px rgba(255, 45, 120, 0.3)',
+              border: '4px solid #ff2d78'
+            }}
           >
             {isPlaying ? '⏸' : '▶'}
           </motion.button>
 
-          <button onClick={nextSong} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 24 }}>⏭</button>
+          <motion.button whileTap={{ scale: 0.8 }} onClick={nextSong} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 28, cursor: 'pointer' }}>⏭</motion.button>
         </div>
 
-        <button onClick={cycleRepeat} style={{ background: 'none', border: 'none', color: repeat !== 'off' ? '#ff2d78' : '#fff', opacity: 0.6 }}>Repeat</button>
+        <button onClick={cycleRepeat} style={{ background: 'none', border: 'none', color: repeat !== 'off' ? '#ff2d78' : '#fff', opacity: 0.8, fontSize: 11, fontWeight: 900, cursor: 'pointer' }}>REPEAT</button>
       </footer>
     </div>
   );

@@ -88,16 +88,17 @@ const MiniPlayer = () => {
                 togglePlay();
               }}
               style={{ 
-                background: 'transparent', 
-                border: '1px solid #ff2d78', 
-                borderRadius: 0,
-                width: 40, height: 40,
-                cursor: 'pointer', fontSize: 12, color: '#fff', 
+                background: '#ff2d78', 
+                border: 'none', 
+                borderRadius: '50%',
+                width: 44, height: 44,
+                cursor: 'pointer', fontSize: 12, color: '#000', 
                 fontWeight: 900,
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 5px 15px rgba(255, 45, 120, 0.3)'
               }}
             >
-              {isPlaying ? 'PAUSE' : 'PLAY'}
+              {isPlaying ? '⏸' : '▶'}
             </motion.button>
           </div>
         </div>
