@@ -74,6 +74,7 @@ const BottomNav = () => {
               <button
                 key={tab.id}
                 onClick={() => navigate(tab.path)}
+                aria-label={tab.label}
                 style={{
                   flex: 1, height: '100%',
                   display: 'flex', flexDirection: 'column',
@@ -100,6 +101,18 @@ const BottomNav = () => {
                   boxShadow: isActive ? '0 0 10px currentColor' : 'none',
                   transition: 'background 0.25s ease',
                 }} />
+                <span
+                  style={{
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: 9,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    color: isActive ? 'rgba(255,255,255,0.84)' : 'rgba(255,255,255,0.32)',
+                    marginTop: 1,
+                  }}
+                >
+                  {tab.label}
+                </span>
               </button>
             );
           })}

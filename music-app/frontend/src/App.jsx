@@ -98,9 +98,9 @@ const TopBar = ({ session, vibe = 'vibrant', onCycleVibe }) => {
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 60,
         height: 52,
         backdropFilter: 'blur(28px) saturate(180%)', WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-        background: 'linear-gradient(135deg, rgba(34,211,238,0.1) 0%, rgba(139,92,246,0.12) 45%, rgba(244,114,182,0.12) 100%)',
-        borderBottom: '1px solid rgba(255,255,255,0.14)',
-        boxShadow: 'inset 8px 8px 16px rgba(11,8,20,0.2), inset -8px -8px 14px rgba(255,255,255,0.08), 0 4px 28px rgba(0,0,0,0.18)',
+        background: 'linear-gradient(135deg, rgba(24,24,24,0.92) 0%, rgba(32,14,44,0.9) 58%, rgba(43,12,38,0.9) 100%)',
+        borderBottom: '1px solid rgba(168,85,247,0.35)',
+        boxShadow: 'inset 8px 8px 16px rgba(11,8,20,0.22), inset -8px -8px 14px rgba(255,255,255,0.05), 0 4px 28px rgba(0,0,0,0.24), 0 0 18px rgba(168,85,247,0.16)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 20px',
       }}
@@ -482,20 +482,21 @@ const AppInner = () => {
   const showShell = authReady && session && !isPublicAuthPage;
   const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
   const isNowPlayingRoute = normalizedPath === '/now-playing';
+  const isHomeRoute = normalizedPath === '/';
   const showMiniPlayer = showShell && !isNowPlayingRoute;
   const ambientByVibe = {
     subtle:
       'radial-gradient(ellipse 80% 60% at 15% 10%, rgba(109,40,217,0.12) 0%, transparent 60%), ' +
       'radial-gradient(ellipse 55% 45% at 85% 85%, rgba(139,92,246,0.08) 0%, transparent 55%)',
     vibrant:
-      'radial-gradient(ellipse 78% 58% at 14% 12%, rgba(34,211,238,0.18) 0%, transparent 62%), ' +
-      'radial-gradient(ellipse 70% 52% at 42% 22%, rgba(139,92,246,0.18) 0%, transparent 62%), ' +
-      'radial-gradient(ellipse 58% 46% at 84% 84%, rgba(244,114,182,0.16) 0%, transparent 58%)',
+      'radial-gradient(ellipse 78% 58% at 14% 12%, rgba(168,85,247,0.2) 0%, transparent 62%), ' +
+      'radial-gradient(ellipse 70% 52% at 42% 22%, rgba(139,92,246,0.2) 0%, transparent 62%), ' +
+      'radial-gradient(ellipse 58% 46% at 84% 84%, rgba(236,72,153,0.18) 0%, transparent 58%)',
     neon:
-      'radial-gradient(ellipse 82% 62% at 12% 10%, rgba(34,211,238,0.28) 0%, transparent 64%), ' +
-      'radial-gradient(ellipse 76% 58% at 45% 22%, rgba(139,92,246,0.28) 0%, transparent 64%), ' +
-      'radial-gradient(ellipse 62% 50% at 86% 82%, rgba(244,114,182,0.24) 0%, transparent 60%), ' +
-      'radial-gradient(ellipse 44% 38% at 52% 88%, rgba(132,204,22,0.18) 0%, transparent 70%)',
+      'radial-gradient(ellipse 82% 62% at 12% 10%, rgba(168,85,247,0.3) 0%, transparent 64%), ' +
+      'radial-gradient(ellipse 76% 58% at 45% 22%, rgba(139,92,246,0.32) 0%, transparent 64%), ' +
+      'radial-gradient(ellipse 62% 50% at 86% 82%, rgba(236,72,153,0.26) 0%, transparent 60%), ' +
+      'radial-gradient(ellipse 44% 38% at 52% 88%, rgba(232,121,249,0.2) 0%, transparent 70%)',
   };
 
   return (
@@ -508,6 +509,54 @@ const AppInner = () => {
           transition: 'background 260ms ease',
         }}
       />
+
+      {showShell && !isHomeRoute && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              top: 80,
+              left: 30,
+              width: 64,
+              height: 64,
+              borderRadius: 10,
+              transform: 'rotate(45deg)',
+              background: 'rgba(255,255,255,0.06)',
+              filter: 'blur(1px)',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              top: 140,
+              right: 28,
+              width: 42,
+              height: 42,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.1)',
+              filter: 'blur(4px)',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 130,
+              left: 110,
+              width: 26,
+              height: 26,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.08)',
+              filter: 'blur(2px)',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          />
+        </>
+      )}
 
       {/* Sticky top bar */}
       {showShell && !isNowPlayingRoute && <TopBar session={session} vibe={vibe} onCycleVibe={() => setVibe((prev) => getNextVibe(prev))} />}

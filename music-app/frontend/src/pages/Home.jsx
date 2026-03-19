@@ -1,689 +1,177 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import usePlayerStore from '../store/playerStore';
-import { CompactCard } from '../components/MusicCards';
-import PlaylistCover from '../components/PlaylistCover';
-import { supabase } from '../lib/supabase';
-import { decodeSongTitle } from '../lib/text';
-import useColorExtract from '../hooks/useColorExtract';
-import { OFFLINE_AUDIO_CACHE_NAME, getSongAudioUrlCandidates } from '../lib/offlineAudio';
-
-const isPlayableSong = (song) => Boolean(song?.stream_url || song?.r2_url);
-
-const Header = () => <div style={{ height: 8 }} />;
-const getMoodConfig = (hour, userName = 'there') => {
-  if (hour >= 5 && hour < 11) {
-    return {
-      key: 'morning',
-      icon: '🌅',
-      message: `Good morning, ${userName}. Start slow.`,
-      query: 'peaceful morning hindi',
-      gradient: 'linear-gradient(135deg, #0a1628, #0d2137)',
-      glow: 'rgba(74, 146, 240, 0.35)',
-      glowColor: '#4a92f0',
-    };
-  }
-  if (hour >= 11 && hour < 15) {
-    return {
-      key: 'afternoon',
-      icon: '☀️',
-      message: `Good afternoon, ${userName}. Keep the energy up.`,
-      query: 'upbeat punjabi',
-      gradient: 'linear-gradient(135deg, #0a1a0a, #0d2d0d)',
-      glow: 'rgba(64, 201, 112, 0.35)',
-      glowColor: '#40c970',
-    };
-  }
-  if (hour >= 15 && hour < 19) {
-    return {
-      key: 'evening',
-      icon: '🌆',
-      message: `Good evening, ${userName}. Wind it down.`,
-      query: 'romantic hindi evening',
-      gradient: 'linear-gradient(135deg, #1a0a0a, #2d1000)',
-      glow: 'rgba(224, 122, 58, 0.35)',
-      glowColor: '#e07a3a',
-    };
-  }
-  if (hour >= 19 && hour < 23) {
-    return {
-      key: 'night',
-      icon: '🌙',
-      message: `It's night, ${userName}. Here's what fits.`,
-      query: 'arijit singh night',
-      gradient: 'linear-gradient(135deg, #080808, #0d0d1a)',
-      glow: 'rgba(128, 126, 255, 0.35)',
-      glowColor: '#807eff',
-    };
-  }
-  return {
-    key: 'late night',
-    icon: '✨',
-    message: `Late night, ${userName}. Just you and the music.`,
-    query: 'sad lofi hindi',
-    gradient: 'linear-gradient(135deg, #000000, #0a0010)',
-    glow: 'rgba(190, 86, 255, 0.35)',
-    glowColor: '#be56ff',
-  };
-};
+import React from 'react';
 
 const Home = () => {
-  const navigate = useNavigate();
-  const [recentFromApi, setRecentFromApi] = useState([]);
-  const [suggestedSong, setSuggestedSong] = useState(null);
-  const [bannerName, setBannerName] = useState('there');
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadBannerName = async () => {
-      if (!supabase) return;
-
-      const { data } = await supabase.auth.getUser();
-      const user = data?.user;
-      if (!user || !mounted) return;
-
-      const candidate =
-        user.user_metadata?.full_name
-        || user.user_metadata?.name
-        || user.email?.split('@')?.[0]
-        || 'there';
-
-      // Use first name only — strip numbers/dots/underscores
-      const firstName = String(candidate).trim().split(/[\s._@+\d]+/).filter(Boolean)[0] || 'there';
-      const capitalized = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-      setBannerName(capitalized);
-    };
-
-    loadBannerName().catch(() => {});
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const mood = useMemo(() => getMoodConfig(new Date().getHours(), bannerName), [bannerName]);
-
-  const recentlyPlayed = usePlayerStore((s) => s.recentlyPlayed);
-  const playlists = usePlayerStore((s) => s.playlists);
-  const songsById = usePlayerStore((s) => s.songsById);
-  const likedSongIds = usePlayerStore((s) => s.likedSongIds);
-  const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
-  const setQueue = usePlayerStore((s) => s.setQueue);
-  const currentSong = usePlayerStore((s) => s.currentSong);
-  const isPlaying = usePlayerStore((s) => s.isPlaying);
-  const { dominantColor } = useColorExtract(currentSong?.album_art_url);
-  const [dr, dg, db] = dominantColor;
-  const accentA = (a) => `rgba(${dr},${dg},${db},${a})`;
-
-  // Offline songs detection
-  const [offlineSongIds, setOfflineSongIds] = useState([]);
-  const savedSongIds = useMemo(() => {
-    const ids = new Set(likedSongIds);
-    playlists.forEach((p) => p.songIds.forEach((id) => ids.add(id)));
-    return ids;
-  }, [likedSongIds, playlists]);
-  const allSongsForOffline = useMemo(
-    () => [...savedSongIds].map((id) => songsById[id]).filter(Boolean),
-    [savedSongIds, songsById]
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!window.caches || allSongsForOffline.length === 0) { setOfflineSongIds([]); return; }
-    caches.open(OFFLINE_AUDIO_CACHE_NAME).then((cache) =>
-      Promise.all(allSongsForOffline.map(async (song) => {
-        for (const url of getSongAudioUrlCandidates(song)) {
-          if (await cache.match(url)) return song.id;
-        }
-        return null;
-      }))
-    ).then((ids) => {
-      if (!cancelled) setOfflineSongIds(ids.filter(Boolean));
-    }).catch(() => {});
-    return () => { cancelled = true; };
-  }, [allSongsForOffline]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadRecent = async () => {
-      if (!supabase) {
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('play_history')
-        .select('*')
-        .order('played_at', { ascending: false })
-        .limit(20);
-
-      if (error) {
-        console.error('Supabase play_history Home fetch error:', error);
-      }
-
-      if (mounted && Array.isArray(data)) {
-        setRecentFromApi(
-          data.map((row) => ({
-            id: row.song_id,
-            title: row.title,
-            artist: row.artist,
-            album_art_url: row.album_art,
-            url: row.url,
-            stream_url: row.url,
-            r2_url: row.url,
-          }))
-        );
-      }
-
-    };
-
-    loadRecent().catch((err) => {
-      console.error('Supabase play_history Home fetch exception:', err);
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadMoodSuggestion = async () => {
-      try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(mood.query)}`);
-        const data = await res.json();
-        const list = Array.isArray(data?.results) && data.results.length > 0
-          ? data.results
-          : Array.isArray(data?.songs)
-            ? data.songs
-            : [];
-
-        if (mounted && list.length > 0) {
-          setSuggestedSong(list[0]);
-        }
-      } catch (err) {
-        console.warn('Mood suggestion fetch failed:', err?.message || err);
-      }
-    };
-
-    loadMoodSuggestion();
-    return () => {
-      mounted = false;
-    };
-  }, [mood.query]);
-
-  const recentSongs = useMemo(() => {
-    const merged = [...recentFromApi, ...recentlyPlayed];
-    const seen = new Set();
-    const result = [];
-    for (const song of merged) {
-      if (!song?.id || seen.has(song.id) || !isPlayableSong(song)) continue;
-      seen.add(song.id);
-      result.push(song);
-      if (result.length === 5) break;
-    }
-    return result;
-  }, [recentFromApi, recentlyPlayed]);
-
-  const playSong = (song, index, list) => {
-    if (!isPlayableSong(song)) {
-      navigate('/search');
-      return;
-    }
-    setCurrentSong(song);
-    setQueue(list, index);
-  };
-
-  const formatDuration = (s) => {
-    if (!s) return '';
-    return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-  };
-
-  const [activeFilter, setActiveFilter] = useState('All');
-  const filters = ['All', 'New Artists', 'Hot Tracks', 'Editor\'s Picks'];
-
   return (
-    <div style={{ position: 'relative', zIndex: 2, paddingBottom: 30 }}>
-      {/* Ambient violet orbs */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
-        <motion.div
-          style={{ position: 'absolute', top: '-5%', left: '-8%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(109,40,217,0.22) 0%, transparent 65%)', filter: 'blur(60px)' }}
-          animate={{ x: [0, 40, 0], y: [0, -24, 0], scale: [1, 1.1, 1] }}
-          transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          style={{ position: 'absolute', top: '25%', right: '-10%', width: 420, height: 420, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 65%)', filter: 'blur(55px)' }}
-          animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.12, 1] }}
-          transition={{ duration: 17, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-        />
-        <motion.div
-          style={{ position: 'absolute', bottom: '8%', left: '15%', width: 350, height: 350, borderRadius: '50%', background: `radial-gradient(circle, ${accentA(0.18)} 0%, transparent 65%)`, filter: 'blur(50px)' }}
-          animate={{ x: [0, 20, 0], y: [0, -20, 0], scale: [1, 1.08, 1] }}
-          transition={{ duration: 19, repeat: Infinity, ease: 'easeInOut', delay: 7 }}
-        />
-      </div>
-      <Header />
+    <>
+      <style>{`
+        .home-page-root {
+          background-color: #080808;
+          color: #fff;
+          font-family: 'Space Grotesk', sans-serif;
+          min-height: calc(100dvh - 54px);
+          position: relative;
+          overflow-x: hidden;
+          z-index: 10;
+        }
+        .glass-nav {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(168, 85, 247, 0.5);
+          box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+        }
+        .hero-glow {
+          box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
+        }
+        .glass-card {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(168, 85, 247, 0.4);
+          border-radius: 12px;
+          box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+          transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 0, 255, 0.5);
+          box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);
+        }
+      `}</style>
 
-      {/* ── Greeting Header ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        style={{ padding: '8px 20px 0', maxWidth: 680, margin: '0 auto' }}
-      >
-        <p style={{
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: 13, fontWeight: 500,
-          color: 'rgba(255,255,255,0.4)',
-          marginBottom: 4, letterSpacing: '0.01em',
-        }}>
-          {mood.icon} {mood.key.charAt(0).toUpperCase() + mood.key.slice(1)} vibes
-        </p>
-        <h1 style={{
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: 'clamp(30px, 7vw, 44px)',
-          fontWeight: 800,
-          color: '#fff',
-          letterSpacing: '-0.02em',
-          lineHeight: 1.1,
-          marginBottom: 20,
-        }}>
-          Hello, <span style={{
-            background: 'linear-gradient(125deg, #22d3ee 0%, #c4b5fd 24%, #8b5cf6 50%, #f472b6 74%, #fb7185 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}>{bannerName}</span>
-        </h1>
+      <div className="home-page-root">
+        <div className="fixed top-20 left-10 w-16 h-16 bg-white opacity-10 rounded-sm transform rotate-45 blur-sm pointer-events-none" />
+        <div className="fixed top-40 right-20 w-12 h-12 bg-white opacity-20 rounded-full blur-md pointer-events-none" />
+        <div className="fixed bottom-20 left-32 w-8 h-8 bg-white opacity-10 rounded-full blur-sm pointer-events-none" />
 
-        {/* Filter chips */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="hide-scrollbar">
-          {filters.map((f) => (
-            <motion.button
-              key={f}
-              onClick={() => setActiveFilter(f)}
-              whileTap={{ scale: 0.92 }}
-              style={{
-                padding: '8px 18px',
-                borderRadius: 999,
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: 13, fontWeight: 500,
-                letterSpacing: '0.01em',
-                background: activeFilter === f
-                  ? 'linear-gradient(135deg, #22d3ee 0%, #8b5cf6 45%, #f472b6 100%)'
-                  : 'rgba(255,255,255,0.06)',
-                backdropFilter: activeFilter === f ? 'none' : 'blur(14px) saturate(160%)',
-                WebkitBackdropFilter: activeFilter === f ? 'none' : 'blur(14px) saturate(160%)',
-                color: activeFilter === f ? '#fff' : 'rgba(255,255,255,0.55)',
-                border: activeFilter === f ? 'none' : '1px solid rgba(255,255,255,0.11)',
-                cursor: 'pointer',
-                boxShadow: activeFilter === f
-                  ? '0 10px 28px rgba(34,211,238,0.2), 0 8px 24px rgba(244,114,182,0.28), inset 0 1px 0 rgba(255,255,255,0.18)'
-                  : 'inset 0 1px 0 rgba(255,255,255,0.1)',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {f}
-            </motion.button>
-          ))}
-        </div>
-      </motion.div>
+        <header className="w-full flex justify-center pt-8 z-50 relative">
+          <nav className="px-12 py-3 flex space-x-12 justify-center items-center w-[60%] mx-auto bg-[#181818] rounded-[30px] border border-[rgba(168,85,247,0.6)] shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+            <a className="text-white font-medium hover:text-fuchsia-400 transition-colors" href="#">Home</a>
+            <a className="text-gray-400 font-medium hover:text-fuchsia-400 transition-colors" href="#">Explore</a>
+            <a className="text-gray-400 font-medium hover:text-fuchsia-400 transition-colors" href="#">Library</a>
+          </nav>
+        </header>
 
-      {/* ── For You Hero Card ── */}
-      <motion.section
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        style={{
-          margin: '20px auto',
-          width: 'min(680px, calc(100vw - 24px))',
-          borderRadius: 22,
-          background: 'linear-gradient(132deg, rgba(34,211,238,0.24) 0%, rgba(139,92,246,0.38) 34%, rgba(244,114,182,0.32) 68%, rgba(251,113,133,0.24) 100%)',
-          backdropFilter: 'blur(30px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.16)',
-          overflow: 'hidden',
-          padding: '24px 22px',
-          position: 'relative',
-          display: 'grid',
-          gridTemplateColumns: '1fr auto',
-          gap: 16,
-          alignItems: 'center',
-          boxShadow: 'inset 10px 10px 26px rgba(20, 8, 36, 0.34), inset -10px -10px 24px rgba(255,255,255,0.08), 0 20px 64px rgba(0,0,0,0.45)',
-        }}
-      >
-        {/* Background glow */}
-        <motion.div
-          style={{ position: 'absolute', top: 0, right: 0, width: 280, height: 280, background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)', pointerEvents: 'none', borderRadius: '50%' }}
-          animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        {/* Left text */}
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(196,181,253,0.8)', marginBottom: 8 }}>
-            For You Today
-          </p>
-          <motion.p
-            key={suggestedSong?.title || 'default'}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: 'clamp(18px,4vw,26px)', fontWeight: 800,
-              color: '#fff', letterSpacing: '-0.01em', lineHeight: 1.15,
-              marginBottom: 6, maxWidth: 260,
-              overflow: 'hidden', textOverflow: 'ellipsis',
-              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-            }}
-          >
-            {suggestedSong ? decodeSongTitle(suggestedSong.title || suggestedSong.name || '') : 'Feel the Beat'}
-          </motion.p>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 18 }}>
-            {suggestedSong ? (suggestedSong.artist || '').replace(/&amp;/g, '&') : 'Explore trending tracks curated for you.'}
-          </p>
-          <motion.button
-            onClick={() => {
-              if (currentSong) { navigate('/now-playing'); return; }
-              if (!suggestedSong) return;
-              const list = [suggestedSong, ...recentSongs.filter((s) => s.id !== suggestedSong.id)];
-              playSong(suggestedSong, 0, list);
-            }}
-            whileHover={{ scale: 1.04, boxShadow: '0 8px 28px rgba(139,92,246,0.6)' }}
-            whileTap={{ scale: 0.96 }}
-            style={{
-              borderRadius: 999,
-              border: 'none',
-              background: 'linear-gradient(140deg, #22d3ee 0%, #8b5cf6 42%, #f472b6 78%, #fb7185 100%)',
-              color: '#ffffff',
-              padding: '11px 22px',
-              cursor: 'pointer',
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: 13, fontWeight: 700,
-              letterSpacing: '0.01em',
-              display: 'flex', alignItems: 'center', gap: 8,
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0,0,0,0.36), 0 6px 22px rgba(244,114,182,0.3)',
-            }}
-          >
-            {currentSong && isPlaying ? (
-              <>
-                <span style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 14 }}>
-                  {[0,1,2].map((i) => (
-                    <motion.span key={i} style={{ display: 'block', width: 3, background: '#6d28d9', borderRadius: 2 }}
-                      animate={{ height: ['4px','12px','4px'] }}
-                      transition={{ duration: 0.7, repeat: Infinity, delay: i*0.15, ease: 'easeInOut' }} />
-                  ))}
-                </span>
-                Now Playing
-              </>
-            ) : (
-              <>
-                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <main className="max-w-[1200px] mx-auto w-full pt-16 pb-24 relative z-10">
+          <section className="flex flex-col md:flex-row items-center justify-between mb-24 relative">
+            <div className="w-full md:w-[30%] z-10">
+              <h1 className="text-5xl font-semibold mb-4 text-white drop-shadow-lg">Hello, User</h1>
+              <p className="text-gray-400 mb-8 max-w-sm text-sm">Ultra high definition weights,<br />Space Grotesk</p>
+              <button className="px-6 py-2 rounded-full border border-fuchsia-500 text-white hover:bg-fuchsia-900/30 transition-all hero-glow">
                 Start Listening
-              </>
-            )}
-          </motion.button>
-        </div>
+              </button>
+            </div>
 
-        {/* Right album art */}
-        {(suggestedSong?.album_art_url || currentSong?.album_art_url) && (
-          <motion.div
-            style={{ position: 'relative', zIndex: 1, flexShrink: 0 }}
-            initial={{ opacity: 0, x: 18, scale: 0.88 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 280, damping: 24 }}
-          >
-            {/* Spinning halo ring when playing */}
-            {isPlaying && (
-              <motion.div
-                style={{ position: 'absolute', inset: -6, borderRadius: 18, border: '2px solid rgba(196,181,253,0.45)', zIndex: 2 }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+            <div className="w-full md:w-[70%] flex justify-center relative mt-12 md:mt-0 h-64 md:h-[500px]">
+              <img
+                alt="Crystal Pyramid"
+                className="object-contain w-full h-full drop-shadow-[0_0_30px_rgba(255,0,255,0.3)]"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDvyNGgzOZPty9MqzBR1iuaqWRmcT6F5s3xq7BgSa_otVG8TQBEEnhwgR2pETQ5kDt1y_rimJLI6W8Sd1qB12tA-xGHcjl0RIPhywIDKS1lHhAoeGevyRVsi26NgMY1xl_q4z_68lw6kSRNffLMWbdzPqIETj4rE448jQTusDS5Dd6sT466FRntFe6OIOiE9ogLqa0kPY285xya1LcRzQQThP-2EuK6RmH34gnTYMMFK5XMavr5JCkGenf5oBpOClqALNhdcd3EzwJ"
               />
-            )}
-            {/* Glow bloom */}
-            <motion.div
-              style={{ position: 'absolute', inset: -14, borderRadius: 22, filter: 'blur(22px)', background: 'rgba(139,92,246,0.5)', zIndex: 0 }}
-              animate={{ opacity: isPlaying ? [0.5, 1, 0.5] : 0.35 }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <motion.img
-              key={suggestedSong?.id || currentSong?.id}
-              src={currentSong?.album_art_url || suggestedSong?.album_art_url}
-              alt=""
-              style={{ width: 110, height: 110, borderRadius: 14, objectFit: 'cover', position: 'relative', zIndex: 1, boxShadow: '0 12px 40px rgba(0,0,0,0.55)' }}
-              animate={isPlaying ? { y: [0, -5, 0] } : { y: 0 }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            />
-          </motion.div>
-        )}
-      </motion.section>
+            </div>
+          </section>
 
-      {/* ── Popular / Recently Played ── */}
-      <section style={{ width: 'min(680px, calc(100vw - 24px))', margin: '0 auto 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, padding: '0 4px' }}>
-          <motion.h2
-            initial={{ opacity: 0, x: -10 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, fontWeight: 700, color: '#fff', margin: 0 }}
-          >
-            {recentSongs.length > 0 ? 'Recently Played' : 'Popular'}
-          </motion.h2>
-          <motion.button
-            whileTap={{ scale: 0.92 }}
-            onClick={() => navigate('/search')}
-            style={{
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 500,
-              color: '#a78bfa', display: 'flex', alignItems: 'center', gap: 4,
-            }}
-          >
-            Show all
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
-              <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
-            </svg>
-          </motion.button>
-        </div>
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-7xl mx-auto pl-12 pr-12 w-full">
+            <div className="lg:col-span-2">
+              <h2 className="text-xl font-semibold mb-6 text-white">For You</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <AlbumCard
+                  title="Daft Punk - Random"
+                  subtitle="Access Memories"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuC5RE2GFyVCFFjuIGS8MI--DLbMe3xb6ulIdM69AD9dCJVXi55Da-R6KjBAxEqU8AXDCgBQPvqzAlHC8IpFDd4F2hvpPWlnBqffIEUADCPSoUJFJHCKa0Fp46dOBmL_SzwosllVmg7Qpj_4DM9zFJoo8LYTwOqWbMWRcSJWIlt6fil9DLCvlMY4CggdqmElyLo4lDO2d4fyTDdG1NMlYnaew7X6jLxR3KMa6EvXz-iSlWMmqHS6oFphfD0ROaiOCu5V4Tuoc962EIXZ"
+                />
+                <AlbumCard
+                  title="The Weeknd -"
+                  subtitle="After Hours"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuB92Pnz6p4vMzH_gJSjk058AlcQ4ivdnLqUESMqe8zuV2q6cPILysgxUHcVmUO_a4Y6cWIPscqWBZwph-0IPbCiBf3G6LYYL7v1Ev2Ajbb0P7IO5W1Z8YX_nPPFV-NbBYbFnn-CUev46EVNIp8Ay2W46p6VD7d9IpZOgOhL742cvOTKcGRi3XrsLl64vRlkQ34tWayucbBie-F4pWUOGk0Nz2Bt-4k_0OFv2NIia_kY87PJDptJ5kdcCTvEYcB4ctMuztk1lAwH3G-P"
+                />
+                <AlbumCard
+                  title="The Weend -"
+                  subtitle="Romantus"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuB3M82kvVL9I605vIdbasS72-K6jtON25CBKbm-ZcnIDzjI8VX9Q30MlwNLfH-M34_UKUSlLSY0JECaZZesQzffWrS9qQF3rfpdHHtsmPnX9fT0AacV7yYgmtZNzycKRuEg-8gk-z6rcDnyRs6hMj0QocXqkcuZkp1Lf4Alay3WSBx5yZG8HCO3Auaiby4Dp4icNjgD6qwhFjFBCBGS_L5KB--W-k60x8hxtSUBRRX0PMHgHSTJSYqwpg1c8Wva7W9d5fgD8jNHpVEk"
+                />
+                <AlbumCard
+                  title="The Black - The Kien"
+                  subtitle="Now"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuDJclhjoAoL_hCGg90BHJo_JuGFK8cPuccFeVpfsCWwOHHvuorYc0L8dZPIm4b2TPPqEVq30kdVyv68jnqHsK3DFNUAXEVOYqvcIs0gOTBiYg51EX2B-8RLyO1xOl31dTyTXtVlV0X05oBx3Nd3RMJ9SslhWbpLJ3eKtkf8asBjyWk6Ss_gt-iw1tQxUiKBYpplAgr3s07N1UfHaxYBPMA8Znx2ZKhAiMauTjqacZYMv4upfw743F282NpgVOrTQR0VdO4QA8XZTL8-"
+                />
+                <AlbumCard
+                  title="Daft Punk - The"
+                  subtitle="Thregs"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuBfBcetbQxL6h3Q-MB-RIldsMNTwGsNqFxPqlPuz5L7h3lCZMYph5zmQ0mPmpbIWqfd9YQyU8r1gqItZ69kAY8Dx4W6R_S_YCD_wHkZkWssa-gjvykoO5Zg8I8po2GTdv4vVxC_XwG1OnK9-Xy0pwGJQIreUJO7KM2LP92csbF-wD3vTr3QQYufhlXsOwVEIDsNfSMJ3O3U5G7bEKfiGiqR9JquaeOQZD_wr0BnOlyExbZ70FYO0dRHojYNqD3BO3S84ztk3d3xsBT5"
+                />
+                <AlbumCard
+                  title="The Weeknd -"
+                  subtitle="Women Cimmor"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuBIkhLdgu4FTrgDaJx98kfnI2hBkJYHFYZQ-wWzhC4-DhWgjMDPFX8VMuIvt_RQTDF9kUp-RHUlQPbqvi0eocdZ6v28jAKvCTzPkgb_SDjOaivT0LZidIej3A7lOlumUYqNPSriMWkgYgB-SMx2Cy_JXBxsK3YzTNKvn3HZtY5cWHpPNaoCe04phSb3jL1lnDIO76jWLtBumj9eAYOws8Zmy4ijHHf4CLZEESggc__B6dHDW-H6jhD10a7RLa9gLUZD7ndcmt58K2LO"
+                  pinkBackdrop
+                />
+                <AlbumCard
+                  title="The Rown - Mlek"
+                  subtitle="Harkur"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuDNrNp7FiEiPJnrJLBsELL2hM-ULAHOiUVBjHWTkZjKwHk8TxnIxjHK_8hMpTGWfRa43b6kiz06v85CBBaUJk4LOZOpzhS_YEmuDLh7v0As_HAncTNQUCvHHCd1dinRiLG6mUgqvic_j0QtnWEOHK3WaCmYfdHFyrdiA4Z5q6O3iZh81kB5wODkAPl3AJNiULDE75c_mAxLnMnOjTbXzLqjAjnfeDgQawKsW3OEsx8tX8h2Pdc0cPDBeGy6MdDvDqNUYjLc8hTrMHON"
+                />
+                <AlbumCard
+                  title="Steve Mega -"
+                  subtitle="Aatreotore"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuD20SnpHn9LlyuLFMU6ocvLTEgIiajObverkxA_BcIo-CZ-0mIXMM85ZESemDenywk7OEAGu4tip1WPAiC1vbyoDfbEZ-0mFB5xvEY8sSTxFxP7roTuucn8m24fDnLB7_21yJvwTkvHdcFPLy1fdaona9Xk4ZzR7Y2_ksr1W89Orjao2OwzNGgXhjH2RVwIL5UXTpUwh5ZnKpNTLHjjL6IZK6-xaUXPjxZKvPbm7Pv3aLWOtJaS2L8sEV0CI3EmN74QOvd3mgSpNaXA"
+                />
+              </div>
+            </div>
 
-        {recentSongs.length > 0 ? (
-          <div>
-            {recentSongs.map((song, i) => (
-              <motion.div
-                key={song.id}
-                initial={{ opacity: 0, x: -14 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.06, type: 'spring', stiffness: 320, damping: 28 }}
-                onClick={() => playSong(song, i, recentSongs)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '10px 12px', borderRadius: 14,
-                  cursor: 'pointer',
-                  background: currentSong?.id === song.id
-                    ? 'linear-gradient(135deg, rgba(34,211,238,0.16) 0%, rgba(139,92,246,0.2) 50%, rgba(244,114,182,0.18) 100%)'
-                    : 'rgba(255,255,255,0.05)',
-                  backdropFilter: 'blur(18px) saturate(160%)',
-                  WebkitBackdropFilter: 'blur(18px) saturate(160%)',
-                  border: currentSong?.id === song.id
-                    ? '1px solid rgba(255,255,255,0.2)'
-                    : '1px solid rgba(255,255,255,0.09)',
-                  boxShadow: currentSong?.id === song.id
-                    ? 'inset 8px 8px 18px rgba(16, 8, 24, 0.32), inset -8px -8px 16px rgba(255,255,255,0.08), 0 10px 30px rgba(34,211,238,0.12), 0 8px 26px rgba(244,114,182,0.2)'
-                    : '0 4px 20px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.09)',
-                  transition: 'all 0.25s ease',
-                  marginBottom: 8,
-                }}
-                whileHover={{ y: -2, boxShadow: '0 10px 36px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.1)' }}
-                whileTap={{ scale: 0.97 }}
-              >
-                {/* Album art */}
-                <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <motion.img
-                    src={song.album_art_url || '/placeholder-album.svg'}
-                    alt=""
-                    style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', display: 'block' }}
-                    animate={currentSong?.id === song.id && isPlaying ? { boxShadow: [`0 0 0 2px rgba(139,92,246,0.4)`, `0 0 0 4px rgba(139,92,246,0.2)`, `0 0 0 2px rgba(139,92,246,0.4)`] } : {}}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                  {/* Playing indicator overlay */}
-                  {currentSong?.id === song.id && (
-                    <motion.div
-                      style={{ position: 'absolute', inset: 0, borderRadius: 12, background: 'rgba(109,40,217,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      {isPlaying ? (
-                        <span style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 14 }}>
-                          {[0,1,2].map((j) => (
-                            <motion.span key={j} style={{ display: 'block', width: 3, background: '#fff', borderRadius: 2 }}
-                              animate={{ height: ['3px','10px','3px'] }}
-                              transition={{ duration: 0.6, repeat: Infinity, delay: j*0.12, ease: 'easeInOut' }} />
-                          ))}
-                        </span>
-                      ) : (
-                        <svg width="14" height="14" fill="#fff" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                      )}
-                    </motion.div>
-                  )}
-                </div>
-
-                {/* Title / artist */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{
-                    fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600,
-                    color: currentSong?.id === song.id ? '#c4b5fd' : '#fff',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0, lineHeight: 1.3,
-                  }}>
-                    {decodeSongTitle(song.title || song.name || '')}
-                  </p>
-                  <p style={{
-                    fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 400,
-                    color: 'rgba(255,255,255,0.38)',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '2px 0 0',
-                  }}>
-                    {(song.artist || song.primaryArtists || '').replace(/&amp;/g, '&')}
-                    {song.album ? ` · ${song.album}` : ''}
-                  </p>
-                </div>
-
-                {/* Duration */}
-                {song.duration ? (
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: 'rgba(255,255,255,0.28)', flexShrink: 0 }}>
-                    {formatDuration(song.duration)}
-                  </span>
-                ) : null}
-
-                {/* Play button */}
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.88 }}
-                  style={{
-                    width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                    background: currentSong?.id === song.id
-                      ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)'
-                      : 'rgba(255,255,255,0.08)',
-                    border: currentSong?.id === song.id ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: currentSong?.id === song.id ? '0 4px 16px rgba(139,92,246,0.45)' : 'none',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  {currentSong?.id === song.id && isPlaying ? (
-                    <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" style={{ color: '#fff' }}>
-                      <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
-                    </svg>
-                  ) : (
-                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24" style={{ color: currentSong?.id === song.id ? '#fff' : 'rgba(255,255,255,0.6)', marginLeft: 2 }}>
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  )}
-                </motion.div>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-              padding: '32px 16px', borderRadius: 20,
-              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-            }}
-          >
-            <div style={{ fontSize: 36 }}>🎵</div>
-            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: 0 }}>
-              No recent tracks yet
-            </p>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/search')}
-              style={{
-                borderRadius: 999, border: 'none',
-                background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                color: '#fff', padding: '10px 22px',
-                fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', boxShadow: '0 4px 16px rgba(139,92,246,0.4)',
-              }}
-            >
-              Browse Songs
-            </motion.button>
-          </motion.div>
-        )}
-      </section>
-
-      {/* ── Playlists ── */}
-      {playlists.length > 0 && (
-        <section style={{ width: 'min(680px, calc(100vw - 24px))', margin: '0 auto 8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, padding: '0 4px' }}>
-            <motion.h2
-              initial={{ opacity: 0, x: -10 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 20, fontWeight: 700, color: '#fff', margin: 0 }}
-            >
-              Your Playlists
-            </motion.h2>
-          </div>
-          <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }} className="hide-scrollbar">
-            {playlists.map((playlist, idx) => (
-              <motion.div
-                key={playlist.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.07, type: 'spring', stiffness: 300, damping: 26 }}
-                style={{ width: 120, flexShrink: 0 }}
-              >
-                <motion.button
-                  onClick={() => navigate('/library', { state: { openPlaylistId: playlist.id } })}
-                  whileHover={{ scale: 1.06, y: -4 }}
-                  whileTap={{ scale: 0.96 }}
-                  transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                  style={{ width: 120, height: 120, borderRadius: 14, background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, cursor: 'pointer' }}
-                >
-                  <PlaylistCover playlist={playlist} songsById={songsById} size={120} />
-                </motion.button>
-                <p style={{
-                  marginTop: 8, fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: 13, fontWeight: 600, color: '#fff',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2,
-                }}>
-                  {playlist.name}
-                </p>
-                <p style={{ margin: '2px 0 0', fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
-                  {playlist.songIds.length} songs
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-6 text-white">Recently Played</h2>
+              <div className="flex flex-col space-y-4">
+                <RecentRow
+                  title="Billie Eilish - Happier Than Ever"
+                  subtitle="Space Grotesk"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuBmtsxbhXXQ2EyoxpOqJOGsJ57NUy9KqzGcpezJXzefjyV3lZ-lLYAtLXNegwS8xKiAr60ae_uEEVr37VqChjuEwX6YHwKcW0eIxn8oEJ1jvCEG2dxHjNBQB043gnfkr7oPep0uelCXWWAHDZsV0Kdh3n9GstyOwWZ3J8LxtXcljINH2ajrNjUelLydauafnK1ANwn3PX34Mjq2MJplH337AYcnnunebC1agOk4QzuJOEMjqeN3sR6fhDMwsQEdP5Ffg-xFOSFOteQs"
+                />
+                <RecentRow
+                  title="Frank Ocean - Blonde"
+                  subtitle="Spack Ocean"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuBtBjxbrKpaBz8JpWe0vGLk90C1dK_DFE3jdY1SeyZ0yQkrSRtA3x17RiT4NI3YjMV7hGbw2tI-NC6y6rsZfhbm__HdC8aN5AdCDN1_We2pPbfTt9YPmxN6CsqPNsovh11-qyaHBhJQ_OB8P4t5ylwBYj99EfGvB9Ioav7KB_UwLp9bk3XPOeU1ZT2U5xWLXagr0yrTfISNXhmVXdGCB-j6rOhgmHNSAzOAHS6Qwc80G2XJnxWfnFyTzy2QDTJMlicF9QH1TsCJdkz6"
+                  compact
+                />
+                <RecentRow
+                  title="Handi Unsh - Heatiy Curation"
+                  subtitle="Space Grotesk"
+                  image="https://lh3.googleusercontent.com/aida-public/AB6AXuDkduWTJs1XQOBRENjEf6stSS8MDfVUfPWaGoRWZDjxs_vYnCgLA2FPXzKaO4_I0YhgXgN1er6R-2gG0Q68YhPr4ZYUX41Z4KiL_Z4jymluts8s3C_2ZLqOf-UGaP2X0DjL-rc-JXluLPc2VEmSW3FJzCaz2g0yutUY0F1yN8kgtVBsISC-mJxRGDh6lfuS0ptkyF3BKkD0cy44YdAK-Q48xTb9lf9QrkM64uJgEIUjjZmAhrGKdfJZ9Cn7Rdr99gGyU9MifMCicilE"
+                  active
+                />
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </>
   );
 };
+
+const AlbumCard = ({ title, subtitle, image, pinkBackdrop = false }) => (
+  <div className="glass-card rounded-xl p-2 cursor-pointer flex flex-col group border border-purple-500/30">
+    <div className={`aspect-square rounded-lg overflow-hidden mb-3 ${pinkBackdrop ? 'bg-rose-500/80 p-6 flex items-center justify-center' : 'bg-gray-800'}`}>
+      <img alt={title} className={`object-cover ${pinkBackdrop ? 'w-16 h-16 shadow-lg' : 'w-full h-full'}`} src={image} />
+    </div>
+    <div className="px-1">
+      <h3 className="text-xs font-medium text-white line-clamp-1">{title}</h3>
+      <p className="text-[10px] text-gray-400 line-clamp-1">{subtitle}</p>
+    </div>
+  </div>
+);
+
+const RecentRow = ({ title, subtitle, image, compact = false, active = false }) => (
+  <div className={`rounded-xl p-2 flex items-center group cursor-pointer bg-[#1a1a1a] rounded-[12px] ${active ? 'border border-fuchsia-500/50 shadow-[0_0_10px_rgba(255,0,255,0.2)]' : 'border border-gray-600'}`}>
+    <div className={`w-14 h-14 overflow-hidden bg-gray-800 mr-4 flex-shrink-0 rounded-[4px] ${compact ? 'flex items-center justify-center' : ''}`}>
+      <img alt={title} className={compact ? 'w-10 h-10 object-cover shadow-md' : 'w-full h-full object-cover'} src={image} />
+    </div>
+    <div className="flex-grow pr-4">
+      <h3 className="text-xs font-medium text-white truncate">{title}</h3>
+      <p className="text-[10px] text-gray-400 truncate mt-1">{subtitle}</p>
+    </div>
+    <button className="text-gray-400 hover:text-white px-2" type="button">
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+      </svg>
+    </button>
+  </div>
+);
 
 export default Home;
