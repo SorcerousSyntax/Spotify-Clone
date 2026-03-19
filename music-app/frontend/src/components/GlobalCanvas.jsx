@@ -10,13 +10,16 @@ const GALAXY_VERTEX_SHADER = `
   attribute vec3 aRandomPos;
   attribute vec3 aTargetPos;
   varying float vDist;
+  varying float vRandom;
 
   void main() {
+    vRandom = aSize; // Use size as a seed for fragment randomness
+    
     // Lerp between random initial position and target galaxy position
     vec3 mixedPos = mix(aRandomPos, aTargetPos, uMorphProgress);
     
     // Continuous slow rotation on Y axis
-    float angle = uTime * 0.08;
+    float angle = uTime * 0.04;
     float s = sin(angle);
     float c = cos(angle);
     mat2 rot = mat2(c, -s, s, c);
@@ -25,43 +28,51 @@ const GALAXY_VERTEX_SHADER = `
     vec4 mvPosition = modelViewMatrix * vec4(mixedPos, 1.0);
     
     vDist = length(aTargetPos.xz);
-    // Core particles slightly larger, edge particles tiny
-    float sizeFactor = (1.0 - smoothstep(0.0, 25.0, vDist) * 0.7);
-    gl_PointSize = aSize * sizeFactor * (400.0 / -mvPosition.z);
+    
+    // Size attenuation: core particles are slightly larger and brighter
+    float sizeFactor = (1.2 - smoothstep(0.0, 35.0, vDist) * 0.8);
+    gl_PointSize = aSize * sizeFactor * (500.0 / -mvPosition.z);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
 
 const GALAXY_FRAGMENT_SHADER = `
   varying float vDist;
+  varying float vRandom;
   
   void main() {
     float dist = length(gl_PointCoord - vec2(0.5));
     if (dist > 0.5) discard;
 
-    // Color gradient: White -> Light Pink -> Hot Pink (#ff2d78) -> Deep Magenta (#c084fc)
+    // Enhanced Color gradient for a stunning Milky Way
+    // Centre: Pure White -> White-Pink -> Hot Pink -> Deep Magenta/Purple at edges
     vec3 colorCore = vec3(1.0, 1.0, 1.0);
-    vec3 colorLightPink = vec3(1.0, 0.7, 0.85);
+    vec3 colorInner = vec3(1.0, 0.85, 0.95);
     vec3 colorHotPink = vec3(1.0, 0.176, 0.471); // #ff2d78
-    vec3 colorMagenta = vec3(0.753, 0.518, 0.988); // #c084fc
+    vec3 colorMagenta = vec3(0.5, 0.2, 0.9); // Deeper purple/magenta
     
     vec3 finalColor;
-    float d = clamp(vDist / 25.0, 0.0, 1.0);
+    float d = clamp(vDist / 35.0, 0.0, 1.0);
     
-    if (d < 0.15) {
-      finalColor = mix(colorCore, colorLightPink, d / 0.15);
-    } else if (d < 0.5) {
-      finalColor = mix(colorLightPink, colorHotPink, (d - 0.15) / 0.35);
+    if (d < 0.1) {
+      finalColor = mix(colorCore, colorInner, d / 0.1);
+    } else if (d < 0.4) {
+      finalColor = mix(colorInner, colorHotPink, (d - 0.1) / 0.3);
     } else {
-      finalColor = mix(colorHotPink, colorMagenta, (d - 0.5) / 0.5);
+      finalColor = mix(colorHotPink, colorMagenta, (d - 0.4) / 0.6);
     }
 
+    // Stunning glow effect
     float strength = 1.0 - (dist * 2.0);
-    strength = pow(strength, 2.5);
+    strength = pow(strength, 3.0);
     
-    // Core glow intensity
-    float coreGlow = 1.0 - smoothstep(0.0, 5.0, vDist);
-    gl_FragColor = vec4(finalColor, (strength * 0.9) + (coreGlow * 0.2));
+    // Twinkle effect
+    float twinkle = 0.8 + 0.2 * sin(vRandom * 100.0);
+    
+    // Core intensity boost
+    float coreGlow = 1.0 - smoothstep(0.0, 8.0, vDist);
+    
+    gl_FragColor = vec4(finalColor, (strength * twinkle * 0.9) + (coreGlow * 0.3));
   }
 `;
 
@@ -76,26 +87,31 @@ const Galaxy = () => {
     const sizeArray = new Float32Array(particleCount);
 
     for (let i = 0; i < particleCount; i++) {
-      // Random initial positions scattered everywhere
-      randomPos[i * 3] = (Math.random() - 0.5) * 150;
-      randomPos[i * 3 + 1] = (Math.random() - 0.5) * 150;
-      randomPos[i * 3 + 2] = (Math.random() - 0.5) * 150;
+      // Wide scattered initial state
+      randomPos[i * 3] = (Math.random() - 0.5) * 200;
+      randomPos[i * 3 + 1] = (Math.random() - 0.5) * 200;
+      randomPos[i * 3 + 2] = (Math.random() - 0.5) * 200;
 
-      // Milky Way Disc positions
-      const radius = Math.random() * 25;
-      const spinAngle = radius * 0.6;
-      const branchAngle = ((i % 3) * 2 * Math.PI) / 3; // 3 spiral arms
+      // Milky Way Disc positions with 4 distinct spiral arms
+      const radius = Math.pow(Math.random(), 0.8) * 35;
+      const spinAngle = radius * 0.5;
+      const branchAngle = ((i % 4) * 2 * Math.PI) / 4; // 4 spiral arms
       
-      const spread = (1.0 - radius / 25.0) * 0.5 + 0.1;
-      const randomX = (Math.random() - 0.5) * 2.0 * spread * radius;
-      const randomZ = (Math.random() - 0.5) * 2.0 * spread * radius;
-      const randomY = (Math.random() - 0.5) * 1.5 * (1.0 - radius / 25.0);
+      // Dispersion: tight in arms, some haze between
+      const isArm = Math.random() < 0.85;
+      const spread = isArm ? (0.1 + (radius / 35.0) * 0.2) : 1.5;
+      
+      const randomX = (Math.random() - 0.5) * spread * radius * 0.5;
+      const randomZ = (Math.random() - 0.5) * spread * radius * 0.5;
+      // Very flat disc with slight vertical bulge at center
+      const bulge = Math.exp(-Math.pow(radius / 5.0, 2)) * 3.0;
+      const randomY = (Math.random() - 0.5) * (1.0 + bulge);
 
       targetPos[i * 3] = Math.cos(spinAngle + branchAngle) * radius + randomX;
       targetPos[i * 3 + 1] = randomY; 
       targetPos[i * 3 + 2] = Math.sin(spinAngle + branchAngle) * radius + randomZ;
 
-      sizeArray[i] = Math.random() * 3 + 0.5;
+      sizeArray[i] = Math.random() * 2.5 + 0.5;
     }
     return [randomPos, targetPos, sizeArray];
   }, []);
@@ -104,7 +120,6 @@ const Galaxy = () => {
     const t = state.clock.getElapsedTime();
     if (material.current) {
       material.current.uniforms.uTime.value = t;
-      // Morph over 2 seconds
       material.current.uniforms.uMorphProgress.value = Math.min(t / 2.0, 1.0);
     }
   });

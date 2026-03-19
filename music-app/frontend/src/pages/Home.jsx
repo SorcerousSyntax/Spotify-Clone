@@ -212,40 +212,44 @@ const SongRow = ({ song, index, queue, playSong, active }) => {
 
   return (
     <motion.div 
-      whileHover={{ x: 4, backgroundColor: 'rgba(255, 45, 120, 0.05)' }}
+      whileHover={{ x: 8, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
       onClick={() => playSong(song, index, queue)}
-      className="glass"
       style={{ 
-        padding: '8px 16px', 
+        padding: '12px 16px', 
         cursor: 'pointer', 
         display: 'flex', 
         alignItems: 'center', 
         gap: 16,
-        height: 64,
-        background: 'rgba(255,255,255,0.03)',
-        borderColor: active ? 'rgba(255,45,120,0.4)' : 'rgba(255,255,255,0.05)',
-        borderRadius: '12px'
+        height: 72,
+        background: 'rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderColor: active ? 'rgba(255, 45, 120, 0.5)' : 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '16px',
+        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+        marginBottom: '4px'
       }}
     >
-      <div style={{ width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+      <div style={{ width: 48, height: 48, borderRadius: 10, overflow: 'hidden', flexShrink: 0, boxShadow: '0 4px 8px rgba(0,0,0,0.3)' }}>
         <img src={song.album_art_url} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: active ? '#ff2d78' : '#fff' }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: active ? '#ff2d78' : '#fff' }}>
           {decodeSongTitle(song.title)}
         </h3>
-        <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
           {song.artist}
         </p>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button 
           onClick={(e) => { e.stopPropagation(); toggleOffline(song); }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, opacity: isOffline ? 1 : 0.3 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, opacity: isOffline ? 1 : 0.3, transition: 'opacity 0.3s' }}
         >
           {isOffline ? '✅' : '📥'}
         </button>
-        <div className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>
+        <div className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>
           {song.duration ? `${Math.floor(song.duration / 60)}:${String(Math.floor(song.duration % 60)).padStart(2, '0')}` : '--:--'}
         </div>
       </div>
