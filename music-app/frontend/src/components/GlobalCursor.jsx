@@ -1,85 +1,118 @@
-import { useEffect, useState } from 'react';
-import { motion, useSpring } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion, useSpring, useMotionValue, AnimatePresence } from 'framer-motion';
 
-export default function GlobalCursor() {
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [hovering, setHovering] = useState(false);
+const GlobalCursor = () => {
+  const cursorX = useMotionValue(-100);
+  const cursorY = useMotionValue(-100);
+  
+  const springConfig = { damping: 25, stiffness: 200 };
+  const cursorXSpring = useSpring(cursorX, springConfig);
+  const cursorYSpring = useSpring(cursorY, springConfig);
 
-  // Hide on touch devices
-  if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) {
-    return null;
-  }
-
-  const ringX = useSpring(0, { stiffness: 220, damping: 26, mass: 0.3 });
-  const ringY = useSpring(0, { stiffness: 220, damping: 26, mass: 0.3 });
+  const [isHovered, setIsHovered] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
 
   useEffect(() => {
-    const handleMove = (e) => {
-      const x = e.clientX;
-      const y = e.clientY;
-      setPos({ x, y });
-      ringX.set(x);
-      ringY.set(y);
-
-      const el = document.elementFromPoint(x, y);
-      const isClickable =
-        el &&
-        (el.tagName === 'BUTTON' ||
-          el.tagName === 'A' ||
-          el.tagName === 'INPUT' ||
-          el.closest('button') ||
-          el.closest('a') ||
-          el.classList.contains('cursor-pointer') ||
-          window.getComputedStyle(el).cursor === 'pointer');
-      setHovering(Boolean(isClickable));
+    const moveCursor = (e) => {
+      cursorX.set(e.clientX);
+      cursorY.set(e.clientY);
     };
 
-    window.addEventListener('mousemove', handleMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMove);
-  }, [ringX, ringY]);
+    const handleMouseOver = (e) => {
+      if (e.target.closest('button, a, input, [role="button"]')) {
+        setIsHovered(true);
+      } else {
+        setIsHovered(false);
+      }
+    };
 
-  const dotSize = 10;
-  const ringBase = 36;
-  const ringHover = 50;
+    const handleMouseDown = () => setIsClicked(true);
+    const handleMouseUp = () => setIsClicked(false);
+
+    window.addEventListener('mousemove', moveCursor);
+    window.addEventListener('mouseover', handleMouseOver);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', moveCursor);
+      window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [cursorX, cursorY]);
 
   return (
     <>
-      {/* Dot */}
+      {/* Main Dot */}
       <motion.div
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
-          width: dotSize,
-          height: dotSize,
+          width: 8,
+          height: 8,
           borderRadius: '50%',
-          background: 'var(--green-pure)',
-          boxShadow: '0 0 8px var(--green-pure), 0 0 20px rgba(0,255,65,0.5)',
-          zIndex: 99,
+          backgroundColor: '#ff2d78',
+          zIndex: 9999,
           pointerEvents: 'none',
-          translateX: pos.x - dotSize / 2,
-          translateY: pos.y - dotSize / 2,
+          x: cursorXSpring,
+          y: cursorYSpring,
+          translateX: '-50%',
+          translateY: '-50%',
+          boxShadow: '0 0 10px #ff2d78'
+        }}
+      />
+      
+      {/* Outer Ring */}
+      <motion.div
+        animate={{
+          scale: isHovered ? 2 : 1,
+          opacity: isClicked ? 0.5 : 0.8
+        }}
+        transition={{ duration: 0.3, ease: [0.76, 0, 0.24, 1] }}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: 32,
+          height: 32,
+          borderRadius: '50%',
+          border: '1px solid #ff2d78',
+          zIndex: 9998,
+          pointerEvents: 'none',
+          x: cursorXSpring,
+          y: cursorYSpring,
+          translateX: '-50%',
+          translateY: '-50%',
         }}
       />
 
-      {/* Ring */}
-      <motion.div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: hovering ? ringHover : ringBase,
-          height: hovering ? ringHover : ringBase,
-          borderRadius: '50%',
-          border: `1px solid rgba(0,255,65,${hovering ? 0.7 : 0.4})`,
-          background: hovering ? 'rgba(0,255,65,0.08)' : 'transparent',
-          zIndex: 98,
-          pointerEvents: 'none',
-          x: ringX.get() - (hovering ? ringHover : ringBase) / 2,
-          y: ringY.get() - (hovering ? ringHover : ringBase) / 2,
-        }}
-        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-      />
+      {/* Burst Animation on Click */}
+      <AnimatePresence>
+        {isClicked && (
+          <motion.div
+            initial={{ scale: 0.5, opacity: 1 }}
+            animate={{ scale: 2, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              top: cursorY.get(),
+              left: cursorX.get(),
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 45, 120, 0.3)',
+              zIndex: 9997,
+              pointerEvents: 'none',
+              translateX: '-50%',
+              translateY: '-50%',
+            }}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
-}
+};
+
+export default GlobalCursor;

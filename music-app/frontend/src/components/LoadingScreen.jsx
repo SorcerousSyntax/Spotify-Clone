@@ -1,104 +1,123 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const LETTERS = ['R', 'A', 'A', 'B', 'T', 'A'];
-
-export default function LoadingScreen({ onComplete }) {
-  const [phase, setPhase] = useState('letters'); // letters → glow → smoke → done
+const LoadingScreen = ({ onComplete }) => {
+  const [progress, setProgress] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
-    // After letters appear (0.1s delay each + 0.5s base = ~1.1s), glow
-    const t1 = setTimeout(() => setPhase('glow'), 1400);
-    // After glow, fade out
-    const t2 = setTimeout(() => setPhase('done'), 2400);
-    // Notify parent
-    const t3 = setTimeout(() => onComplete?.(), 2600);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, []);
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          setTimeout(() => {
+            setIsFinished(true);
+            setTimeout(onComplete, 1000);
+          }, 500);
+          return 100;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 150);
+
+    return () => clearInterval(timer);
+  }, [onComplete]);
 
   return (
     <AnimatePresence>
-      {phase !== 'done' && (
+      {!isFinished && (
         <motion.div
-          key="loading"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.05 }}
-          transition={{ duration: 0.4, ease: 'easeInOut' }}
+          exit={{ y: '-100%' }}
+          transition={{ duration: 1, ease: [0.76, 0, 0.24, 1] }}
           style={{
             position: 'fixed',
             inset: 0,
-            background: '#000000',
+            zIndex: 9999,
+            background: '#000',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 99999,
+            padding: 40,
           }}
         >
-          {/* Letters */}
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {LETTERS.map((letter, i) => (
-              <motion.span
-                key={i}
-                initial={{ opacity: 0, y: 40, scaleY: 0.3 }}
-                animate={{ opacity: 1, y: 0, scaleY: 1 }}
-                transition={{
-                  delay: 0.1 + i * 0.1,
-                  duration: 0.5,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
+          <div style={{ position: 'relative', width: '100%', maxWidth: 400 }}>
+            <motion.h1
+              initial={{ opacity: 0, letterSpacing: '0.5em' }}
+              animate={{ opacity: 1, letterSpacing: '-0.05em' }}
+              transition={{ duration: 1.5, ease: [0.76, 0, 0.24, 1] }}
+              style={{
+                fontSize: 48,
+                textAlign: 'center',
+                marginBottom: 20,
+                color: '#fff',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 900
+              }}
+            >
+              RAABTA<span style={{ color: '#ff2d78' }}>.</span>
+            </motion.h1>
+
+            {/* Progress Bar Container */}
+            <div style={{
+              width: '100%',
+              height: 2,
+              background: 'rgba(255,255,255,0.1)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              {/* Progress Bar Fill */}
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.3 }}
                 style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: 'clamp(56px, 12vw, 96px)',
-                  fontWeight: 800,
-                  letterSpacing: '-0.02em',
-                  color: phase === 'glow' ? '#c4b5fd' : '#8b5cf6',
-                  display: 'inline-block',
-                  textShadow: phase === 'glow'
-                    ? '0 0 30px rgba(167,139,250,0.9), 0 0 80px rgba(139,92,246,0.6)'
-                    : '0 0 14px rgba(139,92,246,0.4)',
-                  transition: 'text-shadow 0.4s ease, color 0.4s ease',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  height: '100%',
+                  background: '#ff2d78',
+                  boxShadow: '0 0 15px #ff2d78'
                 }}
-              >
-                {letter}
-              </motion.span>
-            ))}
+              />
+            </div>
+
+            <div style={{
+              marginTop: 15,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <span className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>
+                SYSTEM INITIALIZING...
+              </span>
+              <span className="font-mono" style={{ fontSize: 9, color: '#ff2d78' }}>
+                {Math.round(progress)}%
+              </span>
+            </div>
           </div>
-
-          {/* Tagline */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: phase === 'glow' ? 0.4 : 0.2 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: '12px', fontWeight: 500,
-              letterSpacing: '0.22em',
-              color: 'rgba(167,139,250,0.55)',
-              marginTop: '16px',
-              textTransform: 'uppercase',
-            }}
-          >
-            Your private world of music
-          </motion.p>
-
-          {/* Bottom green glow bar */}
+          
+          {/* Subtle bottom text */}
           <motion.div
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={{ scaleX: 1, opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
             style={{
               position: 'absolute',
-              bottom: 0,
+              bottom: 40,
               left: 0,
               right: 0,
-              height: '2px',
-              background: 'linear-gradient(90deg, transparent, #8b5cf6, transparent)',
-              boxShadow: '0 0 20px rgba(139,92,246,0.8)',
+              textAlign: 'center'
             }}
-          />
+          >
+            <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.2)' }}>
+              &copy; 2026 RAABTA AUDIO LABS // ALL RIGHTS RESERVED
+            </p>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
   );
-}
+};
+
+export default LoadingScreen;

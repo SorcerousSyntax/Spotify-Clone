@@ -10,7 +10,6 @@ const LyricsPanel = ({ lyrics, onSeek }) => {
   const activeLine = useLyricsSync(lyrics, progress);
   const listRef = useRef(null);
 
-  // Auto-scroll to active line
   useEffect(() => {
     if (listRef.current && activeLine >= 0) {
       const activeEl = listRef.current.children[activeLine];
@@ -22,54 +21,45 @@ const LyricsPanel = ({ lyrics, onSeek }) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
-            style={{
-              position: 'fixed', inset: 0, zIndex: 49,
-              background: 'rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(4px)',
-            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={toggleLyricsPanel}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 110,
+              background: 'rgba(0,0,0,0.8)',
+              backdropFilter: 'blur(10px)',
+            }}
           />
 
-          {/* Panel */}
           <motion.div
-            style={{
-              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-              background: 'rgba(11,0,30,0.97)',
-              backdropFilter: 'blur(40px)',
-              borderTop: '2px solid rgba(139,92,246,0.5)',
-              borderRadius: '20px 20px 0 0',
-              maxHeight: '70vh',
-              boxShadow: '0 -20px 60px rgba(109,40,217,0.15)',
-            }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 350, damping: 35 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            style={{
+              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 120,
+              background: 'rgba(0,0,0,0.95)',
+              borderTop: '1px solid #ff2d78',
+              borderRadius: '30px 30px 0 0',
+              maxHeight: '80vh',
+              padding: '40px',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
           >
-            {/* Handle */}
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(139,92,246,0.4)' }} />
-            </div>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
+              <h2 style={{ fontSize: 32 }}>LYRICS</h2>
+              <button onClick={toggleLyricsPanel} style={{ background: 'none', border: 'none', color: '#ff2d78', fontSize: 24, cursor: 'pointer' }}>✕</button>
+            </header>
 
-            <p style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: 12, fontWeight: 600, letterSpacing: '0.16em',
-              color: 'rgba(167,139,250,0.6)',
-              textAlign: 'center', padding: '4px 0 16px', textTransform: 'uppercase',
-            }}>LYRICS</p>
-
-            {/* Lyrics list */}
             <div
               ref={listRef}
               style={{
-                overflowY: 'auto', padding: '0 24px 100px',
-                maxHeight: 'calc(70vh - 80px)',
-                scrollbarWidth: 'none',
+                flex: 1, overflowY: 'auto',
+                paddingBottom: 60,
+                scrollbarWidth: 'none'
               }}
             >
               {lyrics.length > 0 ? (
@@ -78,35 +68,24 @@ const LyricsPanel = ({ lyrics, onSeek }) => {
                     key={i}
                     onClick={() => onSeek?.(line.time)}
                     animate={{
-                      opacity: i === activeLine ? 1 : i < activeLine ? 0.2 : 0.45,
-                      scale: i === activeLine ? 1.02 : 1,
+                      opacity: i === activeLine ? 1 : 0.2,
+                      scale: i === activeLine ? 1.1 : 1,
+                      x: i === activeLine ? 20 : 0
                     }}
-                    transition={{ duration: 0.3 }}
                     style={{
-                      padding: '10px 0',
+                      padding: '15px 0',
                       cursor: 'pointer',
-                      fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: i === activeLine ? 17 : 14,
-                      lineHeight: 1.5,
-                      color: '#fff',
-                      textShadow: i === activeLine
-                        ? '0 0 18px rgba(255,255,255,0.7)'
-                        : 'none',
-                      transition: 'font-size 0.3s, color 0.3s, text-shadow 0.3s',
-                      borderLeft: i === activeLine ? '3px solid #a78bfa' : '3px solid transparent',
-                      paddingLeft: 16,
-                      marginLeft: -16,
+                      fontSize: 'clamp(24px, 4vw, 48px)',
+                      fontWeight: 900,
+                      color: i === activeLine ? '#ff2d78' : '#fff',
+                      transition: 'all 0.3s ease'
                     }}
                   >
                     {typeof line === 'string' ? line : line.text}
                   </motion.div>
                 ))
               ) : (
-                <p style={{
-                  fontFamily: "'Share Tech Mono', monospace",
-                  fontSize: 13, color: 'rgba(255,255,255,0.2)',
-                  textAlign: 'center', padding: '40px 0',
-                }}>No lyrics available</p>
+                <p className="font-mono" style={{ color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: 100 }}>NO LYRICS DETECTED</p>
               )}
             </div>
           </motion.div>

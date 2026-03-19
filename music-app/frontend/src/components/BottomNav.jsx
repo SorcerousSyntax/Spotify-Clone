@@ -1,124 +1,81 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
-const HomeIcon = ({ filled }) => (
-  <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-    {filled ? (
-      <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-    ) : (
-      <path stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    )}
-  </svg>
-);
-
-const SearchIcon = ({ filled }) => (
-  <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-    <path stroke="currentColor" strokeWidth={filled ? 2.3 : 1.8} strokeLinecap="round" strokeLinejoin="round"
-      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-  </svg>
-);
-
-const MusicIcon = ({ filled }) => (
-  <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-    {filled ? (
-      <path fill="currentColor" d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
-    ) : (
-      <path stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-        d="M9 19V6l12-3v13M9 19c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12-3c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM9 10l12-3" />
-    )}
-  </svg>
-);
-
-const ProfileIcon = ({ filled }) => (
-  <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-    {filled ? (
-      <path fill="currentColor" d="M12 2a5 5 0 100 10 5 5 0 000-10zM12 14c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" />
-    ) : (
-      <path stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    )}
-  </svg>
-);
-
-const tabs = [
-  { id: 'home',    label: 'Home',    path: '/',        Icon: HomeIcon },
-  { id: 'search',  label: 'Search',  path: '/search',  Icon: SearchIcon },
-  { id: 'library', label: 'Library', path: '/library', Icon: MusicIcon },
-  { id: 'profile', label: 'Profile', path: '/profile', Icon: ProfileIcon },
+const NAV_ITEMS = [
+  { id: 'home', label: 'HOME', path: '/', icon: '⌂' },
+  { id: 'search', label: 'SEARCH', path: '/search', icon: '⚲' },
+  { id: 'library', label: 'LIBRARY', path: '/library', icon: '🕮' },
+  { id: 'profile', label: 'PROFILE', path: '/profile', icon: '⚙' },
 ];
 
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const currentPath = location.pathname;
+
+  const isActive = (path) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
   return (
-    <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <div style={{
-        margin: '0 12px 10px',
-        borderRadius: 26,
-        background: 'linear-gradient(132deg, rgba(34,211,238,0.13) 0%, rgba(139,92,246,0.16) 42%, rgba(244,114,182,0.15) 100%)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.16)',
-        boxShadow: 'inset 10px 10px 20px rgba(12,8,20,0.28), inset -8px -8px 16px rgba(255,255,255,0.08), 0 -4px 32px rgba(0,0,0,0.18), 0 4px 20px rgba(0,0,0,0.22)',
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-around',
-          height: 64, maxWidth: 480, margin: '0 auto', padding: '0 6px',
-        }}>
-          {tabs.map((tab) => {
-            const isActive = currentPath === tab.path;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => navigate(tab.path)}
-                aria-label={tab.label}
-                style={{
-                  flex: 1, height: '100%',
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center',
-                  background: 'transparent', border: 'none', outline: 'none',
-                  gap: 6, cursor: 'pointer', padding: 0,
-                }}
-              >
-                <div style={{
-                  color: isActive
-                    ? (tab.id === 'home' ? '#22d3ee' : tab.id === 'search' ? '#a78bfa' : tab.id === 'library' ? '#f472b6' : '#fb7185')
-                    : 'rgba(255,255,255,0.36)',
-                  lineHeight: 0,
-                  filter: isActive ? 'drop-shadow(0 0 8px currentColor)' : 'none',
-                }}>
-                  <tab.Icon filled={isActive} />
-                </div>
-                {/* Active dot indicator */}
-                <div style={{
-                  width: 4, height: 4, borderRadius: '50%',
-                  background: isActive
-                    ? (tab.id === 'home' ? '#22d3ee' : tab.id === 'search' ? '#a78bfa' : tab.id === 'library' ? '#f472b6' : '#fb7185')
-                    : 'transparent',
-                  boxShadow: isActive ? '0 0 10px currentColor' : 'none',
-                  transition: 'background 0.25s ease',
-                }} />
-                <span
+    <motion.nav
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+      style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 70,
+        height: 80,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        background: 'rgba(0,0,0,0.5)',
+        borderTop: '1px solid rgba(255,45,120,0.1)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '0 20px',
+      }}
+    >
+      <div style={{ display: 'flex', gap: 60, alignItems: 'center' }}>
+        {NAV_ITEMS.map((item) => {
+          const active = isActive(item.path);
+          return (
+            <button
+              key={item.id}
+              onClick={() => navigate(item.path)}
+              style={{
+                background: 'none', border: 'none',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                gap: 5, cursor: 'pointer', position: 'relative'
+              }}
+            >
+              <span style={{ 
+                fontSize: 20, 
+                color: active ? '#ff2d78' : 'rgba(255,255,255,0.3)',
+                transition: 'color 0.3s ease'
+              }}>
+                {item.icon}
+              </span>
+              <span className="font-mono" style={{ 
+                fontSize: 8, 
+                color: active ? '#fff' : 'rgba(255,255,255,0.3)',
+                fontWeight: active ? 700 : 400,
+                transition: 'color 0.3s ease'
+              }}>
+                {item.label}
+              </span>
+              {active && (
+                <motion.div
+                  layoutId="nav-active"
                   style={{
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: 9,
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    color: isActive ? 'rgba(255,255,255,0.84)' : 'rgba(255,255,255,0.32)',
-                    marginTop: 1,
+                    position: 'absolute', bottom: -15, width: 20, height: 2,
+                    background: '#ff2d78', boxShadow: '0 0 10px #ff2d78'
                   }}
-                >
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
-    </nav>
+    </motion.nav>
   );
 };
 

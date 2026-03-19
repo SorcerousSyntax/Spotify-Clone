@@ -288,7 +288,12 @@ const usePlayerStore = create((set, get) => ({
 
   supabaseReady: hasSupabase,
 
+  // Scroll state
+  scrollProgress: 0,
+
   // Actions
+  setScrollProgress: (val) => set({ scrollProgress: val }),
+
   setCurrentSong: (songInput) => {
     const song = normalizeSong(songInput);
     if (!song?.id) return;

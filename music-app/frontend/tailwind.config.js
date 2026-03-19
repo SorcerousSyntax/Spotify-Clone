@@ -4,25 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        'void': '#000000',
-        'deep': '#020804',
-        'surface': '#050f08',
-        'card': '#0a1a0f',
-        'green-neon': '#00ff6a',
-        'green-mid': '#00c44f',
-        'green-dark': '#003d1a',
+        primary: '#000000',
+        accent: {
+          1: '#ff2d78',
+          2: '#ff6eb4',
+          3: '#c084fc',
+          4: '#e040fb',
+        },
       },
       fontFamily: {
-        display: ['"Bebas Neue"', 'cursive'],
+        heading: ['"Space Grotesk"', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
         mono: ['"Share Tech Mono"', 'monospace'],
-      },
-      animation: {
-        'vinyl-spin': 'vinylSpin 20s linear infinite',
-        'breathe': 'breathe 3s ease-in-out infinite',
-        'glow-pulse': 'glowPulse 3s ease-in-out infinite',
-        'shimmer': 'shimmer 1.5s ease-in-out infinite',
-        'float': 'float 4s ease-in-out infinite',
-        'wave-dot': 'waveDot 1.2s ease-in-out infinite',
       },
     },
   },

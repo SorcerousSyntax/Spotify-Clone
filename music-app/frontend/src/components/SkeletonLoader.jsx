@@ -1,28 +1,24 @@
 import React from 'react';
 
 const SkeletonLoader = ({ type = 'card', count = 4 }) => {
-  if (type === 'hero') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%' }}>
-        <div className="shimmer" style={{ width: 260, height: 260, borderRadius: 16 }} />
-        <div className="shimmer" style={{ width: 180, height: 28, borderRadius: 6 }} />
-        <div className="shimmer" style={{ width: 120, height: 16, borderRadius: 4 }} />
-        <div className="shimmer" style={{ width: 140, height: 48, borderRadius: 10 }} />
-      </div>
-    );
-  }
+  const shimmerStyle = {
+    background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,45,120,0.05) 50%, rgba(255,255,255,0.03) 100%)',
+    backgroundSize: '200% 100%',
+    animation: 'shimmer 1.5s infinite linear',
+    borderRadius: 4
+  };
 
   if (type === 'row') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: 15 }}>
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0' }}>
-            <div className="shimmer" style={{ width: 52, height: 52, borderRadius: 8, flexShrink: 0 }} />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div className="shimmer" style={{ width: '60%', height: 14, borderRadius: 4 }} />
-              <div className="shimmer" style={{ width: '40%', height: 10, borderRadius: 4 }} />
+          <div key={i} className="glass" style={{ padding: 15, display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div style={{ ...shimmerStyle, width: 50, height: 50 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ ...shimmerStyle, width: '60%', height: 14, marginBottom: 8 }} />
+              <div style={{ ...shimmerStyle, width: '40%', height: 10 }} />
             </div>
-            <div className="shimmer" style={{ width: 36, height: 10, borderRadius: 4 }} />
+            <div style={{ ...shimmerStyle, width: 40, height: 10 }} />
           </div>
         ))}
       </div>
@@ -31,14 +27,12 @@ const SkeletonLoader = ({ type = 'card', count = 4 }) => {
 
   // Default: card grid
   return (
-    <div style={{ display: 'flex', gap: 16, overflowX: 'hidden' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} style={{ width: 152, flexShrink: 0 }}>
-          <div className="shimmer" style={{ width: '100%', aspectRatio: '1', borderRadius: '12px 12px 0 0' }} />
-          <div style={{ padding: '10px 12px', background: 'var(--bg-card)', borderRadius: '0 0 12px 12px', border: '1px solid var(--glass-border)', borderTop: 'none' }}>
-            <div className="shimmer" style={{ width: '80%', height: 14, borderRadius: 4, marginBottom: 8 }} />
-            <div className="shimmer" style={{ width: '55%', height: 10, borderRadius: 4 }} />
-          </div>
+        <div key={i} className="glass" style={{ padding: 10 }}>
+          <div style={{ ...shimmerStyle, aspectRatio: '1/1', marginBottom: 15 }} />
+          <div style={{ ...shimmerStyle, width: '80%', height: 14, marginBottom: 8 }} />
+          <div style={{ ...shimmerStyle, width: '50%', height: 10 }} />
         </div>
       ))}
     </div>
