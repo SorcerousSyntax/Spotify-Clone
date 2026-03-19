@@ -18,20 +18,23 @@ const GALAXY_VERTEX_SHADER = `
     // Lerp between random initial position and target galaxy position
     vec3 mixedPos = mix(aRandomPos, aTargetPos, uMorphProgress);
     
-    // Continuous slow rotation on Y axis
-    float angle = uTime * 0.04;
+    // Enhanced motion graphic rotation: Faster and more dynamic
+    float angle = uTime * 0.12; // Increased speed from 0.04 to 0.12
     float s = sin(angle);
     float c = cos(angle);
     mat2 rot = mat2(c, -s, s, c);
     mixedPos.xz = rot * mixedPos.xz;
 
+    // Added a slight wobble/oscillation for 'motion graphic' feel
+    mixedPos.y += sin(uTime * 0.5 + vDist * 0.2) * 0.5;
+
     vec4 mvPosition = modelViewMatrix * vec4(mixedPos, 1.0);
     
     vDist = length(aTargetPos.xz);
     
-    // Size attenuation: core particles are slightly larger and brighter
-    float sizeFactor = (1.2 - smoothstep(0.0, 35.0, vDist) * 0.8);
-    gl_PointSize = aSize * sizeFactor * (500.0 / -mvPosition.z);
+    // Size attenuation: smaller particles for a cleaner look
+    float sizeFactor = (1.0 - smoothstep(0.0, 35.0, vDist) * 0.7);
+    gl_PointSize = (aSize * 0.6) * sizeFactor * (500.0 / -mvPosition.z);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;

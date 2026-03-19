@@ -33,16 +33,16 @@ export const SongRow = ({ song, index = 0, showIndex = false, onClick }) => {
         display: 'flex', alignItems: 'center', gap: 14,
         padding: '12px 16px',
         borderRadius: 14,
-        marginBottom: 6,
+        marginBottom: 8,
         cursor: 'pointer',
-        background: isActive ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.04)',
-        backdropFilter: 'blur(18px) saturate(160%)',
-        WebkitBackdropFilter: 'blur(18px) saturate(160%)',
-        border: isActive ? '1px solid rgba(139,92,246,0.38)' : '1px solid rgba(255,255,255,0.08)',
+        background: isActive ? 'rgba(139,92,246,0.18)' : 'rgba(0,0,0,0.45)', // Darker background
+        backdropFilter: 'blur(24px) saturate(180%)', // Increased blur
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        border: isActive ? '1px solid rgba(139,92,246,0.45)' : '1px solid rgba(255,255,255,0.12)',
         boxShadow: isActive
-          ? '0 8px 32px rgba(139,92,246,0.28), inset 0 1px 0 rgba(167,139,250,0.15)'
-          : '0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
-        transition: 'background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
+          ? '0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(167,139,250,0.15)'
+          : '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+        transition: 'all 0.3s ease',
       }}
     >
       {showIndex && (
@@ -118,7 +118,11 @@ export const CompactCard = ({ song, index = 0, size = 110, onClick }) => {
         flexShrink: 0,
         cursor: 'pointer',
         borderRadius: 14, overflow: 'hidden',
-        background: 'transparent',
+        background: 'rgba(0,0,0,0.35)', // Darker background
+        backdropFilter: 'blur(16px)', // Glassmorphism
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        transition: 'all 0.3s ease',
       }}
     >
       {/* Art */}

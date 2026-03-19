@@ -15,13 +15,18 @@ const AlbumCard = ({ song, index = 0, onClick }) => {
       onClick={() => onClick?.(song)}
       className="glass"
       style={{ 
-        padding: '8px', 
+        padding: '10px', 
         cursor: 'pointer', 
         width: '100%',
-        borderRadius: '14px',
+        borderRadius: '18px',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center'
+        alignItems: 'center',
+        background: 'rgba(0, 0, 0, 0.45)', // Darker background for visibility
+        backdropFilter: 'blur(24px)', // Stronger blur
+        WebkitBackdropFilter: 'blur(24px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
       }}
     >
       <div style={{ 
