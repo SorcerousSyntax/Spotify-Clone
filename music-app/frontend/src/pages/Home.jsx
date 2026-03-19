@@ -22,7 +22,6 @@ const normalizeSong = (song = {}) => ({
 
 const Home = () => {
   const navigate = useNavigate();
-  const [bannerName, setBannerName] = useState('COMMANDER');
   const [recentFromApi, setRecentFromApi] = useState([]);
   const [suggestedSong, setSuggestedSong] = useState(null);
 
@@ -32,20 +31,6 @@ const Home = () => {
   const currentSong = usePlayerStore((s) => s.currentSong);
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
   const setQueue = usePlayerStore((s) => s.setQueue);
-
-  useEffect(() => {
-    let mounted = true;
-    const loadBannerName = async () => {
-      if (!supabase) return;
-      const { data } = await supabase.auth.getUser();
-      const user = data?.user;
-      if (!user || !mounted) return;
-      const candidate = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')?.[0] || 'COMMANDER';
-      setBannerName(String(candidate).toUpperCase());
-    };
-    loadBannerName().catch(() => {});
-    return () => { mounted = false; };
-  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -126,14 +111,6 @@ const Home = () => {
     navigate('/now-playing');
   };
 
-  const handleStartListening = () => {
-    const candidate = forYouSongs[0] || recentSongs[0] || currentSong;
-    if (!candidate) { navigate('/search'); return; }
-    const sourceQueue = forYouSongs.length ? forYouSongs : recentSongs;
-    const idx = sourceQueue.findIndex((song) => song.id === candidate.id);
-    playSong(candidate, Math.max(0, idx), sourceQueue.length ? sourceQueue : [candidate]);
-  };
-
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -150,40 +127,29 @@ const Home = () => {
   };
 
   return (
-    <div style={{ padding: '40px 40px 100px 40px', maxWidth: 1400, margin: '0 auto' }}>
-      <section style={{ marginBottom: 100 }}>
+    <div style={{ padding: '40px 20px 100px 20px', maxWidth: 1200, margin: '0 auto', background: '#000000' }}>
+      <header style={{ marginBottom: 40, padding: '0 20px' }}>
         <motion.p 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="font-mono" 
-          style={{ fontSize: 12, color: '#ff2d78', marginBottom: 10 }}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 0.5, x: 0 }}
+          style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#ffffff', marginBottom: 4, letterSpacing: '0.02em' }}
         >
-          WELCOME BACK
+          Hi, Harsh 👋
         </motion.p>
         <motion.h1 
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
-          style={{ fontSize: 'clamp(48px, 10vw, 120px)', lineHeight: 0.9, marginBottom: 40 }}
+          style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 1.1, marginBottom: 20 }}
         >
-          {bannerName}<span style={{ color: '#ff2d78' }}>.</span>
+          FOR YOU<span style={{ color: '#ff2d78' }}>.</span>
         </motion.h1>
-        
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          style={{ display: 'flex', gap: 20 }}
-        >
-          <button className="btn-primary" onClick={handleStartListening}>START LISTENING</button>
-          <button className="btn-secondary" onClick={() => navigate('/search')}>EXPLORE</button>
-        </motion.div>
-      </section>
+      </header>
 
-      <section style={{ marginBottom: 100 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 30 }}>
-          <h2 style={{ fontSize: 32 }}>FOR YOU</h2>
-          <p className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>01 // RECOMMENDED</p>
+      <section style={{ marginBottom: 60, padding: '0 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em' }}>RECOMMENDED</h2>
+          <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>01 // CURATED</p>
         </div>
         
         <motion.div 
@@ -191,7 +157,11 @@ const Home = () => {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}
+          style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
+            gap: 20 
+          }}
         >
           {forYouSongs.map((song, index) => (
             <motion.div key={song.id} variants={item}>
@@ -206,10 +176,10 @@ const Home = () => {
         </motion.div>
       </section>
 
-      <section>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 30 }}>
-          <h2 style={{ fontSize: 32 }}>RECENTLY PLAYED</h2>
-          <p className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>02 // HISTORY</p>
+      <section style={{ padding: '0 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em' }}>RECENTLY PLAYED</h2>
+          <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>02 // HISTORY</p>
         </div>
         
         <motion.div 
@@ -217,7 +187,7 @@ const Home = () => {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}
         >
           {recentSongs.slice(0, 6).map((song, index) => (
             <motion.div key={song.id} variants={item}>
@@ -237,26 +207,57 @@ const Home = () => {
 };
 
 const AlbumCard = ({ title, subtitle, image, onClick }) => (
-  <div className="glass" onClick={onClick} style={{ padding: 10, cursor: 'pointer' }}>
-    <div style={{ aspectRatio: '1/1', overflow: 'hidden', marginBottom: 15, background: '#111' }}>
-      <img src={image} alt={title} style={{ width: '100%', height: '100%', objectCover: 'cover', transition: 'transform 0.5s ease' }} className="hover:scale-110" />
+  <div className="glass" onClick={onClick} style={{ 
+    padding: '8px', 
+    cursor: 'pointer',
+    width: '100%',
+    maxWidth: '156px',
+    borderRadius: '14px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    margin: '0 auto'
+  }}>
+    <div style={{ 
+      width: '140px', 
+      height: '140px', 
+      overflow: 'hidden', 
+      marginBottom: '12px', 
+      background: '#111',
+      borderRadius: '10px',
+      /* Claymorphism inner shadow for image container */
+      boxShadow: 'inset 4px 4px 8px rgba(0,0,0,0.6), inset -2px -2px 6px rgba(255,255,255,0.05)'
+    }}>
+      <img 
+        src={image} 
+        alt={title} 
+        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)' }} 
+        className="hover:scale-110" 
+      />
     </div>
-    <h3 style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</h3>
-    <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', marginTop: 5 }}>{subtitle}</p>
+    <div style={{ width: '100%', padding: '0 4px', textAlign: 'center' }}>
+      <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2, color: '#fff' }}>{title}</h3>
+      <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</p>
+    </div>
   </div>
 );
 
 const RecentRow = ({ title, subtitle, image, active, onClick }) => (
   <div className="glass" onClick={onClick} style={{ 
-    padding: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 20,
-    borderColor: active ? '#ff2d78' : 'rgba(255,45,120,0.2)'
+    padding: '12px', 
+    cursor: 'pointer', 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: 16,
+    borderRadius: '12px',
+    borderColor: active ? '#ff2d78' : 'rgba(255,45,120,0.15)'
   }}>
-    <img src={image} alt={title} style={{ width: 60, height: 60, objectCover: 'cover' }} />
+    <img src={image} alt={title} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: '6px' }} />
     <div style={{ flex: 1, overflow: 'hidden' }}>
-      <h3 style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</h3>
-      <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', marginTop: 5 }}>{subtitle}</p>
+      <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</h3>
+      <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{subtitle}</p>
     </div>
-    {active && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff2d78', boxShadow: '0 0 10px #ff2d78' }} />}
+    {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff2d78', boxShadow: '0 0 10px #ff2d78' }} />}
   </div>
 );
 

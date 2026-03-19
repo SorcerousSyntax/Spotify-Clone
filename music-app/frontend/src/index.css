@@ -50,7 +50,7 @@ html.lenis {
 }
 
 body {
-  background: var(--primary);
+  background: #000000 !important;
   color: var(--text-pure);
   font-family: var(--font-body);
   font-weight: 300;
@@ -62,6 +62,7 @@ body {
 #root {
   min-height: 100dvh;
   position: relative;
+  background: #000000 !important;
 }
 
 /* Typography */
@@ -78,19 +79,27 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase;
 }
 
-/* Glassmorphism */
+/* Glassmorphism & Claymorphism */
 .glass {
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 45, 120, 0.12);
   transition: all 0.4s var(--ease-main);
+  /* Enhanced Claymorphism shadows */
+  box-shadow: 
+    inset 2px 2px 4px rgba(255, 255, 255, 0.04),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.4),
+    0 15px 35px rgba(0, 0, 0, 0.5);
 }
 
 .glass:hover {
-  border-color: rgba(255, 45, 120, 0.5);
-  box-shadow: var(--glow-pink);
-  transform: translateY(-8px);
+  border-color: rgba(255, 45, 120, 0.4);
+  box-shadow: 
+    var(--glow-pink),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.08),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.6);
+  transform: translateY(-4px) scale(1.01);
 }
 
 /* Background Texture */
@@ -99,7 +108,7 @@ h1, h2, h3, h4, h5, h6 {
   inset: 0;
   z-index: 100;
   pointer-events: none;
-  opacity: 0.03;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
@@ -121,11 +130,17 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--accent-1);
   color: #000;
   font-family: var(--font-heading);
-  font-weight: 700;
-  padding: 12px 32px;
-  border-radius: 4px;
+  font-weight: 800;
+  padding: 12px 28px;
+  border-radius: 10px;
   transition: all 0.3s var(--ease-main);
-  box-shadow: 0 0 20px rgba(255, 45, 120, 0.2);
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 
+    inset 2px 2px 5px rgba(255, 255, 255, 0.4),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.2),
+    0 10px 25px rgba(255, 45, 120, 0.3);
 }
 
 .btn-primary:hover {
@@ -140,8 +155,9 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 700;
   padding: 12px 32px;
-  border-radius: 4px;
+  border-radius: 8px;
   transition: all 0.3s var(--ease-main);
+  backdrop-filter: blur(5px);
 }
 
 .btn-secondary:hover {
@@ -167,29 +183,6 @@ h1, h2, h3, h4, h5, h6 {
 ::selection {
   background: var(--accent-1);
   color: #000;
-}
-
-/* Page Transitions */
-.page-transition-enter {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.page-transition-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.5s, transform 0.5s;
-}
-
-.page-transition-exit {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.page-transition-exit-active {
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: opacity 0.5s, transform 0.5s;
 }
 
 canvas {
