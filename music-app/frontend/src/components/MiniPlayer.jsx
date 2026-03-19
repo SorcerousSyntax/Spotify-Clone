@@ -23,12 +23,12 @@ const MiniPlayer = () => {
       onClick={() => navigate('/now-playing')}
       style={{
         position: 'fixed',
-        bottom: 100,
+        bottom: 90,
         left: '50%',
         transform: 'translateX(-50%)',
-        width: 'min(500px, 90%)',
+        width: 'min(500px, 95%)',
         height: 70,
-        zIndex: 65,
+        zIndex: 80,
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',

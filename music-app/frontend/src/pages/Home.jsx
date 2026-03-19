@@ -127,7 +127,7 @@ const Home = () => {
   };
 
   return (
-    <div style={{ padding: '40px 20px 100px 20px', maxWidth: 1200, margin: '0 auto', background: '#000000' }}>
+    <div style={{ padding: '40px 20px 100px 20px', maxWidth: 1200, margin: '0 auto', background: 'transparent' }}>
       <header style={{ marginBottom: 40, padding: '0 20px' }}>
         <motion.p 
           initial={{ opacity: 0, x: -10 }}

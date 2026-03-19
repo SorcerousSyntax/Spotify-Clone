@@ -243,7 +243,7 @@ const AppInner = () => {
 
   return (
     <SmoothScroll>
-      <div style={{ position: 'relative', minHeight: '100dvh', background: '#000', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', minHeight: '100dvh', background: 'transparent', overflow: 'hidden' }}>
         <GlobalCanvas />
         <div className="noise" />
 
@@ -253,6 +253,7 @@ const AppInner = () => {
           position: 'relative', zIndex: 2,
           paddingTop: showShell && !isNowPlayingRoute ? 80 : 0,
           paddingBottom: showShell ? 100 : 0,
+          background: 'transparent'
         }}>
           <Suspense fallback={<PageSkeleton />}>
             <AnimatedRoutes session={session} authReady={authReady} />

@@ -17,7 +17,7 @@ const Galaxy = () => {
     
     const colorCore = new THREE.Color('#ffffff');
     const colorMid = new THREE.Color('#ff2d78');
-    const colorEdge = new THREE.Color('#e040fb');
+    const colorEdge = new THREE.Color('#ff71ce'); // Brighter pink for the edge
 
     for (let i = 0; i < particleCount; i++) {
       // Create spiral arms pattern
@@ -137,7 +137,7 @@ const GlobalCanvas = () => {
       left: 0,
       width: '100%',
       height: '100%',
-      zIndex: 0,
+      zIndex: -1,
       pointerEvents: 'none',
       background: '#000000'
     }}>
