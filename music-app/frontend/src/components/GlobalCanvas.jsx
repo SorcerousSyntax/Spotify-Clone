@@ -1,129 +1,153 @@
-import React, { useMemo, useRef, Suspense } from 'react';
+import React, { useMemo, useRef, Suspense, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Float } from '@react-three/drei';
 import * as THREE from 'three';
 import usePlayerStore from '../store/playerStore';
 
+const GALAXY_VERTEX_SHADER = `
+  uniform float uTime;
+  uniform float uMorphProgress;
+  attribute float aSize;
+  attribute vec3 aRandomPos;
+  attribute vec3 aTargetPos;
+  varying float vDist;
+
+  void main() {
+    // Lerp between random initial position and target galaxy position
+    vec3 mixedPos = mix(aRandomPos, aTargetPos, uMorphProgress);
+    
+    // Continuous slow rotation on Y axis
+    float angle = uTime * 0.08;
+    float s = sin(angle);
+    float c = cos(angle);
+    mat2 rot = mat2(c, -s, s, c);
+    mixedPos.xz = rot * mixedPos.xz;
+
+    vec4 mvPosition = modelViewMatrix * vec4(mixedPos, 1.0);
+    
+    vDist = length(aTargetPos.xz);
+    // Core particles slightly larger, edge particles tiny
+    float sizeFactor = (1.0 - smoothstep(0.0, 25.0, vDist) * 0.7);
+    gl_PointSize = aSize * sizeFactor * (400.0 / -mvPosition.z);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`;
+
+const GALAXY_FRAGMENT_SHADER = `
+  varying float vDist;
+  
+  void main() {
+    float dist = length(gl_PointCoord - vec2(0.5));
+    if (dist > 0.5) discard;
+
+    // Color gradient: White -> Light Pink -> Hot Pink (#ff2d78) -> Deep Magenta (#c084fc)
+    vec3 colorCore = vec3(1.0, 1.0, 1.0);
+    vec3 colorLightPink = vec3(1.0, 0.7, 0.85);
+    vec3 colorHotPink = vec3(1.0, 0.176, 0.471); // #ff2d78
+    vec3 colorMagenta = vec3(0.753, 0.518, 0.988); // #c084fc
+    
+    vec3 finalColor;
+    float d = clamp(vDist / 25.0, 0.0, 1.0);
+    
+    if (d < 0.15) {
+      finalColor = mix(colorCore, colorLightPink, d / 0.15);
+    } else if (d < 0.5) {
+      finalColor = mix(colorLightPink, colorHotPink, (d - 0.15) / 0.35);
+    } else {
+      finalColor = mix(colorHotPink, colorMagenta, (d - 0.5) / 0.5);
+    }
+
+    float strength = 1.0 - (dist * 2.0);
+    strength = pow(strength, 2.5);
+    
+    // Core glow intensity
+    float coreGlow = 1.0 - smoothstep(0.0, 5.0, vDist);
+    gl_FragColor = vec4(finalColor, (strength * 0.9) + (coreGlow * 0.2));
+  }
+`;
+
 const Galaxy = () => {
   const points = useRef();
-  const scrollProgress = usePlayerStore((state) => state.scrollProgress);
-
+  const material = useRef();
   const particleCount = 30000;
-  
-  const [positions, colors, randomValues] = useMemo(() => {
-    const pos = new Float32Array(particleCount * 3);
-    const cols = new Float32Array(particleCount * 3);
-    const randoms = new Float32Array(particleCount);
-    
-    const colorCore = new THREE.Color('#ffffff');
-    const colorMid = new THREE.Color('#ff2d78');
-    const colorEdge = new THREE.Color('#ff71ce'); // Brighter pink for the edge
+
+  const [randomPositions, targetPositions, sizes] = useMemo(() => {
+    const randomPos = new Float32Array(particleCount * 3);
+    const targetPos = new Float32Array(particleCount * 3);
+    const sizeArray = new Float32Array(particleCount);
 
     for (let i = 0; i < particleCount; i++) {
-      // Create spiral arms pattern
-      const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 25 + 2;
-      const armIndex = Math.floor(Math.random() * 3);
-      const armAngle = (armIndex / 3) * Math.PI * 2;
-      const spiralFactor = radius * 0.5;
-      
-      const x = Math.cos(angle + armAngle + spiralFactor) * radius + (Math.random() - 0.5) * 4;
-      const y = (Math.random() - 0.5) * 2;
-      const z = Math.sin(angle + armAngle + spiralFactor) * radius + (Math.random() - 0.5) * 4;
-      
-      pos[i * 3] = x;
-      pos[i * 3 + 1] = y;
-      pos[i * 3 + 2] = z;
+      // Random initial positions scattered everywhere
+      randomPos[i * 3] = (Math.random() - 0.5) * 150;
+      randomPos[i * 3 + 1] = (Math.random() - 0.5) * 150;
+      randomPos[i * 3 + 2] = (Math.random() - 0.5) * 150;
 
-      randoms[i] = Math.random();
-
-      const mixedColor = colorCore.clone();
-      const distPercent = radius / 25;
-      mixedColor.lerp(colorMid, Math.min(distPercent * 1.5, 0.8));
-      mixedColor.lerp(colorEdge, Math.max(0, distPercent - 0.5) * 2);
+      // Milky Way Disc positions
+      const radius = Math.random() * 25;
+      const spinAngle = radius * 0.6;
+      const branchAngle = ((i % 3) * 2 * Math.PI) / 3; // 3 spiral arms
       
-      cols[i * 3] = mixedColor.r;
-      cols[i * 3 + 1] = mixedColor.g;
-      cols[i * 3 + 2] = mixedColor.b;
+      const spread = (1.0 - radius / 25.0) * 0.5 + 0.1;
+      const randomX = (Math.random() - 0.5) * 2.0 * spread * radius;
+      const randomZ = (Math.random() - 0.5) * 2.0 * spread * radius;
+      const randomY = (Math.random() - 0.5) * 1.5 * (1.0 - radius / 25.0);
+
+      targetPos[i * 3] = Math.cos(spinAngle + branchAngle) * radius + randomX;
+      targetPos[i * 3 + 1] = randomY; 
+      targetPos[i * 3 + 2] = Math.sin(spinAngle + branchAngle) * radius + randomZ;
+
+      sizeArray[i] = Math.random() * 3 + 0.5;
     }
-    return [pos, cols, randoms];
-  }, []);
-
-  const initialPositions = useMemo(() => {
-    const pos = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 60;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 60;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 60;
-    }
-    return pos;
+    return [randomPos, targetPos, sizeArray];
   }, []);
 
   useFrame((state) => {
-    if (!points.current) return;
-    
-    const time = state.clock.getElapsedTime();
-    const p = points.current.geometry.attributes.position.array;
-    
-    // Always slightly visible, but fades in more as we scroll
-    const opacity = THREE.MathUtils.smoothstep(scrollProgress, -0.2, 0.4) * 0.8 + 0.1;
-    points.current.material.opacity = opacity;
-    
-    const assembleFactor = THREE.MathUtils.smoothstep(scrollProgress, 0.1, 0.8);
-    
-    for (let i = 0; i < particleCount; i++) {
-      const i3 = i * 3;
-      
-      // Target position (Galaxy Disc)
-      const targetX = positions[i3];
-      const targetY = positions[i3 + 1];
-      const targetZ = positions[i3 + 2];
-      
-      // Starting position (Scattered)
-      const startX = initialPositions[i3];
-      const startY = initialPositions[i3 + 1];
-      const startZ = initialPositions[i3 + 2];
-      
-      // Transition with some noise/turbulence
-      const noise = Math.sin(time * 0.5 + randomValues[i] * 10) * 0.15;
-      
-      p[i3] = THREE.MathUtils.lerp(startX, targetX, assembleFactor) + noise;
-      p[i3 + 1] = THREE.MathUtils.lerp(startY, targetY, assembleFactor) + noise;
-      p[i3 + 2] = THREE.MathUtils.lerp(startZ, targetZ, assembleFactor) + noise;
+    const t = state.clock.getElapsedTime();
+    if (material.current) {
+      material.current.uniforms.uTime.value = t;
+      // Morph over 2 seconds
+      material.current.uniforms.uMorphProgress.value = Math.min(t / 2.0, 1.0);
     }
-    
-    points.current.geometry.attributes.position.needsUpdate = true;
-    
-    // Very slow rotation
-    points.current.rotation.y += 0.0008;
-    // Tilted disc
-    points.current.rotation.x = THREE.MathUtils.lerp(Math.PI * 0.05, Math.PI * 0.12, assembleFactor);
-    points.current.rotation.z = Math.sin(time * 0.1) * 0.02;
   });
 
   return (
-    <points ref={points}>
+    <points ref={points} rotation={[Math.PI * (15/180), 0, 0]}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
           count={particleCount}
-          array={initialPositions}
+          array={randomPositions}
           itemSize={3}
         />
         <bufferAttribute
-          attach="attributes-color"
+          attach="attributes-aRandomPos"
           count={particleCount}
-          array={colors}
+          array={randomPositions}
           itemSize={3}
         />
+        <bufferAttribute
+          attach="attributes-aTargetPos"
+          count={particleCount}
+          array={targetPositions}
+          itemSize={3}
+        />
+        <bufferAttribute
+          attach="attributes-aSize"
+          count={particleCount}
+          array={sizes}
+          itemSize={1}
+        />
       </bufferGeometry>
-      <pointsMaterial
-        size={0.07}
-        vertexColors
-        transparent
+      <shaderMaterial
+        ref={material}
         depthWrite={false}
+        transparent={true}
         blending={THREE.AdditiveBlending}
-        opacity={0}
+        vertexShader={GALAXY_VERTEX_SHADER}
+        fragmentShader={GALAXY_FRAGMENT_SHADER}
+        uniforms={{
+          uTime: { value: 0 },
+          uMorphProgress: { value: 0 }
+        }}
       />
     </points>
   );
@@ -135,14 +159,14 @@ const GlobalCanvas = () => {
       position: 'fixed',
       top: 0,
       left: 0,
-      width: '100%',
-      height: '100%',
+      width: '100vw',
+      height: '100vh',
       zIndex: 0,
       pointerEvents: 'none',
     }}>
       <Canvas
         gl={{ alpha: true, antialias: true }}
-        camera={{ position: [0, 0, 35], fov: 45 }}
+        camera={{ position: [0, 0, 40], fov: 45 }}
         dpr={[1, 2]}
       >
         <Suspense fallback={null}>

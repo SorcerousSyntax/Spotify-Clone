@@ -150,7 +150,7 @@ const Home = () => {
   };
 
   return (
-    <div style={{ padding: '40px 20px 100px 20px', maxWidth: 1200, margin: '0 auto', background: 'transparent' }}>
+    <div style={{ padding: '40px 20px 100px 20px', maxWidth: 800, margin: '0 auto', background: 'transparent' }}>
       <header style={{ marginBottom: 40, padding: '0 20px' }}>
         <motion.p 
           initial={{ opacity: 0, x: -10 }}
@@ -163,36 +163,25 @@ const Home = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
-          style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 1.1, marginBottom: 20 }}
+          style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', lineHeight: 1.1, marginBottom: 20 }}
         >
-          FOR YOU<span style={{ color: '#ff2d78' }}>.</span>
+          RAABTA<span style={{ color: '#ff2d78' }}>.</span>
         </motion.h1>
       </header>
 
       {/* RECENTLY PLAYED SECTION */}
       <section style={{ marginBottom: 40, padding: '0 20px' }}>
         <h2 className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 20, letterSpacing: '0.1em' }}>RECENTLY PLAYED</h2>
-        <div style={{ 
-          display: 'flex', 
-          overflowX: 'auto', 
-          gap: 16, 
-          paddingBottom: 10,
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }} className="hide-scrollbar">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {recentlyPlayedTop5.map((song, index) => (
-            <motion.div 
+            <SongRow 
               key={`recent-${song.id}`}
-              whileHover={{ y: -5 }}
-              onClick={() => playSong(song, index, recentlyPlayedTop5)}
-              style={{ flexShrink: 0, width: 120, cursor: 'pointer' }}
-            >
-              <div style={{ width: 120, height: 120, borderRadius: 12, overflow: 'hidden', marginBottom: 8, background: 'rgba(255,255,255,0.05)', boxShadow: '0 8px 16px rgba(0,0,0,0.3)' }}>
-                <img src={song.album_art_url} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <h3 style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{decodeSongTitle(song.title)}</h3>
-              <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.artist}</p>
-            </motion.div>
+              song={song}
+              index={index}
+              queue={recentlyPlayedTop5}
+              playSong={playSong}
+              active={currentSong?.id === song.id}
+            />
           ))}
         </div>
       </section>
@@ -200,144 +189,68 @@ const Home = () => {
       {/* MOST PLAYED SECTION */}
       <section style={{ marginBottom: 60, padding: '0 20px' }}>
         <h2 className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 20, letterSpacing: '0.1em' }}>MOST PLAYED</h2>
-        <div style={{ 
-          display: 'flex', 
-          overflowX: 'auto', 
-          gap: 16, 
-          paddingBottom: 10,
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }} className="hide-scrollbar">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {mostPlayedSongs.map((song, index) => (
-            <motion.div 
+            <SongRow 
               key={`most-${song.id}`}
-              whileHover={{ y: -5 }}
-              onClick={() => playSong(song, index, mostPlayedSongs)}
-              style={{ flexShrink: 0, width: 120, cursor: 'pointer' }}
-            >
-              <div style={{ width: 120, height: 120, borderRadius: 12, overflow: 'hidden', marginBottom: 8, background: 'rgba(255,255,255,0.05)', boxShadow: '0 8px 16px rgba(0,0,0,0.3)' }}>
-                <img src={song.album_art_url} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <h3 style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{decodeSongTitle(song.title)}</h3>
-              <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.artist}</p>
-            </motion.div>
+              song={song}
+              index={index}
+              queue={mostPlayedSongs}
+              playSong={playSong}
+              active={currentSong?.id === song.id}
+            />
           ))}
         </div>
-      </section>
-
-      <section style={{ marginBottom: 60, padding: '0 20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em' }}>RECOMMENDED</h2>
-          <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>01 // CURATED</p>
-        </div>
-        
-        <motion.div 
-          variants={container}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
-            gap: 20 
-          }}
-        >
-          {forYouSongs.map((song, index) => (
-            <motion.div key={song.id} variants={item}>
-              <AlbumCard
-                title={decodeSongTitle(song.title)}
-                subtitle={song.artist}
-                image={song.album_art_url}
-                onClick={() => playSong(song, index, forYouSongs)}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
-
-      <section style={{ padding: '0 20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em' }}>RECENTLY PLAYED</h2>
-          <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>02 // HISTORY</p>
-        </div>
-        
-        <motion.div 
-          variants={container}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}
-        >
-          {recentSongs.slice(0, 6).map((song, index) => (
-            <motion.div key={song.id} variants={item}>
-              <RecentRow
-                title={decodeSongTitle(song.title)}
-                subtitle={song.artist}
-                image={song.album_art_url}
-                active={currentSong?.id === song.id}
-                onClick={() => playSong(song, index, recentSongs)}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
       </section>
     </div>
   );
 };
 
-const AlbumCard = ({ title, subtitle, image, onClick }) => (
-  <div className="glass" onClick={onClick} style={{ 
-    padding: '8px', 
-    cursor: 'pointer',
-    width: '100%',
-    maxWidth: '156px',
-    borderRadius: '14px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    margin: '0 auto'
-  }}>
-    <div style={{ 
-      width: '140px', 
-      height: '140px', 
-      overflow: 'hidden', 
-      marginBottom: '12px', 
-      background: '#111',
-      borderRadius: '10px',
-      /* Claymorphism inner shadow for image container */
-      boxShadow: 'inset 4px 4px 8px rgba(0,0,0,0.6), inset -2px -2px 6px rgba(255,255,255,0.05)'
-    }}>
-      <img 
-        src={image} 
-        alt={title} 
-        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)' }} 
-        className="hover:scale-110" 
-      />
-    </div>
-    <div style={{ width: '100%', padding: '0 4px', textAlign: 'center' }}>
-      <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2, color: '#fff' }}>{title}</h3>
-      <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</p>
-    </div>
-  </div>
-);
+const SongRow = ({ song, index, queue, playSong, active }) => {
+  const isOffline = usePlayerStore(s => s.isOffline(song.id));
+  const toggleOffline = usePlayerStore(s => s.toggleOffline);
 
-const RecentRow = ({ title, subtitle, image, active, onClick }) => (
-  <div className="glass" onClick={onClick} style={{ 
-    padding: '12px', 
-    cursor: 'pointer', 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: 16,
-    borderRadius: '12px',
-    borderColor: active ? '#ff2d78' : 'rgba(255,45,120,0.15)'
-  }}>
-    <img src={image} alt={title} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: '6px' }} />
-    <div style={{ flex: 1, overflow: 'hidden' }}>
-      <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</h3>
-      <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{subtitle}</p>
-    </div>
-    {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff2d78', boxShadow: '0 0 10px #ff2d78' }} />}
-  </div>
-);
+  return (
+    <motion.div 
+      whileHover={{ x: 4, backgroundColor: 'rgba(255, 45, 120, 0.05)' }}
+      onClick={() => playSong(song, index, queue)}
+      className="glass"
+      style={{ 
+        padding: '8px 16px', 
+        cursor: 'pointer', 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 16,
+        height: 64,
+        background: 'rgba(255,255,255,0.03)',
+        borderColor: active ? 'rgba(255,45,120,0.4)' : 'rgba(255,255,255,0.05)',
+        borderRadius: '12px'
+      }}
+    >
+      <div style={{ width: 48, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+        <img src={song.album_art_url} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: active ? '#ff2d78' : '#fff' }}>
+          {decodeSongTitle(song.title)}
+        </h3>
+        <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {song.artist}
+        </p>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button 
+          onClick={(e) => { e.stopPropagation(); toggleOffline(song); }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, opacity: isOffline ? 1 : 0.3 }}
+        >
+          {isOffline ? '✅' : '📥'}
+        </button>
+        <div className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>
+          {song.duration ? `${Math.floor(song.duration / 60)}:${String(Math.floor(song.duration % 60)).padStart(2, '0')}` : '--:--'}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 export default Home;

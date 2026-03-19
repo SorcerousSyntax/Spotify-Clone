@@ -23,19 +23,23 @@ const MiniPlayer = () => {
       onClick={() => navigate('/now-playing')}
       style={{
         position: 'fixed',
-        bottom: 90,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: 'min(500px, 95%)',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
         height: 70,
         zIndex: 80,
         cursor: 'pointer',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        padding: '0 20px',
-        overflow: 'hidden'
+        justifyContent: 'center',
+        overflow: 'hidden',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        background: 'rgba(0,0,0,0.8)',
+        borderTop: '1px solid rgba(255,45,120,0.2)'
       }}
-      className="glass"
     >
       {/* Progress Bar */}
       <div style={{
@@ -48,16 +52,22 @@ const MiniPlayer = () => {
         />
       </div>
 
-      <div className="flex items-center w-full justify-center md:justify-between overflow-hidden">
-        <div className="flex items-center flex-1 min-w-0 md:flex-initial">
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        gap: 24, 
+        width: '100%',
+        padding: '0 20px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
           <img
             src={currentSong.album_art_url}
             alt={currentSong.title}
-            className="w-10 h-10 object-cover rounded-md flex-shrink-0"
-            style={{ width: 40, height: 40 }}
+            style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }}
           />
-          <div className="ml-4 overflow-hidden text-center md:text-left">
-            <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ overflow: 'hidden', textAlign: 'left' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>
               {currentSong.title}
             </h3>
             <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
@@ -66,17 +76,20 @@ const MiniPlayer = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 ml-4">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexShrink: 0, justifyContent: 'center' }}>
           <button
             onClick={(e) => {
               e.stopPropagation();
               togglePlay();
             }}
-            className="w-10 h-10 flex items-center justify-center text-white"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 24 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             {isPlaying ? '⏸' : '▶'}
           </button>
+        </div>
+
+        <div style={{ flex: 1, display: 'none', md: { display: 'block' } }}>
+          {/* Spacer to help centering on larger screens if needed */}
         </div>
       </div>
     </motion.div>

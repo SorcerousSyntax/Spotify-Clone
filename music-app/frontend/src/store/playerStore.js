@@ -198,6 +198,7 @@ const readOfflineLibrarySnapshot = () => {
       recentlyPlayed: Array.isArray(parsed?.recentlyPlayed) ? parsed.recentlyPlayed : [],
       songsById: parsed?.songsById && typeof parsed.songsById === 'object' ? parsed.songsById : {},
       playlists: Array.isArray(parsed?.playlists) ? parsed.playlists : [],
+      offlineSongIds: Array.isArray(parsed?.offlineSongIds) ? parsed.offlineSongIds : [],
     };
   } catch (error) {
     console.warn('Offline snapshot read failed:', error?.message || error);
@@ -205,7 +206,7 @@ const readOfflineLibrarySnapshot = () => {
   }
 };
 
-const persistOfflineLibrarySnapshot = ({ likedSongIds, recentlyPlayed, songsById, playlists }) => {
+const persistOfflineLibrarySnapshot = ({ likedSongIds, recentlyPlayed, songsById, playlists, offlineSongIds }) => {
   if (typeof window === 'undefined') return;
 
   try {
@@ -216,6 +217,7 @@ const persistOfflineLibrarySnapshot = ({ likedSongIds, recentlyPlayed, songsById
         recentlyPlayed: Array.isArray(recentlyPlayed) ? recentlyPlayed : [],
         songsById: songsById || {},
         playlists: Array.isArray(playlists) ? playlists : [],
+        offlineSongIds: Array.isArray(offlineSongIds) ? [...offlineSongIds] : [],
       })
     );
   } catch (error) {
@@ -267,6 +269,9 @@ const usePlayerStore = create((set, get) => ({
   // Liked songs
   likedSongIds: new Set(offlineSnapshot?.likedSongIds || []),
 
+  // Offline songs
+  offlineSongIds: new Set(offlineSnapshot?.offlineSongIds || []),
+
   // Recently played
   recentlyPlayed: (offlineSnapshot?.recentlyPlayed || []).map(normalizeSong),
 
@@ -310,6 +315,7 @@ const usePlayerStore = create((set, get) => ({
       recentlyPlayed: recent,
       songsById: nextSongsById,
       playlists: state.playlists,
+      offlineSongIds: state.offlineSongIds,
     });
 
     set({
@@ -339,10 +345,40 @@ const usePlayerStore = create((set, get) => ({
       recentlyPlayed: state.recentlyPlayed,
       songsById: nextSongsById,
       playlists: state.playlists,
+      offlineSongIds: state.offlineSongIds,
     });
 
     return { songsById: nextSongsById };
   }),
+
+  toggleOffline: async (songInput) => {
+    const song = normalizeSong(songInput);
+    if (!song?.id) return;
+
+    const state = get();
+    const newOffline = new Set(state.offlineSongIds);
+
+    if (newOffline.has(song.id)) {
+      newOffline.delete(song.id);
+    } else {
+      try {
+        await cacheSongForOffline(song);
+        newOffline.add(song.id);
+      } catch (error) {
+        console.error('Failed to cache song:', error);
+      }
+    }
+
+    persistOfflineLibrarySnapshot({
+      likedSongIds: state.likedSongIds,
+      recentlyPlayed: state.recentlyPlayed,
+      songsById: state.songsById,
+      playlists: state.playlists,
+      offlineSongIds: newOffline,
+    });
+
+    set({ offlineSongIds: newOffline });
+  },
 
   hydrateFromSupabase: async () => {
     if (!supabase) {
@@ -450,6 +486,7 @@ const usePlayerStore = create((set, get) => ({
           ...state.songsById,
           ...toSongMap([...likedSongs, ...historySongs, ...playlistSongs]),
         },
+        offlineSongIds: state.offlineSongIds,
       };
 
       persistOfflineLibrarySnapshot(nextState);
@@ -613,6 +650,7 @@ const usePlayerStore = create((set, get) => ({
       recentlyPlayed: state.recentlyPlayed,
       songsById: nextSongsById,
       playlists: nextPlaylists,
+      offlineSongIds: state.offlineSongIds,
     });
 
     return {
@@ -656,6 +694,7 @@ const usePlayerStore = create((set, get) => ({
       recentlyPlayed: state.recentlyPlayed,
       songsById: state.songsById,
       playlists: nextPlaylists,
+      offlineSongIds: state.offlineSongIds,
     });
 
     return { playlists: nextPlaylists };
@@ -697,6 +736,7 @@ const usePlayerStore = create((set, get) => ({
       recentlyPlayed: state.recentlyPlayed,
       songsById: state.songsById,
       playlists: updated,
+      offlineSongIds: state.offlineSongIds,
     });
 
     return { playlists: updated };
@@ -723,6 +763,7 @@ const usePlayerStore = create((set, get) => ({
       recentlyPlayed: state.recentlyPlayed,
       songsById: state.songsById,
       playlists: nextPlaylists,
+      offlineSongIds: state.offlineSongIds,
     });
 
     return { playlists: nextPlaylists };
@@ -774,6 +815,7 @@ const usePlayerStore = create((set, get) => ({
       recentlyPlayed: state.recentlyPlayed,
       songsById: nextSongsById,
       playlists: nextPlaylists,
+      offlineSongIds: state.offlineSongIds,
     });
 
     cacheSongForOffline(normalized);
@@ -821,12 +863,14 @@ const usePlayerStore = create((set, get) => ({
       recentlyPlayed: state.recentlyPlayed,
       songsById: state.songsById,
       playlists: nextPlaylists,
+      offlineSongIds: state.offlineSongIds,
     });
 
     return { playlists: nextPlaylists };
   }),
 
   isLiked: (songId) => get().likedSongIds.has(songId),
+  isOffline: (songId) => get().offlineSongIds.has(songId),
 }));
 
 export default usePlayerStore;

@@ -252,7 +252,7 @@ const AppInner = () => {
         <main style={{
           position: 'relative', zIndex: 2,
           paddingTop: showShell && !isNowPlayingRoute ? 80 : 0,
-          paddingBottom: showShell ? 100 : 0,
+          paddingBottom: showShell ? 150 : 0,
           background: 'transparent'
         }}>
           <Suspense fallback={<PageSkeleton />}>

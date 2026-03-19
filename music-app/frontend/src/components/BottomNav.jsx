@@ -21,10 +21,10 @@ const BottomNav = () => {
   return (
     <motion.nav
       initial={{ y: 100 }}
-      animate={{ y: 0 }}
+      animate={{ y: 70 ? 0 : 0 }}
       transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
       style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 70,
+        position: 'fixed', bottom: 70, left: 0, right: 0, zIndex: 70,
         height: 80,
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',

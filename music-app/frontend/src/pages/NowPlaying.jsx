@@ -35,6 +35,8 @@ const NowPlaying = () => {
   const cycleRepeat = usePlayerStore((s) => s.cycleRepeat);
   const toggleLike = usePlayerStore((s) => s.toggleLike);
   const likedSongIds = usePlayerStore((s) => s.likedSongIds);
+  const isOffline = usePlayerStore((s) => s.isOffline(currentSong?.id));
+  const toggleOffline = usePlayerStore((s) => s.toggleOffline);
   const toggleLyricsPanel = usePlayerStore((s) => s.toggleLyricsPanel);
   const playlists = usePlayerStore((s) => s.playlists);
   const addSongToPlaylist = usePlayerStore((s) => s.addSongToPlaylist);
@@ -136,14 +138,24 @@ const NowPlaying = () => {
           <div className="font-mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.5)' }}>
             NOW PLAYING
           </div>
-          <motion.button 
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => toggleLike(currentSong.id, currentSong)}
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 44, height: 44, color: likedSongIds.has(currentSong.id) ? '#ff2d78' : '#fff', fontSize: 20, cursor: 'pointer', display: 'grid', placeItems: 'center' }}
-          >
-            {likedSongIds.has(currentSong.id) ? '♥' : '♡'}
-          </motion.button>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <motion.button 
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => toggleOffline(currentSong)}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 44, height: 44, color: isOffline ? '#ff2d78' : '#fff', fontSize: 20, cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+            >
+              {isOffline ? '✅' : '📥'}
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => toggleLike(currentSong.id, currentSong)}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: 44, height: 44, color: likedSongIds.has(currentSong.id) ? '#ff2d78' : '#fff', fontSize: 20, cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+            >
+              {likedSongIds.has(currentSong.id) ? '♥' : '♡'}
+            </motion.button>
+          </div>
         </header>
 
         {/* Main Content */}
