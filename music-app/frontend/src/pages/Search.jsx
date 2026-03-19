@@ -106,7 +106,7 @@ const Search = () => {
   };
 
   return (
-    <div style={{ padding: '40px 40px 100px 40px', maxWidth: 1000, margin: '0 auto' }}>
+    <div style={{ padding: '40px 40px 100px 40px', maxWidth: 1000, margin: '0 auto', background: 'transparent' }}>
       <header style={{ marginBottom: 60 }}>
         <h1 style={{ fontSize: 64, marginBottom: 20 }}>SEARCH</h1>
         <div 

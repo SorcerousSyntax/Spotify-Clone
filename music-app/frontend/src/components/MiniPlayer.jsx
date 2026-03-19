@@ -32,7 +32,7 @@ const MiniPlayer = () => {
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
-        padding: '0 10px',
+        padding: '0 20px',
         overflow: 'hidden'
       }}
       className="glass"
@@ -48,35 +48,36 @@ const MiniPlayer = () => {
         />
       </div>
 
-      <img
-        src={currentSong.album_art_url}
-        alt={currentSong.title}
-        style={{ width: 50, height: 50, objectFit: 'cover' }}
-      />
+      <div className="flex items-center w-full justify-center md:justify-between overflow-hidden">
+        <div className="flex items-center flex-1 min-w-0 md:flex-initial">
+          <img
+            src={currentSong.album_art_url}
+            alt={currentSong.title}
+            className="w-10 h-10 object-cover rounded-md flex-shrink-0"
+            style={{ width: 40, height: 40 }}
+          />
+          <div className="ml-4 overflow-hidden text-center md:text-left">
+            <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {currentSong.title}
+            </h3>
+            <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+              {currentSong.artist}
+            </p>
+          </div>
+        </div>
 
-      <div style={{ flex: 1, padding: '0 15px', overflow: 'hidden' }}>
-        <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {currentSong.title}
-        </h3>
-        <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>
-          {currentSong.artist}
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', gap: 10, paddingRight: 10 }}>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            togglePlay();
-          }}
-          style={{
-            background: 'none', border: 'none', color: '#fff', fontSize: 24,
-            width: 40, height: 40, cursor: 'pointer', display: 'flex',
-            alignItems: 'center', justifyContent: 'center'
-          }}
-        >
-          {isPlaying ? '⏸' : '▶'}
-        </button>
+        <div className="flex items-center gap-4 ml-4">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePlay();
+            }}
+            className="w-10 h-10 flex items-center justify-center text-white"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 24 }}
+          >
+            {isPlaying ? '⏸' : '▶'}
+          </button>
+        </div>
       </div>
     </motion.div>
   );

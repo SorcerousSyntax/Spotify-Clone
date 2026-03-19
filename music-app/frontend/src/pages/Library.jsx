@@ -40,7 +40,7 @@ const Library = () => {
   };
 
   return (
-    <div style={{ padding: '40px 40px 100px 40px', maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ padding: '40px 40px 100px 40px', maxWidth: 1200, margin: '0 auto', background: 'transparent' }}>
       <header style={{ marginBottom: 60, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h1 style={{ fontSize: 64 }}>LIBRARY</h1>
@@ -95,16 +95,21 @@ const Library = () => {
                 ← BACK TO LIBRARY
               </button>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: 15 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {playlistSongs.map((song, i) => (
                   <div key={song.id} className="glass" onClick={() => handlePlay(song, i, playlistSongs)} style={{
-                    padding: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 20
+                    padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, height: 56, borderRadius: '8px'
                   }}>
-                    <img src={song.album_art_url} alt={song.title} style={{ width: 50, height: 50, objectFit: 'cover' }} />
+                    <img src={song.album_art_url} alt={song.title} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: '4px' }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <h3 style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{decodeSongTitle(song.title)}</h3>
-                      <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>{song.artist}</p>
+                      <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{decodeSongTitle(song.title)}</h3>
+                      <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{song.artist}</p>
                     </div>
+                    {song.duration && (
+                      <span className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>
+                        {Math.floor(song.duration / 60)}:{String(Math.floor(song.duration % 60)).padStart(2, '0')}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>

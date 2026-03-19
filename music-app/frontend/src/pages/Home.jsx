@@ -99,6 +99,29 @@ const Home = () => {
     return result;
   }, [suggestedSong, recentSongs]);
 
+  const mostPlayedSongs = useMemo(() => {
+    // Basic frequency counting from the recentFromApi history
+    const counts = {};
+    for (const song of recentFromApi) {
+      if (!song.id) continue;
+      counts[song.id] = (counts[song.id] || 0) + 1;
+    }
+    const merged = [...recentFromApi, ...recentFromStore.map(normalizeSong)].filter(isPlayableSong);
+    const unique = [];
+    const seen = new Set();
+    for (const song of merged) {
+      if (!song.id || seen.has(song.id)) continue;
+      seen.add(song.id);
+      unique.push(song);
+    }
+    // Sort by count, then take top 5
+    return unique
+      .sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0))
+      .slice(0, 5);
+  }, [recentFromApi, recentFromStore]);
+
+  const recentlyPlayedTop5 = useMemo(() => recentSongs.slice(0, 5), [recentSongs]);
+
   const playSong = (song, index, queue) => {
     const normalized = normalizeSong(song);
     if (!isPlayableSong(normalized)) {
@@ -145,6 +168,62 @@ const Home = () => {
           FOR YOU<span style={{ color: '#ff2d78' }}>.</span>
         </motion.h1>
       </header>
+
+      {/* RECENTLY PLAYED SECTION */}
+      <section style={{ marginBottom: 40, padding: '0 20px' }}>
+        <h2 className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 20, letterSpacing: '0.1em' }}>RECENTLY PLAYED</h2>
+        <div style={{ 
+          display: 'flex', 
+          overflowX: 'auto', 
+          gap: 16, 
+          paddingBottom: 10,
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }} className="hide-scrollbar">
+          {recentlyPlayedTop5.map((song, index) => (
+            <motion.div 
+              key={`recent-${song.id}`}
+              whileHover={{ y: -5 }}
+              onClick={() => playSong(song, index, recentlyPlayedTop5)}
+              style={{ flexShrink: 0, width: 120, cursor: 'pointer' }}
+            >
+              <div style={{ width: 120, height: 120, borderRadius: 12, overflow: 'hidden', marginBottom: 8, background: 'rgba(255,255,255,0.05)', boxShadow: '0 8px 16px rgba(0,0,0,0.3)' }}>
+                <img src={song.album_art_url} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <h3 style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{decodeSongTitle(song.title)}</h3>
+              <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.artist}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* MOST PLAYED SECTION */}
+      <section style={{ marginBottom: 60, padding: '0 20px' }}>
+        <h2 className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 20, letterSpacing: '0.1em' }}>MOST PLAYED</h2>
+        <div style={{ 
+          display: 'flex', 
+          overflowX: 'auto', 
+          gap: 16, 
+          paddingBottom: 10,
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }} className="hide-scrollbar">
+          {mostPlayedSongs.map((song, index) => (
+            <motion.div 
+              key={`most-${song.id}`}
+              whileHover={{ y: -5 }}
+              onClick={() => playSong(song, index, mostPlayedSongs)}
+              style={{ flexShrink: 0, width: 120, cursor: 'pointer' }}
+            >
+              <div style={{ width: 120, height: 120, borderRadius: 12, overflow: 'hidden', marginBottom: 8, background: 'rgba(255,255,255,0.05)', boxShadow: '0 8px 16px rgba(0,0,0,0.3)' }}>
+                <img src={song.album_art_url} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <h3 style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{decodeSongTitle(song.title)}</h3>
+              <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.artist}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
       <section style={{ marginBottom: 60, padding: '0 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>

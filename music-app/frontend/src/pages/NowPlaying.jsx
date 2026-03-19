@@ -104,7 +104,7 @@ const NowPlaying = () => {
   const progressPercent = duration > 0 ? (currentProgress / duration) * 100 : 0;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: '#000000', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.7)', overflow: 'hidden' }}>
       {/* Immersive Background */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
         <FloatOrb size={400} x={-10} y={-10} color={`rgba(${dr},${dg},${db}, 0.15)`} duration={10} delay={0} />
