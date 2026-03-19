@@ -33,22 +33,29 @@ const SearchResultRow = ({ song, index, onClick }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.05, ease: [0.76, 0, 0.24, 1] }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.03, ease: [0.76, 0, 0.24, 1] }}
       onClick={() => onClick(song, index)}
-      className="glass"
       style={{
         display: 'flex', alignItems: 'center', gap: 20,
-        padding: 15, cursor: 'pointer', marginBottom: 10,
+        padding: 12, cursor: 'pointer', marginBottom: 2,
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.05)',
+        transition: 'all 0.3s ease',
+        position: 'relative',
+        overflow: 'hidden'
       }}
+      whileHover={{ background: 'rgba(255,45,120,0.1)', borderColor: '#ff2d78', x: 10 }}
     >
-      <img src={albumArt} alt={title} style={{ width: 50, height: 50, objectFit: 'cover' }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</h3>
-        <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>{artist}</p>
+      <div style={{ width: 50, height: 50, flexShrink: 0, background: '#111' }}>
+        <img src={albumArt} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
-      <span className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{formatDuration(song.duration)}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h3 style={{ fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 2 }}>{title.toUpperCase()}</h3>
+        <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>{artist.toUpperCase()}</p>
+      </div>
+      <span className="font-mono" style={{ fontSize: 10, color: '#ff2d78', fontWeight: 700 }}>{formatDuration(song.duration)}</span>
     </motion.div>
   );
 };
@@ -106,34 +113,42 @@ const Search = () => {
   };
 
   return (
-    <div style={{ padding: '40px 40px 100px 40px', maxWidth: 1000, margin: '0 auto', background: 'transparent' }}>
-      <header style={{ marginBottom: 60 }}>
-        <h1 style={{ fontSize: 64, marginBottom: 20 }}>SEARCH</h1>
+    <div style={{ padding: '40px 5vw 120px 5vw', maxWidth: 1400, margin: '0 auto', background: '#000', minHeight: '100vh' }}>
+      <header style={{ marginBottom: 80 }}>
+        <motion.h1 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          style={{ fontSize: 'clamp(4rem, 12vw, 10rem)', lineHeight: 0.8, marginBottom: 40, letterSpacing: '-0.05em' }}
+        >
+          SEARCH<span style={{ color: '#ff2d78' }}>.</span>
+        </motion.h1>
         <div 
-          className="glass"
           style={{ 
-            display: 'flex', alignItems: 'center', padding: '0 25px', height: 70,
-            borderColor: focused ? '#ff2d78' : 'rgba(255,45,120,0.2)'
+            display: 'flex', alignItems: 'center', padding: '0 30px', height: 80,
+            background: 'rgba(255,255,255,0.03)',
+            border: `1px solid ${focused ? '#ff2d78' : 'rgba(255,255,255,0.1)'}`,
+            transition: 'all 0.4s ease',
+            borderRadius: 0
           }}
         >
-          <span style={{ fontSize: 24, marginRight: 20, color: '#ff2d78' }}>⚲</span>
           <input
             type="text"
             value={query}
             onChange={handleChange}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            placeholder="TYPE ANYTHING..."
+            placeholder="ENTER ARTIST, TRACK OR ALBUM..."
             style={{ 
               flex: 1, background: 'transparent', border: 'none', outline: 'none',
-              color: '#fff', fontSize: 18, fontFamily: "'Share Tech Mono', monospace"
+              color: '#fff', fontSize: 20, fontFamily: "'Space Grotesk', sans-serif",
+              fontWeight: 700, letterSpacing: '-0.02em'
             }}
           />
           {loading && (
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              style={{ width: 20, height: 20, border: '2px solid #ff2d78', borderTopColor: 'transparent', borderRadius: '50%' }}
+              transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
+              style={{ width: 24, height: 24, border: '2px solid #ff2d78', borderTopColor: 'transparent' }}
             />
           )}
         </div>
@@ -148,7 +163,7 @@ const Search = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: 15 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 10 }}>
                 {results.map((song, i) => (
                   <SearchResultRow key={song.id} song={song} index={i} onClick={handlePlay} />
                 ))}
@@ -159,19 +174,16 @@ const Search = () => {
               key="no-results"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              style={{ textAlign: 'center', padding: 100 }}
+              style={{ textAlign: 'left', padding: '20px 0' }}
             >
-              <p className="font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>NO RESULTS FOUND</p>
+              <p className="font-mono" style={{ color: '#ff2d78', fontSize: 12 }}>ERROR: NO MATCHING DATA FOUND</p>
             </motion.div>
           ) : !loading && (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              style={{ textAlign: 'center', padding: 100 }}
-            >
-              <p className="font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>WAITING FOR INPUT...</p>
-            </motion.div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 40, opacity: 0.2 }}>
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} style={{ height: 60, background: 'rgba(255,255,255,0.05)' }} />
+              ))}
+            </div>
           )}
         </AnimatePresence>
       </section>

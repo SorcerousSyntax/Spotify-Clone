@@ -58,36 +58,39 @@ const TopBar = ({ session }) => {
       animate={{ y: 0 }}
       transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
       style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 60,
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         height: 80,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        background: 'rgba(0,0,0,0.3)',
-        borderBottom: '1px solid rgba(255,45,120,0.1)',
+        backdropFilter: 'blur(30px)',
+        WebkitBackdropFilter: 'blur(30px)',
+        background: 'rgba(0,0,0,0.8)',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 40px',
+        padding: '0 5vw',
       }}
     >
       <Link to="/" style={{ textDecoration: 'none' }}>
         <h1 style={{
-          fontSize: 32, margin: 0, color: '#fff',
-          fontFamily: "'Space Grotesk', sans-serif", fontWeight: 900
+          fontSize: 28, margin: 0, color: '#fff',
+          fontFamily: "'Space Grotesk', sans-serif", fontWeight: 900,
+          letterSpacing: '-0.02em'
         }}>
           RAABTA<span style={{ color: '#ff2d78' }}>.</span>
         </h1>
       </Link>
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-        <span className="font-mono" style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 30 }}>
+        <span className="font-mono" style={{ fontSize: 10, color: '#ff2d78' }}>
           {display}
         </span>
-        <Link to="/profile">
+        <Link to="/profile" style={{ textDecoration: 'none' }}>
           <div style={{
-            width: 40, height: 40, borderRadius: 2,
-            background: '#ff2d78',
+            width: 45, height: 45, borderRadius: 0,
+            background: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, fontWeight: 700, color: '#000',
-            fontFamily: "'Space Grotesk', sans-serif"
+            fontSize: 18, fontWeight: 900, color: '#000',
+            fontFamily: "'Space Grotesk', sans-serif",
+            transition: 'all 0.3s ease',
+            border: '1px solid #ff2d78'
           }}>
             {display[0]?.toUpperCase() || '♪'}
           </div>
@@ -243,8 +246,7 @@ const AppInner = () => {
 
   return (
     <SmoothScroll>
-      <div style={{ position: 'relative', minHeight: '100dvh', background: 'transparent', overflow: 'hidden' }}>
-        <GlobalCanvas />
+      <div style={{ position: 'relative', minHeight: '100dvh', background: '#000', overflow: 'hidden' }}>
         <div className="noise" />
 
         {showShell && !isNowPlayingRoute && <TopBar session={session} />}

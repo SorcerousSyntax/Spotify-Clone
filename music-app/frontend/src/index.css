@@ -6,15 +6,15 @@
 
 :root {
   --primary: #000000;
-  --accent-1: #ff2d78;
-  --accent-2: #ff6eb4;
-  --accent-3: #c084fc;
-  --accent-4: #e040fb;
+  --accent-1: #ff2d78; /* Hot Pink */
+  --accent-2: #ffffff; /* Pure White */
+  --accent-3: #ff6eb4;
+  --accent-4: #c084fc;
   --text-pure: #ffffff;
-  --text-subtle: rgba(255, 255, 255, 0.5);
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --card-border: rgba(255, 45, 120, 0.2);
-  --glow-pink: 0 0 30px rgba(255, 45, 120, 0.3);
+  --text-subtle: rgba(255, 255, 255, 0.6);
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --glow-pink: 0 0 30px rgba(255, 45, 120, 0.4);
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-accent: 'Share Tech Mono', monospace;
@@ -53,8 +53,8 @@ body {
   background: #000000 !important;
   color: var(--text-pure);
   font-family: var(--font-body);
-  font-weight: 300;
-  line-height: 1.6;
+  font-weight: 400;
+  line-height: 1.5;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -68,50 +68,49 @@ body {
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  text-transform: none;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
 }
 
 .font-mono {
   font-family: var(--font-accent);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
-/* Glassmorphism & Claymorphism */
+/* Glassmorphism & Modern UI */
 .glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  transition: all 0.4s var(--ease-main);
-}
-
-.clay {
-  background: rgba(255, 45, 120, 0.08);
-  border-radius: 20px;
-  box-shadow: 
-    8px 8px 20px rgba(0, 0, 0, 0.4),
-    -2px -2px 8px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 45, 120, 0.15);
-  transition: all 0.4s var(--ease-main);
-}
-
-.clay:hover {
-  background: rgba(255, 45, 120, 0.12);
-  box-shadow: 
-    12px 12px 25px rgba(0, 0, 0, 0.5),
-    -2px -2px 10px rgba(255, 255, 255, 0.08),
-    0 0 20px rgba(255, 45, 120, 0.2);
-  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  transition: all 0.5s var(--ease-main);
 }
 
 .glass:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 45, 120, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.clay {
+  background: #ffffff;
+  color: #000000;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 800;
+  text-transform: uppercase;
+  border: none;
+  transition: all 0.3s var(--ease-main);
+}
+
+.clay:hover {
+  background: var(--accent-1);
+  color: #ffffff;
+  transform: scale(1.05);
 }
 
 /* Background Texture */

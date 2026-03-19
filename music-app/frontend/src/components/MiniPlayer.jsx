@@ -19,14 +19,14 @@ const MiniPlayer = () => {
     <motion.div
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      whileHover={{ y: -5, scale: 1.01 }}
+      whileHover={{ y: -5 }}
       transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
       onClick={() => navigate('/now-playing')}
       style={{
         position: 'fixed',
-        bottom: 82, // Floating above BottomNav (70px height + 12px margin)
-        left: 12,
-        right: 12,
+        bottom: 85, 
+        left: 20,
+        right: 20,
         height: 64,
         zIndex: 85,
         cursor: 'pointer',
@@ -35,29 +35,24 @@ const MiniPlayer = () => {
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        borderRadius: '16px',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        background: 'rgba(0,0,0,0.6)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)'
+        borderRadius: 0, // Sharp aesthetic
+        backdropFilter: 'blur(30px)',
+        WebkitBackdropFilter: 'blur(30px)',
+        background: 'rgba(0,0,0,0.9)',
+        border: '1px solid #ff2d78',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
       }}
     >
-      {/* Dynamic Floating Animation Wrapper */}
-      <motion.div
-        animate={{ y: [0, -3, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-      >
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         {/* Progress Bar (Slightly more refined) */}
         <div style={{
-          position: 'absolute', top: 0, left: 0, width: '100%', height: 2,
+          position: 'absolute', top: 0, left: 0, width: '100%', height: 1,
           background: 'rgba(255,255,255,0.05)'
         }}>
           <motion.div
             animate={{ width: `${progressPercent}%` }}
             transition={{ type: 'spring', stiffness: 50 }}
-            style={{ height: '100%', background: '#ff2d78', boxShadow: '0 0 10px #ff2d78' }}
+            style={{ height: '100%', background: '#ff2d78' }}
           />
         </div>
 
@@ -67,21 +62,19 @@ const MiniPlayer = () => {
           alignItems: 'center', 
           gap: 16, 
           width: '100%',
-          padding: '0 16px'
+          padding: '0 20px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-            <motion.img
-              animate={isPlaying ? { rotate: 360 } : {}}
-              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 15, flex: 1, minWidth: 0 }}>
+            <img
               src={currentSong.album_art_url}
               alt={currentSong.title}
-              style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: '50%', border: '2px solid rgba(255,45,120,0.3)', flexShrink: 0 }}
+              style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 0, border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}
             />
             <div style={{ overflow: 'hidden', textAlign: 'left' }}>
-              <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>
-                {currentSong.title}
+              <h3 style={{ fontSize: 13, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff', letterSpacing: '-0.02em' }}>
+                {currentSong.title.toUpperCase()}
               </h3>
-              <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', marginTop: 2, letterSpacing: '0.05em' }}>
+              <p className="font-mono" style={{ fontSize: 9, color: '#ff2d78', marginTop: 2, fontWeight: 700 }}>
                 {currentSong.artist?.toUpperCase()}
               </p>
             </div>
@@ -95,20 +88,20 @@ const MiniPlayer = () => {
                 togglePlay();
               }}
               style={{ 
-                background: 'rgba(255,45,120,0.1)', 
-                border: '1px solid rgba(255,45,120,0.3)', 
-                borderRadius: '50%',
-                width: 38, height: 38,
-                cursor: 'pointer', fontSize: 18, color: '#fff', 
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 15px rgba(255,45,120,0.2)'
+                background: 'transparent', 
+                border: '1px solid #ff2d78', 
+                borderRadius: 0,
+                width: 40, height: 40,
+                cursor: 'pointer', fontSize: 12, color: '#fff', 
+                fontWeight: 900,
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}
             >
-              {isPlaying ? '⏸' : '▶'}
+              {isPlaying ? 'PAUSE' : 'PLAY'}
             </motion.button>
           </div>
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 };

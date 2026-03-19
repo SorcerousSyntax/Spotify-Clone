@@ -42,16 +42,18 @@ const Library = () => {
   };
 
   return (
-    <div style={{ padding: '40px 20px 100px 20px', maxWidth: 1000, margin: '0 auto', background: 'transparent' }}>
-      <header style={{ marginBottom: 60, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '0 20px' }}>
+    <div style={{ padding: '40px 5vw 120px 5vw', maxWidth: 1400, margin: '0 auto', background: '#000', minHeight: '100vh' }}>
+      <header style={{ marginBottom: 80, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h1 style={{ fontSize: 'clamp(2rem, 8vw, 4rem)', lineHeight: 1 }}>LIBRARY</h1>
-          <p className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 10 }}>
-            {selectedPlaylist ? selectedPlaylist.name.toUpperCase() : 'YOUR COLLECTIONS'}
+          <h1 style={{ fontSize: 'clamp(4rem, 12vw, 10rem)', lineHeight: 0.8, letterSpacing: '-0.05em' }}>
+            LIBRARY<span style={{ color: '#ff2d78' }}>.</span>
+          </h1>
+          <p className="font-mono" style={{ fontSize: 10, color: '#ff2d78', marginTop: 30, letterSpacing: '0.3em', fontWeight: 800 }}>
+            {selectedPlaylist ? `COLLECTION / ${selectedPlaylist.name.toUpperCase()}` : 'USER / COLLECTIONS'}
           </p>
         </div>
         {!selectedPlaylist && (
-          <button className="btn-primary" style={{ padding: '8px 20px', fontSize: 12 }} onClick={() => setShowCreate(true)}>NEW</button>
+          <button className="clay" style={{ padding: '15px 30px', fontSize: 14, borderRadius: 0 }} onClick={() => setShowCreate(true)}>NEW COLLECTION</button>
         )}
       </header>
 
@@ -61,26 +63,30 @@ const Library = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="glass"
-            style={{ padding: 30, marginBottom: 40, margin: '0 20px 40px 20px', display: 'flex', gap: 20 }}
+            style={{ 
+              padding: 40, marginBottom: 60, background: 'rgba(255,255,255,0.03)', 
+              border: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: 30,
+              alignItems: 'center'
+            }}
           >
             <input
               type="text"
               value={newPlaylistName}
               onChange={(e) => setNewPlaylistName(e.target.value)}
-              placeholder="PLAYLIST NAME"
+              placeholder="ENTER COLLECTION NAME..."
               style={{
-                flex: 1, background: 'transparent', border: 'none', borderBottom: '1px solid #ff2d78',
-                color: '#fff', fontSize: 18, fontFamily: "'Share Tech Mono', monospace", outline: 'none'
+                flex: 1, background: 'transparent', border: 'none', borderBottom: '2px solid #ff2d78',
+                color: '#fff', fontSize: 24, fontFamily: "'Space Grotesk', sans-serif", outline: 'none',
+                fontWeight: 800
               }}
             />
-            <button className="btn-primary" onClick={onCreate}>CREATE</button>
-            <button className="btn-secondary" onClick={() => setShowCreate(false)}>CANCEL</button>
+            <button className="clay" style={{ borderRadius: 0, height: 50, padding: '0 40px' }} onClick={onCreate}>CREATE</button>
+            <button className="glass" style={{ borderRadius: 0, height: 50, padding: '0 40px', background: 'transparent', color: '#fff', border: '1px solid #fff' }} onClick={() => setShowCreate(false)}>CANCEL</button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <section style={{ padding: '0 20px' }}>
+      <section>
         <AnimatePresence mode="wait">
           {selectedPlaylist ? (
             <motion.div
@@ -92,30 +98,33 @@ const Library = () => {
               <button 
                 onClick={() => setSelectedPlaylistId(null)}
                 className="font-mono"
-                style={{ background: 'none', border: 'none', color: '#ff2d78', cursor: 'pointer', marginBottom: 30, fontSize: 12 }}
+                style={{ background: 'none', border: 'none', color: '#ff2d78', cursor: 'pointer', marginBottom: 40, fontSize: 12, fontWeight: 800, letterSpacing: '0.2em' }}
               >
-                ← BACK TO LIBRARY
+                ← BACK TO COLLECTIONS
               </button>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: 2 }}>
                 {playlistSongs.map((song, i) => {
                   const isOffline = usePlayerStore(s => s.isOffline(song.id));
                   const toggleOffline = usePlayerStore(s => s.toggleOffline);
                   
                   return (
-                    <div key={song.id} className="glass" onClick={() => handlePlay(song, i, playlistSongs)} style={{
-                      padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, height: 56, 
-                      borderRadius: '12px', background: 'rgba(255,255,255,0.03)',
-                      borderColor: currentSong?.id === song.id ? 'rgba(255,45,120,0.4)' : 'rgba(255,255,255,0.05)'
+                    <div key={song.id} onClick={() => handlePlay(song, i, playlistSongs)} style={{
+                      padding: '12px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 20, height: 70, 
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      transition: 'all 0.3s ease'
                     }}>
-                      <img src={song.album_art_url} alt={song.title} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: '8px' }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <h3 style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: currentSong?.id === song.id ? '#ff2d78' : '#fff' }}>
-                          {decodeSongTitle(song.title)}
-                        </h3>
-                        <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{song.artist}</p>
+                      <div style={{ width: 45, height: 45, background: '#111', flexShrink: 0 }}>
+                        <img src={song.album_art_url} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h3 style={{ fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: currentSong?.id === song.id ? '#ff2d78' : '#fff' }}>
+                          {decodeSongTitle(song.title).toUpperCase()}
+                        </h3>
+                        <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{song.artist.toUpperCase()}</p>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
                         <button 
                           onClick={(e) => { e.stopPropagation(); toggleOffline(song); }}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, opacity: isOffline ? 1 : 0.3 }}
@@ -123,7 +132,7 @@ const Library = () => {
                           {isOffline ? '✅' : '📥'}
                         </button>
                         {song.duration && (
-                          <span className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>
+                          <span className="font-mono" style={{ fontSize: 10, color: '#ff2d78', fontWeight: 800 }}>
                             {Math.floor(song.duration / 60)}:{String(Math.floor(song.duration % 60)).padStart(2, '0')}
                           </span>
                         )}
@@ -141,42 +150,48 @@ const Library = () => {
               exit={{ opacity: 0 }}
               style={{ 
                 display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', 
-                gap: 20 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', 
+                gap: 40 
               }}
             >
               {playlists.map((playlist, i) => (
                 <motion.div 
                   key={playlist.id} 
-                  whileHover={{ y: -5, boxShadow: '0 0 20px rgba(255, 45, 120, 0.2)' }}
+                  whileHover={{ y: -10 }}
                   onClick={() => setSelectedPlaylistId(playlist.id)}
-                  className="clay"
                   style={{ 
-                    padding: 12, 
                     cursor: 'pointer', 
-                    position: 'relative', 
-                    width: '100%', 
-                    maxWidth: 160,
-                    margin: '0 auto'
+                    position: 'relative'
                   }}
                 >
-                  <PlaylistCover 
-                    playlist={playlist} 
-                    songsById={songsById} 
-                    size={136} 
-                  />
-                  <div style={{ marginTop: 12 }}>
-                    <h3 style={{ fontSize: 14, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ 
+                    aspectRatio: '1/1', 
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 20,
+                    overflow: 'hidden'
+                  }}>
+                    <PlaylistCover 
+                      playlist={playlist} 
+                      songsById={songsById} 
+                      size={220} 
+                    />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 900, marginBottom: 5 }}>
                       {playlist.name.toUpperCase()}
                     </h3>
-                    <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>
-                      {playlist.songIds.length} TRACKS
+                    <p className="font-mono" style={{ fontSize: 10, color: '#ff2d78', fontWeight: 800 }}>
+                      {playlist.songIds.length} ITEMS
                     </p>
                   </div>
                   {playlist.id !== LIKED_SONGS_PLAYLIST_ID && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); deletePlaylist(playlist.id); }}
-                      style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 20, height: 20, borderRadius: '50%', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      style={{ position: 'absolute', top: 10, right: 10, background: '#000', border: '1px solid #fff', color: '#fff', width: 30, height: 30, fontSize: 12, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                     >
                       ✕
                     </button>
