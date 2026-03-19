@@ -19,28 +19,19 @@ const BottomNav = () => {
   };
 
   return (
-    <motion.nav
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
-      style={{
-        position: 'fixed', 
-        bottom: 0, 
-        left: 0, 
-        right: 0, 
-        zIndex: 90, 
-        height: 70, 
-        backdropFilter: 'blur(30px)',
-        WebkitBackdropFilter: 'blur(30px)',
-        background: 'rgba(0,0,0,0.9)', 
-        borderTop: '1px solid rgba(255,255,255,0.05)', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        padding: '0 5vw',
-      }}
-    >
-      <div style={{ display: 'flex', gap: '10vw', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+    <div style={{
+      position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)',
+      zIndex: 100, width: 'min(360px, 90vw)'
+    }}>
+      <motion.nav
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        className="nav-pill"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 25px', boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+        }}
+      >
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.path);
           return (
@@ -51,42 +42,31 @@ const BottomNav = () => {
               style={{
                 background: 'none', border: 'none',
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
-                gap: 5, cursor: 'pointer', position: 'relative',
-                padding: '10px 0',
-                transition: 'all 0.3s ease'
+                gap: 5, cursor: 'pointer', position: 'relative'
               }}
             >
               <span style={{ 
-                fontSize: 20, 
+                fontSize: 22, 
                 color: active ? '#ff2d78' : 'rgba(255,255,255,0.4)',
-                transition: 'all 0.4s ease'
+                transition: 'all 0.3s ease'
               }}>
                 {item.icon}
               </span>
-              <span className="font-mono" style={{ 
+              <span style={{ 
                 fontSize: 9, 
                 color: active ? '#fff' : 'rgba(255,255,255,0.4)',
-                fontWeight: 900,
-                letterSpacing: '0.2em',
-                transition: 'all 0.4s ease'
+                fontWeight: 700,
+                transition: 'all 0.3s ease'
               }}>
                 {item.label}
               </span>
-              {active && (
-                <motion.div
-                  layoutId="nav-active-bar"
-                  style={{
-                    position: 'absolute', top: 0, width: '100%', height: 2,
-                    background: '#ff2d78', 
-                    borderRadius: 0
-                  }}
-                />
-              )}
             </motion.button>
           );
         })}
-      </div>
-    </motion.nav>
+      </motion.nav>
+    </div>
+  );
+};
   );
 };
 

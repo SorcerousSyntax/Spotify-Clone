@@ -253,16 +253,14 @@ const AppInner = () => {
 
         <main style={{
           position: 'relative', zIndex: 2,
-          paddingTop: showShell && !isNowPlayingRoute ? 80 : 0,
-          paddingBottom: showShell ? 150 : 0,
-          background: 'transparent'
+          paddingBottom: 150,
+          background: '#000'
         }}>
           <Suspense fallback={<PageSkeleton />}>
             <AnimatedRoutes session={session} authReady={authReady} />
           </Suspense>
         </main>
 
-        {showShell && !isNowPlayingRoute && <MiniPlayer />}
         {showShell && <BottomNav />}
         <GlobalCursor />
       </div>
