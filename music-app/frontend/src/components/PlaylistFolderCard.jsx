@@ -16,9 +16,9 @@ const PlaylistFolderCard = ({ playlist, onClick, isLikedSongs = false, isOffline
     >
       <div className="folder-card clay pink-glow" style={{ 
         background: isLikedSongs 
-          ? 'linear-gradient(135deg, #ff2d78 0%, #000 100%)'
+          ? 'linear-gradient(135deg, #ff2d78 0%, rgba(0,0,0,0.6) 100%)'
           : isOfflineCard
-          ? 'linear-gradient(135deg, #444 0%, #000 100%)'
+          ? 'linear-gradient(135deg, #444 0%, rgba(0,0,0,0.6) 100%)'
           : 'linear-gradient(135deg, rgba(255,45,120,0.2) 0%, rgba(0,0,0,0.4) 100%)' 
       }}>
         <div className="folder-tab" />
@@ -41,7 +41,7 @@ const PlaylistFolderCard = ({ playlist, onClick, isLikedSongs = false, isOffline
               aspectRatio: '1/1',
               borderRadius: 8,
               overflow: 'hidden',
-              background: '#000'
+              background: 'rgba(0,0,0,0.4)'
             }}>
               <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>

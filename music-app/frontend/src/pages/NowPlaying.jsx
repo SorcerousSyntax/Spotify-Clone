@@ -38,20 +38,41 @@ const NowPlaying = () => {
 
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
 
-  // Seek logic
-  const handleSeek = (e) => {
-    if (!progressBarRef.current || !duration) return;
-    const rect = progressBarRef.current.getBoundingClientRect();
-    let clientX;
-    if (e.type === 'touchstart' || e.type === 'touchmove') {
-      clientX = e.touches[0].clientX;
-    } else {
-      clientX = e.clientX;
-    }
-    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-    const pct = x / rect.width;
+  // Circular progress config
+  const svgSize = 320; // Default base size for calculations
+  const radius = 145; // Based on 280px art + padding
+  const center = svgSize / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+
+  // Seek logic for circular arc
+  const handleCircularSeek = (e) => {
+    if (!duration) return;
+    const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+    
+    // Get center of the album art / svg
+    const artElement = e.currentTarget;
+    const rect = artElement.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+    
+    // Angle in radians, starting from top (12 o'clock)
+    let angle = Math.atan2(dy, dx) + Math.PI / 2;
+    if (angle < 0) angle += 2 * Math.PI;
+    
+    const pct = angle / (2 * Math.PI);
     seek?.(pct * duration);
   };
+
+  // Dot position calculation
+  const dotAngle = (progressPercent / 100) * 360 - 90;
+  const dotAngleRad = (dotAngle * Math.PI) / 180;
+  const dotX = center + radius * Math.cos(dotAngleRad);
+  const dotY = center + radius * Math.sin(dotAngleRad);
 
   // Long press logic
   const longPressTimer = useRef(null);
@@ -123,35 +144,84 @@ const NowPlaying = () => {
 
       {/* Album Art Section */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          style={{ position: 'relative', width: 'min(280px, 70vw)', aspectRatio: '1/1' }}
+        <div 
+          style={{ position: 'relative', width: 'min(280px, 70vw)', aspectRatio: '1/1', display: 'grid', placeItems: 'center' }}
+          onMouseDown={handleCircularSeek}
+          onTouchStart={handleCircularSeek}
         >
-          {/* Rotating Vinyl Background */}
-          <div className={`animate-vinyl ${!isPlaying ? 'animate-vinyl-paused' : ''}`} style={{
-            position: 'absolute',
-            inset: -15,
-            background: 'conic-gradient(#111, #000, #111, #000, #111)',
-            borderRadius: '50%',
-            zIndex: -1,
-            boxShadow: '0 0 40px rgba(0,0,0,0.8)'
-          }}>
-            <div style={{ position: 'absolute', inset: '30%', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '50%' }} />
-          </div>
+          {/* Circular SVG Progress */}
+          <svg 
+            viewBox={`0 0 ${svgSize} ${svgSize}`} 
+            style={{ 
+              position: 'absolute', 
+              width: 'calc(100% + 32px)', 
+              height: 'calc(100% + 32px)', 
+              transform: 'rotate(-90deg)',
+              pointerEvents: 'none' // Important so touch hits the container
+            }}
+          >
+            {/* Background Track */}
+            <circle
+              cx={center} cy={center} r={radius}
+              fill="none"
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth="3"
+            />
+            {/* Progress Arc */}
+            <motion.circle
+              cx={center} cy={center} r={radius}
+              fill="none"
+              stroke="#ff2d78"
+              strokeWidth="3"
+              strokeDasharray={circumference}
+              animate={{ strokeDashoffset }}
+              transition={{ type: 'tween', ease: 'linear' }}
+              strokeLinecap="round"
+              style={{ filter: 'drop-shadow(0 0 6px #ff2d78)' }}
+            />
+            {/* Tip Dot */}
+            <motion.circle
+              cx={dotX} cy={dotY} r="4"
+              fill="#ff2d78"
+              style={{ filter: 'drop-shadow(0 0 8px #ff2d78)' }}
+            />
+          </svg>
 
-          {/* Main Circular Art */}
-          <div style={{
-            width: '100%',
-            height: '100%',
-            borderRadius: '50%',
-            overflow: 'hidden',
-            border: '4px solid #000',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
-          }}>
-            <img src={currentSong.album_art_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-          </div>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{ width: '100%', height: '100%', position: 'relative' }}
+          >
+            {/* Rotating Vinyl Background */}
+            <div className={`animate-vinyl ${!isPlaying ? 'animate-vinyl-paused' : ''}`} style={{
+              position: 'absolute',
+              inset: -15,
+              background: 'conic-gradient(#111, #000, #111, #000, #111)',
+              borderRadius: '50%',
+              zIndex: -1,
+              boxShadow: '0 0 40px rgba(0,0,0,0.8)'
+            }}>
+              <div style={{ position: 'absolute', inset: '30%', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '50%' }} />
+            </div>
+
+            {/* Main Circular Art */}
+            <div style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              border: '4px solid #000',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
+            }}>
+              <img src={currentSong.album_art_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Time Display centered below circle */}
+        <div className="font-mono" style={{ fontSize: 14, fontWeight: 900, marginTop: 30, color: 'var(--pink-hot)' }}>
+          {formatTime(progress)}
+        </div>
 
         {/* Waveform */}
         <Waveform />
@@ -176,36 +246,6 @@ const NowPlaying = () => {
           >
             +
           </motion.button>
-        </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div style={{ padding: '0 10px', marginBottom: 40 }}>
-        <div
-          ref={progressBarRef}
-          onMouseDown={handleSeek}
-          onTouchStart={handleSeek}
-          onTouchMove={handleSeek}
-          style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, cursor: 'pointer' }}
-        >
-          <motion.div
-            style={{
-              position: 'absolute', top: 0, left: 0, height: '100%',
-              background: 'var(--pink-hot)', borderRadius: 3,
-              width: `${progressPercent}%`
-            }}
-          />
-          <motion.div
-            style={{
-              position: 'absolute', top: '50%', left: `${progressPercent}%`,
-              width: 16, height: 16, borderRadius: '50%', background: '#fff',
-              transform: 'translate(-50%, -50%)', boxShadow: '0 0 15px rgba(255,45,120,0.8)'
-            }}
-          />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
-          <span className="font-mono" style={{ fontSize: 10, opacity: 0.5 }}>{formatTime(progress)}</span>
-          <span className="font-mono" style={{ fontSize: 10, opacity: 0.5 }}>{formatTime(duration)}</span>
         </div>
       </div>
 

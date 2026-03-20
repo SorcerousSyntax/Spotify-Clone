@@ -5,6 +5,7 @@ import { decodeSongTitle } from '../lib/text';
 import PlaylistFolderCard from '../components/PlaylistFolderCard';
 
 const Library = () => {
+  console.log('Library mounting...');
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
@@ -17,6 +18,7 @@ const Library = () => {
   const createPlaylist = usePlayerStore((s) => s.createPlaylist);
   const toggleOffline = usePlayerStore((s) => s.toggleOffline);
   const isOffline = usePlayerStore((s) => s.isOffline);
+  const offlineSongIds = usePlayerStore((s) => s.offlineSongIds);
 
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId) || null;
 
@@ -56,7 +58,7 @@ const Library = () => {
   };
 
   return (
-    <div style={{ padding: '100px 20px 150px 20px', minHeight: '100vh', position: 'relative', zIndex: 10 }}>
+    <div style={{ padding: '100px 20px 150px 20px', minHeight: '100vh', position: 'relative', zIndex: 10, background: 'transparent' }}>
       {/* Header */}
       <header style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
