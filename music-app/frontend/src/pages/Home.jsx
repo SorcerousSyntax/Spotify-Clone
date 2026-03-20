@@ -95,7 +95,7 @@ const Home = () => {
                 onClick={() => playSong(song, 0, [song])}
                 style={{ minWidth: 120, cursor: 'pointer' }}
               >
-                <div className="glass" style={{ width: 120, height: 120, borderRadius: 24, overflow: 'hidden', marginBottom: 12 }}>
+                <div className="card-glass" style={{ width: 120, height: 120, borderRadius: 24, overflow: 'hidden', marginBottom: 12 }}>
                   <img src={song.album_art_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                 </div>
                 <h3 style={{ fontSize: 11, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{decodeSongTitle(song.title).toUpperCase()}</h3>

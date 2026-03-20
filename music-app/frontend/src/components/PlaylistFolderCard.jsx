@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const PlaylistFolderCard = ({ playlist, onClick, isLikedSongs = false }) => {
+const PlaylistFolderCard = ({ playlist, onClick, isLikedSongs = false, isOfflineCard = false }) => {
   // Get top 4 covers or placeholders
   const covers = (playlist.songs || []).slice(0, 4).map(s => s.album_art_url);
   while (covers.length < 4) covers.push('https://via.placeholder.com/150/000000/ff2d78?text=♪');
@@ -17,11 +17,16 @@ const PlaylistFolderCard = ({ playlist, onClick, isLikedSongs = false }) => {
       <div className="folder-card clay pink-glow" style={{ 
         background: isLikedSongs 
           ? 'linear-gradient(135deg, #ff2d78 0%, #000 100%)'
+          : isOfflineCard
+          ? 'linear-gradient(135deg, #444 0%, #000 100%)'
           : 'linear-gradient(135deg, rgba(255,45,120,0.2) 0%, rgba(0,0,0,0.4) 100%)' 
       }}>
         <div className="folder-tab" />
         {isLikedSongs && (
           <div style={{ position: 'absolute', top: -15, right: -5, fontSize: 24, filter: 'drop-shadow(0 0 10px #ff2d78)' }}>♥</div>
+        )}
+        {isOfflineCard && (
+          <div style={{ position: 'absolute', top: -15, right: -5, fontSize: 20, filter: 'drop-shadow(0 0 10px #fff)' }}>📥</div>
         )}
         <div style={{
           display: 'grid',

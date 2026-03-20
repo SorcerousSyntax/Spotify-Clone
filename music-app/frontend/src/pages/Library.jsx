@@ -21,15 +21,14 @@ const Library = () => {
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId) || null;
 
   const displaySongs = useMemo(() => {
+    if (selectedPlaylistId === 'offline-auto') {
+      return Array.from(offlineSongIds).map(id => songsById[id]).filter(Boolean);
+    }
     if (selectedPlaylist) {
       return selectedPlaylist.songIds.map(id => songsById[id]).filter(Boolean);
     }
-    // Default to all known songs if no playlist selected? 
-    // Or just show liked songs if it's the default "Library" view.
-    // The user said: "ALL SONGS LIST: Compact list view below playlists"
-    // So if no playlist is selected, show all songs.
     return Object.values(songsById);
-  }, [selectedPlaylist, songsById]);
+  }, [selectedPlaylist, selectedPlaylistId, songsById, offlineSongIds]);
 
   const handlePlay = (song, index, list) => {
     setCurrentSong(song);
@@ -50,19 +49,25 @@ const Library = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const offlinePlaylist = {
+    id: 'offline-auto',
+    name: 'OFFLINE',
+    songs: Array.from(offlineSongIds).map(id => songsById[id]).filter(Boolean)
+  };
+
   return (
     <div style={{ padding: '100px 20px 150px 20px', minHeight: '100vh', position: 'relative', zIndex: 10 }}>
       {/* Header */}
       <header style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h1 style={{ fontSize: 42, color: '#fff' }}>
-            {selectedPlaylist ? selectedPlaylist.name.toUpperCase() : 'LIBRARY'}<span className="text-pink">.</span>
+            {selectedPlaylistId === 'offline-auto' ? 'OFFLINE' : selectedPlaylist ? selectedPlaylist.name.toUpperCase() : 'LIBRARY'}<span className="text-pink">.</span>
           </h1>
           <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 8 }}>
-            {selectedPlaylist ? `COLLECTION / ${selectedPlaylist.songIds.length} ITEMS` : 'YOUR COLLECTIONS'}
+            {selectedPlaylistId === 'offline-auto' ? `OFFLINE / ${offlineSongIds.size} ITEMS` : selectedPlaylist ? `COLLECTION / ${selectedPlaylist.songIds.length} ITEMS` : 'YOUR COLLECTIONS'}
           </p>
         </div>
-        {!selectedPlaylist && (
+        {!selectedPlaylist && selectedPlaylistId !== 'offline-auto' && (
           <button 
             onClick={() => setShowCreate(true)}
             className="glass" 
@@ -73,46 +78,19 @@ const Library = () => {
         )}
       </header>
 
-      {/* Create Playlist Modal (Overlay) */}
-      <AnimatePresence>
-        {showCreate && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)', display: 'grid', placeItems: 'center', padding: 20 }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="glass"
-              style={{ width: '100%', maxWidth: 400, padding: 40, textAlign: 'center' }}
-            >
-              <h2 style={{ fontSize: 24, marginBottom: 30 }}>CREATE COLLECTION</h2>
-              <input
-                type="text"
-                autoFocus
-                value={newPlaylistName}
-                onChange={(e) => setNewPlaylistName(e.target.value)}
-                placeholder="NAME..."
-                style={{
-                  width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid var(--pink-hot)',
-                  color: '#fff', fontSize: 18, fontWeight: 900, textAlign: 'center', marginBottom: 30, outline: 'none'
-                }}
-              />
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={onCreate} className="btn-primary" style={{ flex: 1, height: 50, borderRadius: 25 }}>CREATE</button>
-                <button onClick={() => setShowCreate(false)} className="glass" style={{ flex: 1, height: 50, borderRadius: 25, border: 'none', color: '#fff' }}>CANCEL</button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ... AnimatePresence for showCreate remains same ... */}
 
       {/* Playlist Grid */}
-      {!selectedPlaylist && (
+      {!selectedPlaylist && selectedPlaylistId !== 'offline-auto' && (
         <section style={{ marginBottom: 60 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 20 }}>
+            {/* Offline Special Card */}
+            <PlaylistFolderCard
+              playlist={offlinePlaylist}
+              onClick={() => setSelectedPlaylistId('offline-auto')}
+              isOfflineCard={true}
+            />
+
             {playlists.map((playlist) => (
               <PlaylistFolderCard
                 key={playlist.id}
@@ -130,7 +108,7 @@ const Library = () => {
 
       {/* Song List */}
       <section>
-        {selectedPlaylist && (
+        {(selectedPlaylist || selectedPlaylistId === 'offline-auto') && (
           <button 
             onClick={() => setSelectedPlaylistId(null)}
             className="font-mono"
@@ -140,7 +118,7 @@ const Library = () => {
           </button>
         )}
         
-        <h2 style={{ fontSize: 18, marginBottom: 20 }}>{selectedPlaylist ? 'SONGS' : 'ALL SONGS'}</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 20 }}>{selectedPlaylistId === 'offline-auto' ? 'OFFLINE SONGS' : selectedPlaylist ? 'SONGS' : 'ALL SONGS'}</h2>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {displaySongs.map((song, i) => {

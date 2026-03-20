@@ -21,17 +21,18 @@ const BottomNav = () => {
   return (
     <div style={{
       position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
+      bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
+      left: '50%',
+      transform: 'translateX(-50%)',
       zIndex: 1000,
-      paddingBottom: 'env(safe-area-inset-bottom, 20px)',
-      background: 'rgba(0,0,0,0.8)',
-      backdropFilter: 'blur(30px)',
-      WebkitBackdropFilter: 'blur(30px)',
-      borderTop: '1px solid rgba(255,45,120,0.2)',
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
+      width: '85%',
+      maxWidth: '400px',
+      background: 'rgba(255,255,255,0.08)',
+      backdropFilter: 'blur(30px) saturate(200%)',
+      WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+      borderRadius: '32px',
+      border: '1px solid rgba(255,255,255,0.15)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,45,120,0.1)',
       overflow: 'hidden'
     }}>
       <motion.nav
@@ -43,7 +44,7 @@ const BottomNav = () => {
           alignItems: 'center',
           justifyContent: 'space-around',
           height: 70,
-          padding: '0 20px'
+          padding: '0 10px'
         }}
       >
         {NAV_ITEMS.map((item) => {
@@ -69,12 +70,13 @@ const BottomNav = () => {
               <span style={{ 
                 fontSize: 24, 
                 color: active ? '#ff2d78' : 'rgba(255,255,255,0.4)',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                textShadow: active ? '0 0 10px rgba(255,45,120,0.5)' : 'none'
               }}>
                 {item.icon}
               </span>
               <span style={{ 
-                fontSize: 9, 
+                fontSize: 8, 
                 color: active ? '#ff2d78' : 'rgba(255,255,255,0.4)',
                 fontWeight: 900,
                 fontFamily: "'Space Grotesk', sans-serif",
@@ -87,12 +89,12 @@ const BottomNav = () => {
                   layoutId="active-dot"
                   style={{
                     position: 'absolute',
-                    top: 0,
+                    bottom: 4,
                     width: 4,
                     height: 4,
                     borderRadius: '50%',
                     background: '#ff2d78',
-                    boxShadow: '0 0 10px #ff2d78'
+                    boxShadow: '0 0 8px #ff2d78'
                   }}
                 />
               )}

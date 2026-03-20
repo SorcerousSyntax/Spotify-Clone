@@ -1,94 +1,75 @@
 import React, { useRef, useEffect } from 'react';
+import usePlayerStore from '../store/playerStore';
 
-const HISTORY = 200;
-
-const Waveform = ({ getFrequencyData, isPlaying }) => {
+const Waveform = () => {
   const canvasRef = useRef(null);
-  const animRef = useRef(null);
-  const bufRef = useRef(new Float32Array(HISTORY).fill(0));
-  const headRef = useRef(0);
+  const getFrequencyData = usePlayerStore((s) => s.playerControls.getFrequencyData);
+  const isPlaying = usePlayerStore((s) => s.isPlaying);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
+    let animationId;
 
-    const resize = () => {
-      canvas.width = canvas.offsetWidth * dpr;
-      canvas.height = canvas.offsetHeight * dpr;
-    };
-    resize();
-    window.addEventListener('resize', resize);
-
-    const draw = () => {
-      animRef.current = requestAnimationFrame(draw);
+    const render = () => {
+      const data = getFrequencyData?.() || new Uint8Array(64);
       
-      const W = canvas.width;
-      const H = canvas.height;
-      const mid = H / 2;
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      const freqData = getFrequencyData?.();
-      let amp = 0;
-      if (freqData && isPlaying) {
-        const sum = freqData.slice(0, 10).reduce((a, b) => a + b, 0);
-        amp = (sum / 10 / 255);
-      } else {
-        amp = Math.random() * 0.05;
-      }
-
-      bufRef.current[headRef.current % HISTORY] = amp;
-      headRef.current++;
-
-      ctx.clearRect(0, 0, W, H);
-      
-      // Neon Glow Line
       ctx.beginPath();
+      ctx.lineWidth = 3;
       ctx.strokeStyle = '#ff2d78';
-      ctx.lineWidth = 2 * dpr;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.shadowBlur = 15 * dpr;
+      
+      // ECG / Waveform style
+      const width = canvas.width;
+      const height = canvas.height;
+      const step = width / (data.length - 1);
+      
+      ctx.moveTo(0, height / 2);
+      
+      for (let i = 0; i < data.length; i++) {
+        const x = i * step;
+        const amplitude = (data[i] / 255.0) * (height / 1.5);
+        const y = height / 2 + (i % 2 === 0 ? -amplitude : amplitude);
+        
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          // Smooth the line a bit
+          const prevX = (i - 1) * step;
+          const prevAmplitude = (data[i - 1] / 255.0) * (height / 1.5);
+          const prevY = height / 2 + ((i - 1) % 2 === 0 ? -prevAmplitude : prevAmplitude);
+          
+          const cpX = prevX + (x - prevX) / 2;
+          ctx.quadraticCurveTo(cpX, prevY, x, y);
+        }
+      }
+      
+      // Glow effect
+      ctx.shadowBlur = 15;
       ctx.shadowColor = '#ff2d78';
-
-      for (let i = 0; i < HISTORY; i++) {
-        const x = (i / HISTORY) * W;
-        const val = bufRef.current[(headRef.current + i) % HISTORY];
-        const y = mid - (val * H * 0.4);
-        
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
       ctx.stroke();
-
-      // Mirror Line
-      ctx.beginPath();
-      ctx.strokeStyle = '#ff2d78';
-      ctx.opacity = 0.3;
-      for (let i = 0; i < HISTORY; i++) {
-        const x = (i / HISTORY) * W;
-        const val = bufRef.current[(headRef.current + i) % HISTORY];
-        const y = mid + (val * H * 0.4);
-        
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
+      
+      animationId = requestAnimationFrame(render);
     };
 
-    draw();
-    return () => {
-      cancelAnimationFrame(animRef.current);
-      window.removeEventListener('resize', resize);
-    };
-  }, [getFrequencyData, isPlaying]);
+    render();
+    return () => cancelAnimationFrame(animationId);
+  }, [getFrequencyData]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ width: '100%', height: 60, display: 'block' }}
-    />
+    <div style={{ width: '100%', height: 60, marginTop: 20, marginBottom: 20 }}>
+      <canvas
+        ref={canvasRef}
+        width={800}
+        height={60}
+        style={{ width: '100%', height: '100%', display: 'block' }}
+      />
+    </div>
   );
 };
 

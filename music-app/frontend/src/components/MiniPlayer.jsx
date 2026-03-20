@@ -31,7 +31,7 @@ const MiniPlayer = () => {
       className="glass"
       style={{
         position: 'fixed',
-        bottom: 85, // Above BottomNav (70px + safe area)
+        bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))',
         left: 10,
         right: 10,
         height: 64,
@@ -42,8 +42,11 @@ const MiniPlayer = () => {
         padding: '0 15px',
         overflow: 'hidden',
         borderRadius: 32, // Pill shape
-        background: 'rgba(0,0,0,0.8)',
-        border: '1px solid rgba(255,45,120,0.2)'
+        background: 'rgba(15,15,15,0.85)',
+        backdropFilter: 'blur(30px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+        border: '1px solid rgba(255,255,255,0.15)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
       }}
     >
       {/* Progress Line at Top */}
