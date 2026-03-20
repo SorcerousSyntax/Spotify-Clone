@@ -25,7 +25,6 @@ const NowPlaying = () => {
   const seek = usePlayerStore((s) => s.playerControls.seek);
 
   const [showPlaylistSelector, setShowPlaylistSelector] = useState(false);
-  const progressBarRef = useRef(null);
 
   const formatTime = (seconds) => {
     if (!seconds || Number.isNaN(seconds)) return '0:00';
@@ -36,23 +35,22 @@ const NowPlaying = () => {
 
   if (!currentSong) return null;
 
-  const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
+  // Progress calculations
   const progressRatio = duration > 0 ? (progress / duration) : 0;
-
+  
   // Circular progress config
-  // Album art is min(280px, 70vw). We'll base calculations on 280px.
-  const artDiameter = 280;
-  const gap = 20;
-  const radius = (artDiameter / 2) + gap; // 140 + 20 = 160
-  const svgSize = artDiameter + (gap * 2) + 40; // 280 + 40 + 40 = 360 (room for dot/glow)
-  const center = svgSize / 2;
+  // We'll use a responsive container but base math on a coordinate system
+  const size = 300;
+  const centerX = size / 2;
+  const centerY = size / 2;
+  const radius = 120;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - progressRatio * circumference;
+  const offset = circumference * (1 - progressRatio);
 
-  // Dot position calculation using trigonometry
-  const dotAngle = (progressRatio * 360 - 90) * (Math.PI / 180);
-  const dotX = center + radius * Math.cos(dotAngle);
-  const dotY = center + radius * Math.sin(dotAngle);
+  // Dot position - starts at TOP (12 o'clock = -90 degrees):
+  const angle = (progressRatio * 2 * Math.PI) - (Math.PI / 2);
+  const dotX = centerX + radius * Math.cos(angle);
+  const dotY = centerY + radius * Math.sin(angle);
 
   // Seek logic for circular arc
   const handleCircularSeek = (e) => {
@@ -60,39 +58,19 @@ const NowPlaying = () => {
     const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
     
-    // Get center of the album art / svg
     const artElement = e.currentTarget;
     const rect = artElement.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+    const cX = rect.left + rect.width / 2;
+    const cY = rect.top + rect.height / 2;
     
-    const dx = clientX - centerX;
-    const dy = clientY - centerY;
+    const dx = clientX - cX;
+    const dy = clientY - cY;
     
-    // Angle in radians, starting from top (12 o'clock)
-    let angle = Math.atan2(dy, dx) + Math.PI / 2;
-    if (angle < 0) angle += 2 * Math.PI;
+    let clickAngle = Math.atan2(dy, dx) + Math.PI / 2;
+    if (clickAngle < 0) clickAngle += 2 * Math.PI;
     
-    const pct = angle / (2 * Math.PI);
+    const pct = clickAngle / (2 * Math.PI);
     seek?.(pct * duration);
-  };
-
-  // Long press logic
-  const longPressTimer = useRef(null);
-  const handleLongPressStart = (type) => {
-    longPressTimer.current = setInterval(() => {
-      if (type === 'next') {
-        seek?.(Math.min(progress + 10, duration));
-      } else {
-        seek?.(Math.max(progress - 10, 0));
-      }
-    }, 200);
-  };
-  const handleLongPressEnd = () => {
-    if (longPressTimer.current) {
-      clearInterval(longPressTimer.current);
-      longPressTimer.current = null;
-    }
   };
 
   const offlineStatus = isOffline(currentSong.id);
@@ -103,33 +81,40 @@ const NowPlaying = () => {
       position: 'fixed',
       inset: 0,
       zIndex: 2000,
-      background: 'rgba(0,0,0,0.6)',
+      background: 'rgba(0,0,0,0.8)',
       backdropFilter: 'blur(40px)',
       WebkitBackdropFilter: 'blur(40px)',
       color: '#fff',
-      padding: '25px',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      height: '100dvh'
     }}>
-      {/* Top Bar */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      {/* 1. TOP BAR - 60px */}
+      <header style={{ 
+        height: 60, 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        padding: '0 20px',
+        flexShrink: 0
+      }}>
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)}
           className="glass flex-center"
-          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer' }}
+          style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}
         >
           ✕
         </motion.button>
         
-        <h2 className="font-mono" style={{ fontSize: 10, letterSpacing: '0.2em', opacity: 0.5 }}>NOW PLAYING</h2>
+        <h2 className="font-mono" style={{ fontSize: 12, letterSpacing: '0.2em', fontWeight: 900, color: 'rgba(255,255,255,0.8)' }}>NOW PLAYING</h2>
 
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => toggleOffline(currentSong)}
           className="glass flex-center"
-          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}
+          style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer' }}
         >
           {isDownloading ? (
             <motion.div
@@ -145,169 +130,194 @@ const NowPlaying = () => {
         </motion.button>
       </header>
 
-      {/* Album Art Section */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+      {/* 2. ALBUM ART + CIRCULAR PROGRESS - Flexible space */}
+      <div style={{ 
+        flex: 1, 
+        display: 'flex', 
+        flexDirection: 'column', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        position: 'relative',
+        minHeight: 0 // Crucial for flex nested items
+      }}>
         <div 
-          style={{ position: 'relative', width: 'min(280px, 70vw)', aspectRatio: '1/1', display: 'grid', placeItems: 'center' }}
-          onMouseDown={handleCircularSeek}
-          onTouchStart={handleCircularSeek}
+          style={{ 
+            position: 'relative', 
+            width: 'min(65vw, 300px)', 
+            aspectRatio: '1/1', 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            cursor: 'pointer'
+          }}
+          onClick={handleCircularSeek}
         >
           {/* Circular SVG Progress */}
           <svg 
-            viewBox={`0 0 ${svgSize} ${svgSize}`} 
+            viewBox={`0 0 ${size} ${size}`} 
             style={{ 
               position: 'absolute', 
-              width: 'calc(100% + 80px)', 
-              height: 'calc(100% + 80px)', 
-              transform: 'rotate(-90deg)',
-              pointerEvents: 'none', // Important so touch hits the container
+              width: '130%', 
+              height: '130%', 
+              pointerEvents: 'none',
               zIndex: 10
             }}
           >
             {/* Background Track */}
             <circle
-              cx={center} cy={center} r={radius}
+              cx={centerX} cy={centerY} r={radius}
               fill="none"
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="3"
+              stroke="rgba(255,255,255,0.05)"
+              strokeWidth="4"
             />
             {/* Progress Arc */}
             <motion.circle
-              cx={center} cy={center} r={radius}
+              cx={centerX} cy={centerY} r={radius}
               fill="none"
               stroke="#ff2d78"
-              strokeWidth="3"
+              strokeWidth="4"
               strokeDasharray={circumference}
-              animate={{ strokeDashoffset }}
+              animate={{ strokeDashoffset: offset }}
               transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
               strokeLinecap="round"
-              style={{ filter: 'drop-shadow(0 0 6px #ff2d78)' }}
+              transform={`rotate(-90 ${centerX} ${centerY})`}
+              style={{ filter: 'drop-shadow(0 0 8px #ff2d78)' }}
             />
             {/* Tip Dot */}
             <motion.circle
-              cx={dotX} cy={dotY} r="6"
+              cx={dotX} cy={dotY} r="5"
               fill="#ffffff"
-              stroke="#ff2d78"
-              strokeWidth="2"
               animate={isPlaying ? {
-                filter: [
-                  'drop-shadow(0 0 8px #ff2d78) drop-shadow(0 0 16px rgba(255,45,120,0.5))',
-                  'drop-shadow(0 0 12px #ff2d78) drop-shadow(0 0 24px rgba(255,45,120,0.8))',
-                  'drop-shadow(0 0 8px #ff2d78) drop-shadow(0 0 16px rgba(255,45,120,0.5))'
-                ]
-              } : {
-                filter: 'drop-shadow(0 0 8px #ff2d78) drop-shadow(0 0 16px rgba(255,45,120,0.5))'
-              }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              style={{ zIndex: 20 }}
+                boxShadow: ['0 0 10px #ff2d78', '0 0 20px #ff2d78', '0 0 10px #ff2d78']
+              } : {}}
+              style={{ filter: 'drop-shadow(0 0 8px #ff2d78)' }}
             />
           </svg>
 
+          {/* Album Art Image */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            style={{ width: '100%', height: '100%', position: 'relative' }}
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              borderRadius: '50%', 
+              overflow: 'hidden', 
+              border: '4px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+              position: 'relative',
+              zIndex: 5
+            }}
           >
-            {/* Rotating Vinyl Background */}
-            <div className={`animate-vinyl ${!isPlaying ? 'animate-vinyl-paused' : ''}`} style={{
-              position: 'absolute',
-              inset: -15,
-              background: 'conic-gradient(#111, #000, #111, #000, #111)',
-              borderRadius: '50%',
-              zIndex: -1,
-              boxShadow: '0 0 40px rgba(0,0,0,0.8)'
-            }}>
-              <div style={{ position: 'absolute', inset: '30%', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '50%' }} />
-            </div>
-
-            {/* Main Circular Art */}
-            <div style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              overflow: 'hidden',
-              border: '4px solid #000',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
-            }}>
-              <img src={currentSong.album_art_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-            </div>
+            <img 
+              src={currentSong.album_art_url} 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              alt="" 
+            />
           </motion.div>
         </div>
+      </div>
 
-        {/* Time Display centered below circle */}
-        <div className="font-mono" style={{ fontSize: 14, fontWeight: 900, marginTop: 40, color: 'var(--pink-hot)' }}>
-          {formatTime(progress)}
-        </div>
+      {/* 3. TIME DISPLAY - 30px */}
+      <div style={{ height: 30, display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+        <span className="font-mono" style={{ fontSize: 14, fontWeight: 900, color: 'var(--pink-hot)', letterSpacing: '0.1em' }}>
+          {formatTime(progress)} / {formatTime(duration)}
+        </span>
+      </div>
 
-        {/* Waveform */}
+      {/* 4. WAVEFORM - 50px */}
+      <div style={{ height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '0 20px' }}>
         <Waveform />
       </div>
 
-      {/* Song Info */}
-      <div style={{ padding: '0 10px', marginBottom: 30 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ fontSize: 24, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {decodeSongTitle(currentSong.title).toUpperCase()}
-            </h1>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>
-              {currentSong.artist.toUpperCase()}
-            </p>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.8 }}
-            onClick={() => setShowPlaylistSelector(true)}
-            className="glass flex-center"
-            style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}
-          >
-            +
-          </motion.button>
+      {/* 5. SONG INFO - 60px */}
+      <div style={{ height: 60, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 30px', flexShrink: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, marginRight: 20 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>
+            {decodeSongTitle(currentSong.title).toUpperCase()}
+          </h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: '4px 0 0 0', fontWeight: 600 }}>
+            {currentSong.artist.toUpperCase()}
+          </p>
         </div>
+        <motion.button
+          whileTap={{ scale: 0.8 }}
+          className="glass flex-center"
+          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}
+        >
+          ♥
+        </motion.button>
       </div>
 
-      {/* Playback Controls Row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'env(safe-area-inset-bottom, 20px)' }}>
+      {/* 6. CONTROLS ROW - 80px */}
+      <div style={{ 
+        height: 80, 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        gap: 20, 
+        padding: '0 20px',
+        flexShrink: 0 
+      }}>
         <button
           onClick={toggleShuffle}
-          style={{ background: 'none', border: 'none', color: shuffle ? 'var(--pink-hot)' : 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 900, cursor: 'pointer' }}
+          style={{ background: 'none', border: 'none', color: shuffle ? 'var(--pink-hot)' : 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 900, cursor: 'pointer', width: 60 }}
         >
           SHUFFLE
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 30 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 25 }}>
           <motion.button 
             whileTap={{ scale: 0.8 }} 
             onClick={prevSong}
-            onMouseDown={() => handleLongPressStart('prev')}
-            onMouseUp={handleLongPressEnd}
-            onMouseLeave={handleLongPressEnd}
-            onTouchStart={() => handleLongPressStart('prev')}
-            onTouchEnd={handleLongPressEnd}
             style={{ background: 'none', border: 'none', color: '#fff', fontSize: 28, cursor: 'pointer' }}
           >
             ⏮
           </motion.button>
           
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={togglePlay}
-            className="flex-center pink-glow"
-            style={{
-              width: 74, height: 74, borderRadius: '50%', background: 'var(--pink-hot)', border: 'none', color: '#fff', fontSize: 28, cursor: 'pointer'
-            }}
-          >
-            {isPlaying ? '⏸' : '▶'}
-          </motion.button>
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {/* Pulsing glow ring */}
+            {isPlaying && (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0.5 }}
+                animate={{ scale: 1.4, opacity: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
+                style={{
+                  position: 'absolute',
+                  width: 72,
+                  height: 72,
+                  borderRadius: '50%',
+                  border: '2px solid var(--pink-hot)',
+                  pointerEvents: 'none'
+                }}
+              />
+            )}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={togglePlay}
+              style={{
+                width: 72, 
+                height: 72, 
+                borderRadius: '50%', 
+                background: 'linear-gradient(135deg, #ff2d78, #ff5e95)', 
+                border: 'none', 
+                color: '#fff', 
+                fontSize: 28, 
+                cursor: 'pointer',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxShadow: '0 0 30px rgba(255,45,120,0.6), 0 0 60px rgba(255,45,120,0.3)',
+                zIndex: 2
+              }}
+            >
+              {isPlaying ? '⏸' : '▶'}
+            </motion.button>
+          </div>
 
           <motion.button 
             whileTap={{ scale: 0.8 }} 
             onClick={nextSong}
-            onMouseDown={() => handleLongPressStart('next')}
-            onMouseUp={handleLongPressEnd}
-            onMouseLeave={handleLongPressEnd}
-            onTouchStart={() => handleLongPressStart('next')}
-            onTouchEnd={handleLongPressEnd}
             style={{ background: 'none', border: 'none', color: '#fff', fontSize: 28, cursor: 'pointer' }}
           >
             ⏭
@@ -316,11 +326,34 @@ const NowPlaying = () => {
 
         <button
           onClick={cycleRepeat}
-          style={{ background: 'none', border: 'none', color: repeat !== 'off' ? 'var(--pink-hot)' : 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 900, cursor: 'pointer' }}
+          style={{ background: 'none', border: 'none', color: repeat !== 'off' ? 'var(--pink-hot)' : 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 900, cursor: 'pointer', width: 60 }}
         >
           {repeat.toUpperCase()}
         </button>
       </div>
+
+      {/* 7. ADD TO PLAYLIST - 40px */}
+      <div style={{ height: 40, display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, marginBottom: 10 }}>
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setShowPlaylistSelector(true)}
+          style={{ 
+            background: 'rgba(255,255,255,0.05)', 
+            border: '1px solid rgba(255,255,255,0.1)', 
+            padding: '6px 16px', 
+            borderRadius: 20, 
+            color: '#fff', 
+            fontSize: 12, 
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}
+        >
+          ADD TO PLAYLIST +
+        </motion.button>
+      </div>
+
+      {/* Spacing for bottom nav if needed */}
+      <div style={{ height: 20, flexShrink: 0 }} />
 
       <AnimatePresence>
         {showPlaylistSelector && (
