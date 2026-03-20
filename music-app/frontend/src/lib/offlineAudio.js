@@ -101,3 +101,17 @@ export const cacheSongForOffline = async (song = {}) => {
   );
   return { ok: true, reason: 'saved' };
 };
+
+export const removeSongFromOfflineCache = async (song = {}) => {
+  if (typeof window === 'undefined' || !window.caches) {
+    return { ok: false, reason: 'cache-unavailable' };
+  }
+
+  const candidates = getSongAudioUrlCandidates(song);
+  if (candidates.length === 0) return { ok: true };
+
+  const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
+  await Promise.all(candidates.map((url) => cache.delete(url)));
+  
+  return { ok: true };
+};

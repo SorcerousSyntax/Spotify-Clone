@@ -191,14 +191,29 @@ const readOfflineLibrarySnapshot = () => {
 
   try {
     const raw = localStorage.getItem(OFFLINE_LIBRARY_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
+    const offlineIdsRaw = localStorage.getItem('raabta_offline_songs');
+    
+    if (!raw && !offlineIdsRaw) return null;
+    
+    const parsed = raw ? JSON.parse(raw) : {};
+    let offlineSongIds = [];
+    
+    if (offlineIdsRaw) {
+      try {
+        offlineSongIds = JSON.parse(offlineIdsRaw);
+      } catch (e) {
+        offlineSongIds = parsed?.offlineSongIds || [];
+      }
+    } else {
+      offlineSongIds = parsed?.offlineSongIds || [];
+    }
+
     return {
       likedSongIds: Array.isArray(parsed?.likedSongIds) ? parsed.likedSongIds : [],
       recentlyPlayed: Array.isArray(parsed?.recentlyPlayed) ? parsed.recentlyPlayed : [],
       songsById: parsed?.songsById && typeof parsed.songsById === 'object' ? parsed.songsById : {},
       playlists: Array.isArray(parsed?.playlists) ? parsed.playlists : [],
-      offlineSongIds: Array.isArray(parsed?.offlineSongIds) ? parsed.offlineSongIds : [],
+      offlineSongIds: Array.isArray(offlineSongIds) ? offlineSongIds : [],
     };
   } catch (error) {
     console.warn('Offline snapshot read failed:', error?.message || error);
@@ -364,6 +379,10 @@ const usePlayerStore = create((set, get) => ({
     if (newOffline.has(song.id)) {
       newOffline.delete(song.id);
       localStorage.setItem('raabta_offline_songs', JSON.stringify([...newOffline]));
+      
+      const { removeSongFromOfflineCache } = await import('../lib/offlineAudio');
+      await removeSongFromOfflineCache(song);
+
       persistOfflineLibrarySnapshot({
         likedSongIds: state.likedSongIds,
         recentlyPlayed: state.recentlyPlayed,
