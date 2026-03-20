@@ -16,6 +16,7 @@ const Home = React.lazy(() => import('./pages/Home'));
 const Search = React.lazy(() => import('./pages/Search'));
 const NowPlaying = React.lazy(() => import('./pages/NowPlaying'));
 const Library = React.lazy(() => import('./pages/Library'));
+const Profile = React.lazy(() => import('./pages/Profile'));
 
 const PageTransition = ({ children }) => (
   <motion.div
@@ -57,40 +58,38 @@ const TopBar = ({ session }) => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+      className="glass"
       style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         height: 80,
-        backdropFilter: 'blur(30px)',
-        WebkitBackdropFilter: 'blur(30px)',
-        background: 'rgba(0,0,0,0.8)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        borderTopLeftRadius: 0, borderTopRightRadius: 0,
+        borderLeft: 'none', borderRight: 'none', borderTop: 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 5vw',
       }}
     >
       <Link to="/" style={{ textDecoration: 'none' }}>
         <h1 style={{
-          fontSize: 28, margin: 0, color: '#fff',
+          fontSize: 24, margin: 0, color: '#fff',
           fontFamily: "'Space Grotesk', sans-serif", fontWeight: 900,
           letterSpacing: '-0.02em'
         }}>
-          RAABTA<span style={{ color: '#ff2d78' }}>.</span>
+          RAABTA<span className="text-pink">.</span>
         </h1>
       </Link>
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: 30 }}>
-        <span className="font-mono" style={{ fontSize: 10, color: '#ff2d78' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <span className="font-mono" style={{ fontSize: 10, color: '#fff' }}>
           {display}
         </span>
         <Link to="/profile" style={{ textDecoration: 'none' }}>
-          <div style={{
-            width: 45, height: 45, borderRadius: 0,
-            background: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, fontWeight: 900, color: '#000',
+          <div className="flex-center" style={{
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'var(--glass-bg)',
+            border: '1px solid var(--glass-border)',
+            fontSize: 14, fontWeight: 900, color: '#fff',
             fontFamily: "'Space Grotesk', sans-serif",
-            transition: 'all 0.3s ease',
-            border: '1px solid #ff2d78'
+            overflow: 'hidden'
           }}>
             {display[0]?.toUpperCase() || '♪'}
           </div>
@@ -206,7 +205,7 @@ const AnimatedRoutes = ({ session, authReady }) => {
         <Route path="/search" element={<ProtectedRoute session={session} authReady={authReady}><PageTransition><Search /></PageTransition></ProtectedRoute>} />
         <Route path="/now-playing" element={<ProtectedRoute session={session} authReady={authReady}><PageTransition><NowPlaying /></PageTransition></ProtectedRoute>} />
         <Route path="/library" element={<ProtectedRoute session={session} authReady={authReady}><PageTransition><Library /></PageTransition></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute session={session} authReady={authReady}><PageTransition><ProfilePage /></PageTransition></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute session={session} authReady={authReady}><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
         <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />
       </Routes>
     </AnimatePresence>
@@ -247,6 +246,7 @@ const AppInner = () => {
   return (
     <SmoothScroll>
       <div style={{ position: 'relative', minHeight: '100dvh', background: '#000', overflow: 'hidden' }}>
+        <GlobalCanvas />
         <div className="noise" />
 
         {showShell && !isNowPlayingRoute && <TopBar session={session} />}
@@ -254,13 +254,14 @@ const AppInner = () => {
         <main style={{
           position: 'relative', zIndex: 2,
           paddingBottom: 150,
-          background: '#000'
+          background: 'transparent'
         }}>
           <Suspense fallback={<PageSkeleton />}>
             <AnimatedRoutes session={session} authReady={authReady} />
           </Suspense>
         </main>
 
+        {showShell && <MiniPlayer />}
         {showShell && <BottomNav />}
         <GlobalCursor />
       </div>
@@ -278,36 +279,11 @@ export default function App() {
   );
 }
 
-const ProfilePage = () => {
-  const likedCount = usePlayerStore((s) => s.likedSongIds.size);
-  const playedCount = usePlayerStore((s) => s.recentlyPlayed.length);
-  const onSignOut = () => supabase?.auth.signOut();
-
-  return (
-    <div style={{ padding: '100px 40px', maxWidth: 800, margin: '0 auto' }}>
-      <h2 style={{ fontSize: 64, marginBottom: 40 }}>PROFILE</h2>
-      <div className="glass" style={{ padding: 40, display: 'grid', gap: 20 }}>
-        <div style={{ display: 'flex', gap: 40 }}>
-          <div>
-            <p className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>LIKED</p>
-            <p style={{ fontSize: 32, fontWeight: 900 }}>{likedCount}</p>
-          </div>
-          <div>
-            <p className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>PLAYED</p>
-            <p style={{ fontSize: 32, fontWeight: 900 }}>{playedCount}</p>
-          </div>
-        </div>
-        <button onClick={onSignOut} className="btn-secondary" style={{ width: 'fit-content' }}>SIGN OUT</button>
-      </div>
-    </div>
-  );
-};
-
 const PageSkeleton = () => (
-  <div style={{ padding: '100px 40px' }}>
-    <div className="shimmer" style={{ height: 60, width: '40%', marginBottom: 40, borderRadius: 4 }} />
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
-      {[1, 2, 3, 4].map(i => <div key={i} className="shimmer" style={{ height: 280, borderRadius: 4 }} />)}
+  <div style={{ padding: '100px 20px' }}>
+    <div className="shimmer" style={{ height: 60, width: '60%', marginBottom: 40, borderRadius: 12 }} />
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 20 }}>
+      {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="shimmer" style={{ height: 180, borderRadius: 24 }} />)}
     </div>
   </div>
 );

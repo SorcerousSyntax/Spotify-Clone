@@ -20,16 +20,30 @@ const BottomNav = () => {
 
   return (
     <div style={{
-      position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)',
-      zIndex: 100, width: 'min(360px, 90vw)'
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      zIndex: 1000,
+      paddingBottom: 'env(safe-area-inset-bottom, 20px)',
+      background: 'rgba(0,0,0,0.8)',
+      backdropFilter: 'blur(30px)',
+      WebkitBackdropFilter: 'blur(30px)',
+      borderTop: '1px solid rgba(255,45,120,0.2)',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      overflow: 'hidden'
     }}>
       <motion.nav
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="nav-pill"
+        transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
         style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 25px', boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          height: 70,
+          padding: '0 20px'
         }}
       >
         {NAV_ITEMS.map((item) => {
@@ -37,16 +51,23 @@ const BottomNav = () => {
           return (
             <motion.button
               key={item.id}
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate(item.path)}
               style={{
-                background: 'none', border: 'none',
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                gap: 5, cursor: 'pointer', position: 'relative'
+                background: 'none',
+                border: 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+                cursor: 'pointer',
+                position: 'relative',
+                flex: 1,
+                padding: '10px 0'
               }}
             >
               <span style={{ 
-                fontSize: 22, 
+                fontSize: 24, 
                 color: active ? '#ff2d78' : 'rgba(255,255,255,0.4)',
                 transition: 'all 0.3s ease'
               }}>
@@ -54,12 +75,27 @@ const BottomNav = () => {
               </span>
               <span style={{ 
                 fontSize: 9, 
-                color: active ? '#fff' : 'rgba(255,255,255,0.4)',
-                fontWeight: 700,
+                color: active ? '#ff2d78' : 'rgba(255,255,255,0.4)',
+                fontWeight: 900,
+                fontFamily: "'Space Grotesk', sans-serif",
                 transition: 'all 0.3s ease'
               }}>
                 {item.label}
               </span>
+              {active && (
+                <motion.div
+                  layoutId="active-dot"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    width: 4,
+                    height: 4,
+                    borderRadius: '50%',
+                    background: '#ff2d78',
+                    boxShadow: '0 0 10px #ff2d78'
+                  }}
+                />
+              )}
             </motion.button>
           );
         })}

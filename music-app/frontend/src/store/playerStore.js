@@ -271,6 +271,7 @@ const usePlayerStore = create((set, get) => ({
 
   // Offline songs
   offlineSongIds: new Set(offlineSnapshot?.offlineSongIds || []),
+  downloadingIds: new Set(),
 
   // Recently played
   recentlyPlayed: (offlineSnapshot?.recentlyPlayed || []).map(normalizeSong),
@@ -317,6 +318,7 @@ const usePlayerStore = create((set, get) => ({
       playlists: state.playlists,
       offlineSongIds: state.offlineSongIds,
     });
+    localStorage.setItem('raabta_offline_songs', JSON.stringify([...state.offlineSongIds]));
 
     set({
       currentSong: song,
@@ -347,6 +349,7 @@ const usePlayerStore = create((set, get) => ({
       playlists: state.playlists,
       offlineSongIds: state.offlineSongIds,
     });
+    localStorage.setItem('raabta_offline_songs', JSON.stringify([...state.offlineSongIds]));
 
     return { songsById: nextSongsById };
   }),
@@ -360,24 +363,47 @@ const usePlayerStore = create((set, get) => ({
 
     if (newOffline.has(song.id)) {
       newOffline.delete(song.id);
+      localStorage.setItem('raabta_offline_songs', JSON.stringify([...newOffline]));
+      persistOfflineLibrarySnapshot({
+        likedSongIds: state.likedSongIds,
+        recentlyPlayed: state.recentlyPlayed,
+        songsById: state.songsById,
+        playlists: state.playlists,
+        offlineSongIds: newOffline,
+      });
+      set({ offlineSongIds: newOffline });
     } else {
+      set((s) => {
+        const next = new Set(s.downloadingIds);
+        next.add(song.id);
+        return { downloadingIds: next };
+      });
+
       try {
         await cacheSongForOffline(song);
-        newOffline.add(song.id);
+        const nextOffline = new Set(get().offlineSongIds);
+        nextOffline.add(song.id);
+        
+        localStorage.setItem('raabta_offline_songs', JSON.stringify([...nextOffline]));
+        persistOfflineLibrarySnapshot({
+          likedSongIds: state.likedSongIds,
+          recentlyPlayed: state.recentlyPlayed,
+          songsById: state.songsById,
+          playlists: state.playlists,
+          offlineSongIds: nextOffline,
+        });
+        
+        set({ offlineSongIds: nextOffline });
       } catch (error) {
         console.error('Failed to cache song:', error);
+      } finally {
+        set((s) => {
+          const next = new Set(s.downloadingIds);
+          next.delete(song.id);
+          return { downloadingIds: next };
+        });
       }
     }
-
-    persistOfflineLibrarySnapshot({
-      likedSongIds: state.likedSongIds,
-      recentlyPlayed: state.recentlyPlayed,
-      songsById: state.songsById,
-      playlists: state.playlists,
-      offlineSongIds: newOffline,
-    });
-
-    set({ offlineSongIds: newOffline });
   },
 
   hydrateFromSupabase: async () => {
