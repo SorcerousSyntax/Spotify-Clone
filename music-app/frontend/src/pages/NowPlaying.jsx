@@ -23,8 +23,22 @@ const NowPlaying = () => {
   const isOffline = usePlayerStore((s) => s.isOffline);
   const downloadingIds = usePlayerStore((s) => s.downloadingIds);
   const seek = usePlayerStore((s) => s.playerControls.seek);
+  
+  // Like functionality
+  const likedSongIds = usePlayerStore((s) => s.likedSongIds);
+  const toggleLike = usePlayerStore((s) => s.toggleLike);
+  const isLiked = currentSong ? likedSongIds.has(currentSong.id) : false;
 
   const [showPlaylistSelector, setShowPlaylistSelector] = useState(false);
+  const [isTitleOverflowing, setIsTitleOverflowing] = useState(false);
+  const titleRef = useRef(null);
+  const isDragging = useRef(false);
+
+  useEffect(() => {
+    if (titleRef.current) {
+      setIsTitleOverflowing(titleRef.current.scrollWidth > titleRef.current.clientWidth);
+    }
+  }, [currentSong?.title]);
 
   const formatTime = (seconds) => {
     if (!seconds || Number.isNaN(seconds)) return '0:00';
@@ -39,7 +53,6 @@ const NowPlaying = () => {
   const progressRatio = duration > 0 ? (progress / duration) : 0;
   
   // Circular progress config
-  // We'll use a responsive container but base math on a coordinate system
   const size = 300;
   const centerX = size / 2;
   const centerY = size / 2;
@@ -73,6 +86,17 @@ const NowPlaying = () => {
     seek?.(pct * duration);
   };
 
+  const handleDragStart = (e) => {
+    isDragging.current = true;
+    handleCircularSeek(e);
+  };
+  const handleDragMove = (e) => {
+    if (isDragging.current) handleCircularSeek(e);
+  };
+  const handleDragEnd = () => {
+    isDragging.current = false;
+  };
+
   const offlineStatus = isOffline(currentSong.id);
   const isDownloading = downloadingIds.has(currentSong.id);
 
@@ -90,6 +114,20 @@ const NowPlaying = () => {
       overflow: 'hidden',
       height: '100dvh'
     }}>
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(100%) }
+          100% { transform: translateX(-100%) }
+        }
+        .marquee-animation {
+          display: inline-block;
+          animation: marquee 8s linear infinite;
+        }
+        .marquee-animation:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+
       {/* 1. TOP BAR - 60px */}
       <header style={{ 
         height: 60, 
@@ -138,7 +176,7 @@ const NowPlaying = () => {
         justifyContent: 'center', 
         alignItems: 'center', 
         position: 'relative',
-        minHeight: 0 // Crucial for flex nested items
+        minHeight: 0
       }}>
         <div 
           style={{ 
@@ -150,7 +188,13 @@ const NowPlaying = () => {
             alignItems: 'center',
             cursor: 'pointer'
           }}
-          onClick={handleCircularSeek}
+          onMouseDown={handleDragStart}
+          onMouseMove={handleDragMove}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
         >
           {/* Circular SVG Progress */}
           <svg 
@@ -159,7 +203,7 @@ const NowPlaying = () => {
               position: 'absolute', 
               width: '130%', 
               height: '130%', 
-              pointerEvents: 'none',
+              pointerEvents: 'all',
               zIndex: 10
             }}
           >
@@ -187,9 +231,6 @@ const NowPlaying = () => {
             <motion.circle
               cx={dotX} cy={dotY} r="5"
               fill="#ffffff"
-              animate={isPlaying ? {
-                boxShadow: ['0 0 10px #ff2d78', '0 0 20px #ff2d78', '0 0 10px #ff2d78']
-              } : {}}
               style={{ filter: 'drop-shadow(0 0 8px #ff2d78)' }}
             />
           </svg>
@@ -206,7 +247,8 @@ const NowPlaying = () => {
               border: '4px solid rgba(255,255,255,0.1)',
               boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
               position: 'relative',
-              zIndex: 5
+              zIndex: 5,
+              pointerEvents: 'none'
             }}
           >
             <img 
@@ -233,19 +275,55 @@ const NowPlaying = () => {
       {/* 5. SONG INFO - 60px */}
       <div style={{ height: 60, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 30px', flexShrink: 0 }}>
         <div style={{ flex: 1, minWidth: 0, marginRight: 20 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>
-            {decodeSongTitle(currentSong.title).toUpperCase()}
-          </h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: '4px 0 0 0', fontWeight: 600 }}>
+          <div 
+            ref={titleRef}
+            style={{ 
+              width: '100%',
+              overflow: 'hidden', 
+              whiteSpace: 'nowrap',
+              position: 'relative'
+            }}
+          >
+            <h1 
+              className={isTitleOverflowing ? "marquee-animation" : ""}
+              style={{ 
+                fontSize: 22, 
+                fontWeight: 900, 
+                margin: 0,
+                display: isTitleOverflowing ? 'inline-block' : 'block'
+              }}
+            >
+              {decodeSongTitle(currentSong.title).toUpperCase()}
+            </h1>
+          </div>
+          <p style={{ 
+            fontSize: 13, 
+            color: 'rgba(255,255,255,0.5)', 
+            margin: '4px 0 0 0', 
+            fontWeight: 600,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            maxWidth: '100%'
+          }}>
             {currentSong.artist.toUpperCase()}
           </p>
         </div>
         <motion.button
           whileTap={{ scale: 0.8 }}
+          onClick={() => toggleLike(currentSong.id, currentSong)}
           className="glass flex-center"
-          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}
+          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', cursor: 'pointer' }}
         >
-          ♥
+          {isLiked ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#ff2d78">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          )}
         </motion.button>
       </div>
 
@@ -299,7 +377,7 @@ const NowPlaying = () => {
                 width: 72, 
                 height: 72, 
                 borderRadius: '50%', 
-                background: 'linear-gradient(135deg, #ff2d78, #ff5e95)', 
+                background: '#ff2d78', 
                 border: 'none', 
                 color: '#fff', 
                 fontSize: 28, 
@@ -307,11 +385,19 @@ const NowPlaying = () => {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                boxShadow: '0 0 30px rgba(255,45,120,0.6), 0 0 60px rgba(255,45,120,0.3)',
+                boxShadow: '0 0 25px rgba(255,45,120,0.7), 0 0 50px rgba(255,45,120,0.3)',
                 zIndex: 2
               }}
             >
-              {isPlaying ? '⏸' : '▶'}
+              {isPlaying ? (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+              ) : (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              )}
             </motion.button>
           </div>
 
@@ -352,7 +438,6 @@ const NowPlaying = () => {
         </motion.button>
       </div>
 
-      {/* Spacing for bottom nav if needed */}
       <div style={{ height: 20, flexShrink: 0 }} />
 
       <AnimatePresence>
