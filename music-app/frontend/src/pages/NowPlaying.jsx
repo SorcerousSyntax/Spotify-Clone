@@ -37,13 +37,22 @@ const NowPlaying = () => {
   if (!currentSong) return null;
 
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
+  const progressRatio = duration > 0 ? (progress / duration) : 0;
 
   // Circular progress config
-  const svgSize = 320; // Default base size for calculations
-  const radius = 145; // Based on 280px art + padding
+  // Album art is min(280px, 70vw). We'll base calculations on 280px.
+  const artDiameter = 280;
+  const gap = 20;
+  const radius = (artDiameter / 2) + gap; // 140 + 20 = 160
+  const svgSize = artDiameter + (gap * 2) + 40; // 280 + 40 + 40 = 360 (room for dot/glow)
   const center = svgSize / 2;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+  const strokeDashoffset = circumference - progressRatio * circumference;
+
+  // Dot position calculation using trigonometry
+  const dotAngle = (progressRatio * 360 - 90) * (Math.PI / 180);
+  const dotX = center + radius * Math.cos(dotAngle);
+  const dotY = center + radius * Math.sin(dotAngle);
 
   // Seek logic for circular arc
   const handleCircularSeek = (e) => {
@@ -67,12 +76,6 @@ const NowPlaying = () => {
     const pct = angle / (2 * Math.PI);
     seek?.(pct * duration);
   };
-
-  // Dot position calculation
-  const dotAngle = (progressPercent / 100) * 360 - 90;
-  const dotAngleRad = (dotAngle * Math.PI) / 180;
-  const dotX = center + radius * Math.cos(dotAngleRad);
-  const dotY = center + radius * Math.sin(dotAngleRad);
 
   // Long press logic
   const longPressTimer = useRef(null);
@@ -154,10 +157,11 @@ const NowPlaying = () => {
             viewBox={`0 0 ${svgSize} ${svgSize}`} 
             style={{ 
               position: 'absolute', 
-              width: 'calc(100% + 32px)', 
-              height: 'calc(100% + 32px)', 
+              width: 'calc(100% + 80px)', 
+              height: 'calc(100% + 80px)', 
               transform: 'rotate(-90deg)',
-              pointerEvents: 'none' // Important so touch hits the container
+              pointerEvents: 'none', // Important so touch hits the container
+              zIndex: 10
             }}
           >
             {/* Background Track */}
@@ -175,15 +179,27 @@ const NowPlaying = () => {
               strokeWidth="3"
               strokeDasharray={circumference}
               animate={{ strokeDashoffset }}
-              transition={{ type: 'tween', ease: 'linear' }}
+              transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
               strokeLinecap="round"
               style={{ filter: 'drop-shadow(0 0 6px #ff2d78)' }}
             />
             {/* Tip Dot */}
             <motion.circle
-              cx={dotX} cy={dotY} r="4"
-              fill="#ff2d78"
-              style={{ filter: 'drop-shadow(0 0 8px #ff2d78)' }}
+              cx={dotX} cy={dotY} r="6"
+              fill="#ffffff"
+              stroke="#ff2d78"
+              strokeWidth="2"
+              animate={isPlaying ? {
+                filter: [
+                  'drop-shadow(0 0 8px #ff2d78) drop-shadow(0 0 16px rgba(255,45,120,0.5))',
+                  'drop-shadow(0 0 12px #ff2d78) drop-shadow(0 0 24px rgba(255,45,120,0.8))',
+                  'drop-shadow(0 0 8px #ff2d78) drop-shadow(0 0 16px rgba(255,45,120,0.5))'
+                ]
+              } : {
+                filter: 'drop-shadow(0 0 8px #ff2d78) drop-shadow(0 0 16px rgba(255,45,120,0.5))'
+              }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              style={{ zIndex: 20 }}
             />
           </svg>
 
@@ -219,7 +235,7 @@ const NowPlaying = () => {
         </div>
 
         {/* Time Display centered below circle */}
-        <div className="font-mono" style={{ fontSize: 14, fontWeight: 900, marginTop: 30, color: 'var(--pink-hot)' }}>
+        <div className="font-mono" style={{ fontSize: 14, fontWeight: 900, marginTop: 40, color: 'var(--pink-hot)' }}>
           {formatTime(progress)}
         </div>
 
