@@ -11,6 +11,8 @@
   "dependencies": {
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
+    "@splinetool/react-spline": "^4.1.0",
+    "@splinetool/runtime": "^1.12.70",
     "@studio-freight/lenis": "^1.0.42",
     "@supabase/supabase-js": "^2.38.0",
     "color-thief-browser": "^2.0.0",

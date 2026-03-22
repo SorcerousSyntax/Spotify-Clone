@@ -6,6 +6,7 @@ import LoadingScreen from './components/LoadingScreen';
 import BottomNav from './components/BottomNav';
 import MiniPlayer from './components/MiniPlayer';
 import GlobalCanvas from './components/GlobalCanvas';
+import SplineBackground from './components/SplineBackground';
 import SmoothScroll from './components/SmoothScroll';
 import usePlayer from './hooks/usePlayer';
 import usePlayerStore from './store/playerStore';
@@ -246,7 +247,7 @@ const AppInner = () => {
   return (
     <SmoothScroll>
       <div style={{ position: 'relative', minHeight: '100dvh', background: '#000', overflow: 'hidden' }}>
-        <GlobalCanvas />
+        {isPublicAuthPage ? <SplineBackground /> : <GlobalCanvas />}
         <div className="noise" />
 
         {showShell && !isNowPlayingRoute && <TopBar session={session} />}
