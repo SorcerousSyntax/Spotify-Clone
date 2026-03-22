@@ -5,6 +5,7 @@ import usePlayerStore from '../store/playerStore';
 import { supabase } from '../lib/supabase';
 import { decodeSongTitle } from '../lib/text';
 import PlaylistFolderCard from '../components/PlaylistFolderCard';
+import SplineBackground from '../components/SplineBackground';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -47,7 +48,9 @@ const Home = () => {
   };
 
   return (
-    <div style={{ padding: '100px 20px 150px 20px', minHeight: '100vh', position: 'relative', zIndex: 10 }}>
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      <SplineBackground />
+      <div style={{ padding: '100px 20px 150px 20px', position: 'relative', zIndex: 10 }}>
       {/* Hero Greeting */}
       <section style={{ marginBottom: 40 }}>
         <h1 style={{ fontSize: 42, lineHeight: 1, color: '#fff' }}>
@@ -175,6 +178,7 @@ const Home = () => {
       >
         GENERATE AI PLAYLIST
       </motion.button>
+      </div>
     </div>
   );
 };

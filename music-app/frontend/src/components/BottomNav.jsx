@@ -21,10 +21,12 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
     .bnav-pill {
       position: fixed;
       bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-      left: 50%;
-      transform: translateX(-50%);
+      left: 4%;
+      right: 4%;
+      margin: 0 auto;
+      max-width: 440px;
+      width: auto;
       z-index: 9999;
-      width: min(92vw, 440px);
       height: 70px;
       border-radius: 999px;
       /* frosted glass body: purple/blue tint like reference */
