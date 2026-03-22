@@ -112,7 +112,8 @@ const NowPlaying = () => {
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
-      height: '100dvh'
+      height: '100dvh',
+      touchAction: 'none'
     }}>
       <style>{`
         @keyframes marquee {
@@ -186,7 +187,8 @@ const NowPlaying = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            touchAction: 'none'
           }}
           onMouseDown={handleDragStart}
           onMouseMove={handleDragMove}
@@ -201,9 +203,9 @@ const NowPlaying = () => {
             viewBox={`0 0 ${size} ${size}`} 
             style={{ 
               position: 'absolute', 
-              width: '130%', 
-              height: '130%', 
-              pointerEvents: 'all',
+              width: '135%', 
+              height: '135%', 
+              pointerEvents: 'none',
               zIndex: 10
             }}
           >
@@ -229,9 +231,18 @@ const NowPlaying = () => {
             />
             {/* Tip Dot */}
             <motion.circle
-              cx={dotX} cy={dotY} r="5"
+              cx={dotX} cy={dotY} r="6"
               fill="#ffffff"
               style={{ filter: 'drop-shadow(0 0 8px #ff2d78)' }}
+            />
+
+            {/* INVISIBLE HIT AREA - Fixed Seek */}
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={radius + 30}
+              fill="transparent"
+              style={{ pointerEvents: 'all' }}
             />
           </svg>
 

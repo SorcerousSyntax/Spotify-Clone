@@ -246,34 +246,34 @@ const AppInner = () => {
   const showShell = authReady && session && !isPublicAuthPage;
   const isNowPlayingRoute = location.pathname === '/now-playing';
 
-  return (
-    <SmoothScroll>
-      <div style={{ position: 'relative', minHeight: '100dvh', background: '#000', overflow: 'hidden' }}>
-        {!isProfilePage ? (
-          <SplineBackground mode={isHomePage ? 'orange' : 'pink'} />
-        ) : (
-          <GlobalCanvas />
-        )}
-        <div className="noise" />
+  const content = (
+    <div style={{ position: 'relative', minHeight: '100dvh', background: '#000', overflow: 'hidden' }}>
+      {!isProfilePage ? (
+        <SplineBackground mode={isHomePage ? 'orange' : 'pink'} />
+      ) : (
+        <GlobalCanvas />
+      )}
+      <div className="noise" />
 
-        {showShell && !isNowPlayingRoute && <TopBar session={session} />}
+      {showShell && !isNowPlayingRoute && <TopBar session={session} />}
 
-        <main style={{
-          position: 'relative', zIndex: 2,
-          paddingBottom: 150,
-          background: 'transparent'
-        }}>
-          <Suspense fallback={<PageSkeleton />}>
-            <AnimatedRoutes session={session} authReady={authReady} />
-          </Suspense>
-        </main>
+      <main style={{
+        position: 'relative', zIndex: 2,
+        paddingBottom: 150,
+        background: 'transparent'
+      }}>
+        <Suspense fallback={<PageSkeleton />}>
+          <AnimatedRoutes session={session} authReady={authReady} />
+        </Suspense>
+      </main>
 
-        {showShell && <MiniPlayer />}
-        {showShell && <BottomNav />}
-        <GlobalCursor />
-      </div>
-    </SmoothScroll>
+      {showShell && <MiniPlayer />}
+      {showShell && <BottomNav />}
+      <GlobalCursor />
+    </div>
   );
+
+  return isNowPlayingRoute ? content : <SmoothScroll>{content}</SmoothScroll>;
 };
 
 export default function App() {

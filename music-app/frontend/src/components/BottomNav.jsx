@@ -29,21 +29,21 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
       z-index: 9999;
       height: 70px;
       border-radius: 999px;
-      /* darker frosted glass body for better contrast */
+      /* light frosted glass body */
       background: linear-gradient(
         135deg,
-        rgba(30, 20, 50, 0.95) 0%,
-        rgba(20, 10, 40, 0.90) 50%,
-        rgba(10, 5, 30, 0.95) 100%
+        rgba(255, 255, 255, 0.45) 0%,
+        rgba(255, 255, 255, 0.30) 50%,
+        rgba(255, 255, 255, 0.40) 100%
       );
-      backdrop-filter:          blur(40px) saturate(190%) brightness(0.8);
-      -webkit-backdrop-filter:  blur(40px) saturate(190%) brightness(0.8);
+      backdrop-filter:          blur(30px) saturate(190%) brightness(1.1);
+      -webkit-backdrop-filter:  blur(30px) saturate(190%) brightness(1.1);
       /* outer drop shadow */
       box-shadow:
-        0 12px 52px rgba(0,0,0,0.80),
-        0  4px 24px rgba(130, 70, 255, 0.4),
-        inset 0  1px 0 rgba(255,255,255,0.15),
-        inset 0 -1px 0 rgba( 90, 50, 190, 0.3);
+        0 12px 52px rgba(0,0,0,0.15),
+        0  4px 24px rgba(0, 0, 0, 0.08),
+        inset 0  1px 0 rgba(255,255,255,0.60),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
       display: flex;
       align-items: center;
       justify-content: space-around;
@@ -75,7 +75,7 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
       mask-composite: exclude;
       padding: 1.5px;
       animation: bnav-spin 4s linear infinite;
-      opacity: 0.85;
+      opacity: 0.4;
       z-index: -1;
     }
 
@@ -88,9 +88,9 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
       background: linear-gradient(
         90deg,
         transparent,
-        rgba(255,255,255,0.55) 30%,
-        rgba(210,175,255,0.72) 50%,
-        rgba(255,255,255,0.55) 70%,
+        rgba(255,255,255,0.8) 30%,
+        rgba(255,255,255,0.9) 50%,
+        rgba(255,255,255,0.8) 70%,
         transparent
       );
       pointer-events: none;
@@ -115,11 +115,10 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
         background 0.28s ease,
         transform  0.22s cubic-bezier(.34,1.56,.64,1);
     }
-    .bnav-btn:hover  { background: rgba(180,140,255,0.10); transform: translateY(-2px); }
+    .bnav-btn:hover  { background: rgba(0,0,0,0.05); transform: translateY(-2px); }
     .bnav-btn:active { transform: scale(0.91); }
     .bnav-btn.bnav-active {
-      background: linear-gradient(135deg, rgba(160,100,255,0.20), rgba(80,100,255,0.13));
-      box-shadow: inset 0 0 14px rgba(155,92,246,0.18), 0 0 16px rgba(130,80,255,0.12);
+      background: rgba(0,0,0,0.03);
     }
 
     /* ── icon ── */
@@ -130,14 +129,11 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
     }
     .bnav-btn:hover .bnav-ico { transform: scale(1.14); }
     .bnav-ico-on {
-      color: #ffffff;
-      text-shadow:
-        0 0  9px rgba(200,150,255,0.95),
-        0 0 22px rgba(140, 80,255,0.80),
-        0 0 40px rgba(100,120,255,0.45);
+      color: #000000;
+      text-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     .bnav-ico-off {
-      color: rgba(255, 255, 255, 0.55);
+      color: rgba(0, 0, 0, 0.4);
     }
 
     /* ── label ── */
@@ -149,15 +145,15 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
       font-family: 'Space Grotesk', system-ui, sans-serif;
       transition: color 0.28s, text-shadow 0.28s;
     }
-    .bnav-lbl-on  { color: rgba(255,255,255,1); text-shadow: 0 0 8px rgba(175,115,255,0.7); }
-    .bnav-lbl-off { color: rgba(255, 255, 255, 0.45); }
+    .bnav-lbl-on  { color: #000000; }
+    .bnav-lbl-off { color: rgba(0, 0, 0, 0.35); }
 
     /* ── active pip dot ── */
     .bnav-pip {
       width: 3px; height: 3px;
       border-radius: 50%;
-      background: #c4a0ff;
-      box-shadow: 0 0 6px #9b5cf6, 0 0 14px rgba(155,92,246,0.55);
+      background: #000000;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
     }
   `;
   document.head.appendChild(s);
