@@ -177,12 +177,13 @@ const NowPlaying = () => {
         justifyContent: 'center', 
         alignItems: 'center', 
         position: 'relative',
-        minHeight: 0
+        minHeight: 0,
+        padding: '10px 0'
       }}>
         <div 
           style={{ 
             position: 'relative', 
-            width: 'min(65vw, 300px)', 
+            width: 'min(60vw, 260px)', 
             aspectRatio: '1/1', 
             display: 'flex', 
             justifyContent: 'center', 
@@ -203,8 +204,8 @@ const NowPlaying = () => {
             viewBox={`0 0 ${size} ${size}`} 
             style={{ 
               position: 'absolute', 
-              width: '135%', 
-              height: '135%', 
+              width: '145%', 
+              height: '145%', 
               pointerEvents: 'none',
               zIndex: 10
             }}
@@ -240,7 +241,7 @@ const NowPlaying = () => {
             <circle
               cx={centerX}
               cy={centerY}
-              r={radius + 30}
+              r={radius + 40}
               fill="transparent"
               style={{ pointerEvents: 'all' }}
             />
@@ -272,19 +273,19 @@ const NowPlaying = () => {
       </div>
 
       {/* 3. TIME DISPLAY - 30px */}
-      <div style={{ height: 30, display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
-        <span className="font-mono" style={{ fontSize: 14, fontWeight: 900, color: 'var(--pink-hot)', letterSpacing: '0.1em' }}>
+      <div style={{ height: 25, display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+        <span className="font-mono" style={{ fontSize: 13, fontWeight: 900, color: 'var(--pink-hot)', letterSpacing: '0.1em' }}>
           {formatTime(progress)} / {formatTime(duration)}
         </span>
       </div>
 
       {/* 4. WAVEFORM - 50px */}
-      <div style={{ height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '0 20px' }}>
+      <div style={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: '0 20px' }}>
         <Waveform />
       </div>
 
       {/* 5. SONG INFO - 60px */}
-      <div style={{ height: 60, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 30px', flexShrink: 0 }}>
+      <div style={{ height: 50, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 30px', flexShrink: 0 }}>
         <div style={{ flex: 1, minWidth: 0, marginRight: 20 }}>
           <div 
             ref={titleRef}
@@ -298,7 +299,7 @@ const NowPlaying = () => {
             <h1 
               className={isTitleOverflowing ? "marquee-animation" : ""}
               style={{ 
-                fontSize: 22, 
+                fontSize: 20, 
                 fontWeight: 900, 
                 margin: 0,
                 display: isTitleOverflowing ? 'inline-block' : 'block'
@@ -308,9 +309,9 @@ const NowPlaying = () => {
             </h1>
           </div>
           <p style={{ 
-            fontSize: 13, 
+            fontSize: 12, 
             color: 'rgba(255,255,255,0.5)', 
-            margin: '4px 0 0 0', 
+            margin: '2px 0 0 0', 
             fontWeight: 600,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -324,14 +325,14 @@ const NowPlaying = () => {
           whileTap={{ scale: 0.8 }}
           onClick={() => toggleLike(currentSong.id, currentSong)}
           className="glass flex-center"
-          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', cursor: 'pointer' }}
+          style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', cursor: 'pointer' }}
         >
           {isLiked ? (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#ff2d78">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff2d78">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
           ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
           )}
@@ -340,7 +341,7 @@ const NowPlaying = () => {
 
       {/* 6. CONTROLS ROW - 80px */}
       <div style={{ 
-        height: 80, 
+        height: 70, 
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
@@ -350,22 +351,21 @@ const NowPlaying = () => {
       }}>
         <button
           onClick={toggleShuffle}
-          style={{ background: 'none', border: 'none', color: shuffle ? 'var(--pink-hot)' : 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 900, cursor: 'pointer', width: 60 }}
+          style={{ background: 'none', border: 'none', color: shuffle ? 'var(--pink-hot)' : 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 900, cursor: 'pointer', width: 50 }}
         >
           SHUFFLE
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 25 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <motion.button 
             whileTap={{ scale: 0.8 }} 
             onClick={prevSong}
-            style={{ background: 'none', border: 'none', color: '#fff', fontSize: 28, cursor: 'pointer' }}
+            style={{ background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}
           >
             ⏮
           </motion.button>
           
           <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            {/* Pulsing glow ring */}
             {isPlaying && (
               <motion.div
                 initial={{ scale: 0.8, opacity: 0.5 }}
@@ -373,8 +373,8 @@ const NowPlaying = () => {
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
                 style={{
                   position: 'absolute',
-                  width: 72,
-                  height: 72,
+                  width: 60,
+                  height: 60,
                   borderRadius: '50%',
                   border: '2px solid var(--pink-hot)',
                   pointerEvents: 'none'
@@ -385,13 +385,13 @@ const NowPlaying = () => {
               whileTap={{ scale: 0.95 }}
               onClick={togglePlay}
               style={{
-                width: 72, 
-                height: 72, 
+                width: 60, 
+                height: 60, 
                 borderRadius: '50%', 
                 background: '#ff2d78', 
                 border: 'none', 
                 color: '#fff', 
-                fontSize: 28, 
+                fontSize: 24, 
                 cursor: 'pointer',
                 display: 'flex',
                 justifyContent: 'center',
@@ -401,11 +401,11 @@ const NowPlaying = () => {
               }}
             >
               {isPlaying ? (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
                   <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
                 </svg>
               ) : (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
               )}
@@ -415,7 +415,7 @@ const NowPlaying = () => {
           <motion.button 
             whileTap={{ scale: 0.8 }} 
             onClick={nextSong}
-            style={{ background: 'none', border: 'none', color: '#fff', fontSize: 28, cursor: 'pointer' }}
+            style={{ background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer' }}
           >
             ⏭
           </motion.button>
@@ -423,14 +423,14 @@ const NowPlaying = () => {
 
         <button
           onClick={cycleRepeat}
-          style={{ background: 'none', border: 'none', color: repeat !== 'off' ? 'var(--pink-hot)' : 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 900, cursor: 'pointer', width: 60 }}
+          style={{ background: 'none', border: 'none', color: repeat !== 'off' ? 'var(--pink-hot)' : 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 900, cursor: 'pointer', width: 50 }}
         >
           {repeat.toUpperCase()}
         </button>
       </div>
 
       {/* 7. ADD TO PLAYLIST - 40px */}
-      <div style={{ height: 40, display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, marginBottom: 10 }}>
+      <div style={{ height: 40, display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, marginBottom: 5 }}>
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => setShowPlaylistSelector(true)}
@@ -440,7 +440,7 @@ const NowPlaying = () => {
             padding: '6px 16px', 
             borderRadius: 20, 
             color: '#fff', 
-            fontSize: 12, 
+            fontSize: 11, 
             fontWeight: 700,
             cursor: 'pointer'
           }}
@@ -449,7 +449,8 @@ const NowPlaying = () => {
         </motion.button>
       </div>
 
-      <div style={{ height: 20, flexShrink: 0 }} />
+      {/* Bottom spacer for Navigation Bar */}
+      <div style={{ height: 110, flexShrink: 0 }} />
 
       <AnimatePresence>
         {showPlaylistSelector && (

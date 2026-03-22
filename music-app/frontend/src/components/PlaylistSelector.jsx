@@ -5,10 +5,15 @@ import usePlayerStore from '../store/playerStore';
 const PlaylistSelector = ({ song, onClose }) => {
   const playlists = usePlayerStore((s) => s.playlists);
   const addSongToPlaylist = usePlayerStore((s) => s.addSongToPlaylist);
+  const [addedId, setAddedId] = React.useState(null);
 
   const handleAdd = (playlistId) => {
     addSongToPlaylist(playlistId, song);
-    onClose();
+    setAddedId(playlistId);
+    // Auto close after brief delay
+    setTimeout(() => {
+      onClose();
+    }, 800);
   };
 
   return (
@@ -32,7 +37,7 @@ const PlaylistSelector = ({ song, onClose }) => {
         className="glass"
         style={{
           width: '100%', maxWidth: '500px',
-          padding: '30px 20px ' + (30 + 20) + 'px', // Extra bottom for iOS
+          padding: '30px 20px ' + (30 + 40) + 'px', // Extra bottom for iOS & Nav bar
           borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
           maxHeight: '70vh', overflowY: 'auto'
         }}
@@ -51,12 +56,14 @@ const PlaylistSelector = ({ song, onClose }) => {
               className="glass"
               style={{
                 padding: '15px 20px', textAlign: 'left', border: 'none',
-                color: '#fff', fontSize: 14, fontWeight: 900, cursor: 'pointer',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                color: addedId === playlist.id ? 'var(--pink-hot)' : '#fff', 
+                fontSize: 14, fontWeight: 900, cursor: 'pointer',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                transition: 'all 0.3s ease'
               }}
             >
               <span>{playlist.name.toUpperCase()}</span>
-              <span style={{ opacity: 0.3 }}>+</span>
+              <span>{addedId === playlist.id ? 'ADDED ✓' : '+'}</span>
             </motion.button>
           ))}
           {playlists.filter(p => !p.isSystem).length === 0 && (
