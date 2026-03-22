@@ -241,13 +241,19 @@ const AppInner = () => {
   usePlayer();
 
   const isPublicAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isHomePage = location.pathname === '/';
+  const isProfilePage = location.pathname === '/profile';
   const showShell = authReady && session && !isPublicAuthPage;
   const isNowPlayingRoute = location.pathname === '/now-playing';
 
   return (
     <SmoothScroll>
       <div style={{ position: 'relative', minHeight: '100dvh', background: '#000', overflow: 'hidden' }}>
-        {isPublicAuthPage ? <SplineBackground /> : <GlobalCanvas />}
+        {!isProfilePage ? (
+          <SplineBackground mode={isHomePage ? 'orange' : 'pink'} />
+        ) : (
+          <GlobalCanvas />
+        )}
         <div className="noise" />
 
         {showShell && !isNowPlayingRoute && <TopBar session={session} />}

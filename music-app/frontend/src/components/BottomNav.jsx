@@ -29,21 +29,21 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
       z-index: 9999;
       height: 70px;
       border-radius: 999px;
-      /* frosted glass body: purple/blue tint like reference */
+      /* darker frosted glass body for better contrast */
       background: linear-gradient(
         135deg,
-        rgba(170, 145, 235, 0.20) 0%,
-        rgba(110,  90, 200, 0.13) 50%,
-        rgba( 75,  55, 175, 0.18) 100%
+        rgba(30, 20, 50, 0.95) 0%,
+        rgba(20, 10, 40, 0.90) 50%,
+        rgba(10, 5, 30, 0.95) 100%
       );
-      backdrop-filter:          blur(30px) saturate(190%) brightness(1.12);
-      -webkit-backdrop-filter:  blur(30px) saturate(190%) brightness(1.12);
+      backdrop-filter:          blur(40px) saturate(190%) brightness(0.8);
+      -webkit-backdrop-filter:  blur(40px) saturate(190%) brightness(0.8);
       /* outer drop shadow */
       box-shadow:
-        0 12px 52px rgba(0,0,0,0.60),
-        0  4px 24px rgba(130, 70, 255, 0.28),
-        inset 0  1px 0 rgba(255,255,255,0.30),
-        inset 0 -1px 0 rgba( 90, 50, 190, 0.18);
+        0 12px 52px rgba(0,0,0,0.80),
+        0  4px 24px rgba(130, 70, 255, 0.4),
+        inset 0  1px 0 rgba(255,255,255,0.15),
+        inset 0 -1px 0 rgba( 90, 50, 190, 0.3);
       display: flex;
       align-items: center;
       justify-content: space-around;
@@ -137,7 +137,7 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
         0 0 40px rgba(100,120,255,0.45);
     }
     .bnav-ico-off {
-      color: rgba(205,195,235,0.45);
+      color: rgba(255, 255, 255, 0.55);
     }
 
     /* ── label ── */
@@ -149,8 +149,8 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
       font-family: 'Space Grotesk', system-ui, sans-serif;
       transition: color 0.28s, text-shadow 0.28s;
     }
-    .bnav-lbl-on  { color: rgba(255,255,255,0.92); text-shadow: 0 0 8px rgba(175,115,255,0.7); }
-    .bnav-lbl-off { color: rgba(205,195,235,0.38); }
+    .bnav-lbl-on  { color: rgba(255,255,255,1); text-shadow: 0 0 8px rgba(175,115,255,0.7); }
+    .bnav-lbl-off { color: rgba(255, 255, 255, 0.45); }
 
     /* ── active pip dot ── */
     .bnav-pip {

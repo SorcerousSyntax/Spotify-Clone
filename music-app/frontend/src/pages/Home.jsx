@@ -10,7 +10,6 @@ import SplineBackground from '../components/SplineBackground';
 const Home = () => {
   const navigate = useNavigate();
   const [trendingSongs, setTrendingSongs] = useState([]);
-  const [activeCategory, setActiveCategory] = useState('HOT');
   const [userName, setUserName] = useState('');
 
   const currentSong = usePlayerStore((s) => s.currentSong);
@@ -49,7 +48,6 @@ const Home = () => {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
-      <SplineBackground />
       <div style={{ padding: '100px 20px 150px 20px', position: 'relative', zIndex: 10 }}>
       {/* Hero Greeting */}
       <section style={{ marginBottom: 40 }}>
@@ -109,31 +107,9 @@ const Home = () => {
         </section>
       )}
 
-      {/* Pick a Mood */}
+      {/* Trending Songs (Simplified from Pick a Mood) */}
       <section style={{ marginBottom: 40 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 20 }}>PICK A MOOD</h2>
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', marginBottom: 25 }} className="no-scrollbar">
-          {['HOT', 'GLOBAL', 'NEW', 'PARTY', 'CHILL', 'SAD'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              style={{
-                borderRadius: 99,
-                padding: '10px 24px',
-                fontSize: 12,
-                fontWeight: 900,
-                cursor: 'pointer',
-                transition: 'all 0.3s var(--ease-main)',
-                ...(activeCategory === cat 
-                  ? { background: 'var(--pink-hot)', color: '#000', border: 'none', boxShadow: '0 0 20px rgba(255,45,120,0.4)' }
-                  : { background: 'var(--glass-bg)', color: '#fff', border: '1px solid var(--glass-border)' })
-              }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
+        <h2 style={{ fontSize: 18, marginBottom: 20 }}>TRENDING NOW</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 15 }}>
           {trendingSongs.slice(0, 6).map((song, i) => (
             <motion.div
@@ -155,29 +131,6 @@ const Home = () => {
           ))}
         </div>
       </section>
-
-      {/* AI Playlist Button */}
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        animate={{ boxShadow: ['0 0 20px rgba(255,45,120,0.2)', '0 0 40px rgba(255,45,120,0.4)', '0 0 20px rgba(255,45,120,0.2)'] }}
-        transition={{ repeat: Infinity, duration: 2 }}
-        style={{
-          width: '100%',
-          height: 60,
-          borderRadius: 30,
-          background: 'linear-gradient(90deg, #ff2d78, #ff6eb4)',
-          border: 'none',
-          color: '#000',
-          fontSize: 14,
-          fontWeight: 900,
-          cursor: 'pointer',
-          letterSpacing: 1,
-          marginTop: 20
-        }}
-      >
-        GENERATE AI PLAYLIST
-      </motion.button>
       </div>
     </div>
   );
