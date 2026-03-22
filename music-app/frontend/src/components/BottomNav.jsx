@@ -1,108 +1,219 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const NAV_ITEMS = [
-  { id: 'home', label: 'HOME', path: '/', icon: '⌂' },
-  { id: 'search', label: 'SEARCH', path: '/search', icon: '⚲' },
-  { id: 'library', label: 'LIBRARY', path: '/library', icon: '🕮' },
-  { id: 'profile', label: 'PROFILE', path: '/profile', icon: '⚙' },
+/* ─── inject keyframes + styles once ─── */
+const STYLE_ID = 'raabta-bnav-v3';
+if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
+  const s = document.createElement('style');
+  s.id = STYLE_ID;
+  s.textContent = `
+    @property --bnav-angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+    @keyframes bnav-spin {
+      to { --bnav-angle: 360deg; }
+    }
+
+    /* ── pill wrapper ── */
+    .bnav-pill {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      width: min(92vw, 440px);
+      height: 70px;
+      border-radius: 999px;
+      /* frosted glass body: purple/blue tint like reference */
+      background: linear-gradient(
+        135deg,
+        rgba(170, 145, 235, 0.20) 0%,
+        rgba(110,  90, 200, 0.13) 50%,
+        rgba( 75,  55, 175, 0.18) 100%
+      );
+      backdrop-filter:          blur(30px) saturate(190%) brightness(1.12);
+      -webkit-backdrop-filter:  blur(30px) saturate(190%) brightness(1.12);
+      /* outer drop shadow */
+      box-shadow:
+        0 12px 52px rgba(0,0,0,0.60),
+        0  4px 24px rgba(130, 70, 255, 0.28),
+        inset 0  1px 0 rgba(255,255,255,0.30),
+        inset 0 -1px 0 rgba( 90, 50, 190, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 10px;
+      isolation: isolate;
+    }
+
+    /* animated iridescent border */
+    .bnav-pill::before {
+      content: '';
+      position: absolute;
+      inset: -1.5px;
+      border-radius: 999px;
+      background: conic-gradient(
+        from var(--bnav-angle),
+        #4a6cf7,
+        #9b5cf6,
+        #ea6af6,
+        #f97316,
+        #fbbf24,
+        #f97316,
+        #ea6af6,
+        #9b5cf6,
+        #4a6cf7
+      );
+      -webkit-mask: linear-gradient(#fff 0 0) content-box,
+                    linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      padding: 1.5px;
+      animation: bnav-spin 4s linear infinite;
+      opacity: 0.85;
+      z-index: -1;
+    }
+
+    /* top inner specular highlight */
+    .bnav-pill::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 14%; right: 14%;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,0.55) 30%,
+        rgba(210,175,255,0.72) 50%,
+        rgba(255,255,255,0.55) 70%,
+        transparent
+      );
+      pointer-events: none;
+    }
+
+    /* ── each button ── */
+    .bnav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 4px 5px;
+      border-radius: 26px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+      transition:
+        background 0.28s ease,
+        transform  0.22s cubic-bezier(.34,1.56,.64,1);
+    }
+    .bnav-btn:hover  { background: rgba(180,140,255,0.10); transform: translateY(-2px); }
+    .bnav-btn:active { transform: scale(0.91); }
+    .bnav-btn.bnav-active {
+      background: linear-gradient(135deg, rgba(160,100,255,0.20), rgba(80,100,255,0.13));
+      box-shadow: inset 0 0 14px rgba(155,92,246,0.18), 0 0 16px rgba(130,80,255,0.12);
+    }
+
+    /* ── icon ── */
+    .bnav-ico {
+      font-size: 20px;
+      line-height: 1;
+      transition: color 0.28s, text-shadow 0.28s, transform 0.28s;
+    }
+    .bnav-btn:hover .bnav-ico { transform: scale(1.14); }
+    .bnav-ico-on {
+      color: #ffffff;
+      text-shadow:
+        0 0  9px rgba(200,150,255,0.95),
+        0 0 22px rgba(140, 80,255,0.80),
+        0 0 40px rgba(100,120,255,0.45);
+    }
+    .bnav-ico-off {
+      color: rgba(205,195,235,0.45);
+    }
+
+    /* ── label ── */
+    .bnav-lbl {
+      font-size: 7.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      transition: color 0.28s, text-shadow 0.28s;
+    }
+    .bnav-lbl-on  { color: rgba(255,255,255,0.92); text-shadow: 0 0 8px rgba(175,115,255,0.7); }
+    .bnav-lbl-off { color: rgba(205,195,235,0.38); }
+
+    /* ── active pip dot ── */
+    .bnav-pip {
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: #c4a0ff;
+      box-shadow: 0 0 6px #9b5cf6, 0 0 14px rgba(155,92,246,0.55);
+    }
+  `;
+  document.head.appendChild(s);
+}
+
+/* ── nav items ── */
+const ITEMS = [
+  { id: 'home',     label: 'Home',    path: '/',            icon: '⌂' },
+  { id: 'playing',  label: 'Playing', path: '/now-playing', icon: '♪' },
+  { id: 'library',  label: 'Library', path: '/library',     icon: '▤' },
+  { id: 'search',   label: 'Search',  path: '/search',      icon: '⌕' },
 ];
 
+/* ── component ── */
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const isActive = (path) => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
-  };
+  const isOn = (p) => (p === '/' ? location.pathname === '/' : location.pathname.startsWith(p));
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 1000,
-      width: '85%',
-      maxWidth: '400px',
-      background: 'rgba(255,255,255,0.08)',
-      backdropFilter: 'blur(30px) saturate(200%)',
-      WebkitBackdropFilter: 'blur(30px) saturate(200%)',
-      borderRadius: '32px',
-      border: '1px solid rgba(255,255,255,0.15)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,45,120,0.1)',
-      overflow: 'hidden'
-    }}>
-      <motion.nav
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-around',
-          height: 70,
-          padding: '0 10px'
-        }}
-      >
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(item.path);
-          return (
-            <motion.button
-              key={item.id}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate(item.path)}
-              style={{
-                background: 'none',
-                border: 'none',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 4,
-                cursor: 'pointer',
-                position: 'relative',
-                flex: 1,
-                padding: '10px 0'
-              }}
-            >
-              <span style={{ 
-                fontSize: 24, 
-                color: active ? '#ff2d78' : 'rgba(255,255,255,0.4)',
-                transition: 'all 0.3s ease',
-                textShadow: active ? '0 0 10px rgba(255,45,120,0.5)' : 'none'
-              }}>
-                {item.icon}
-              </span>
-              <span style={{ 
-                fontSize: 8, 
-                color: active ? '#ff2d78' : 'rgba(255,255,255,0.4)',
-                fontWeight: 900,
-                fontFamily: "'Space Grotesk', sans-serif",
-                transition: 'all 0.3s ease'
-              }}>
-                {item.label}
-              </span>
-              {active && (
+    <motion.div
+      className="bnav-pill"
+      initial={{ y: 120, opacity: 0 }}
+      animate={{ y: 0,   opacity: 1 }}
+      transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1], delay: 0.15 }}
+    >
+      {ITEMS.map((item) => {
+        const on = isOn(item.path);
+        return (
+          <button
+            key={item.id}
+            className={`bnav-btn${on ? ' bnav-active' : ''}`}
+            onClick={() => navigate(item.path)}
+            aria-label={item.label}
+          >
+            <span className={`bnav-ico ${on ? 'bnav-ico-on' : 'bnav-ico-off'}`}>
+              {item.icon}
+            </span>
+            <span className={`bnav-lbl ${on ? 'bnav-lbl-on' : 'bnav-lbl-off'}`}>
+              {item.label}
+            </span>
+            <AnimatePresence>
+              {on && (
                 <motion.div
-                  layoutId="active-dot"
-                  style={{
-                    position: 'absolute',
-                    bottom: 4,
-                    width: 4,
-                    height: 4,
-                    borderRadius: '50%',
-                    background: '#ff2d78',
-                    boxShadow: '0 0 8px #ff2d78'
-                  }}
+                  key="pip"
+                  layoutId="bnav-pip"
+                  className="bnav-pip"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{   scale: 0, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 26 }}
                 />
               )}
-            </motion.button>
-          );
-        })}
-      </motion.nav>
-    </div>
+            </AnimatePresence>
+          </button>
+        );
+      })}
+    </motion.div>
   );
 };
 
