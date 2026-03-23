@@ -33,6 +33,45 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+/**
+ * Helper to handle Range requests from the cache.
+ * Safari/iOS require 206 Partial Content for audio/video.
+ */
+async function handleRangeRequest(request, cacheNames) {
+  const rangeHeader = request.headers.get('range');
+  
+  for (const cacheName of cacheNames) {
+    const cache = await caches.open(cacheName);
+    const cachedResponse = await cache.match(request);
+    
+    if (cachedResponse) {
+      if (!rangeHeader) {
+        return cachedResponse;
+      }
+
+      const blob = await cachedResponse.blob();
+      const match = rangeHeader.match(/bytes=(\d+)-(\d+)?/);
+      
+      if (match) {
+        const start = parseInt(match[1], 10);
+        const end = match[2] ? parseInt(match[2], 10) : blob.size - 1;
+        
+        const slicedBlob = blob.slice(start, end + 1);
+        return new Response(slicedBlob, {
+          status: 206,
+          statusText: 'Partial Content',
+          headers: {
+            ...Object.fromEntries(cachedResponse.headers.entries()),
+            'Content-Range': `bytes ${start}-${end}/${blob.size}`,
+            'Content-Length': slicedBlob.size,
+          },
+        });
+      }
+    }
+  }
+  return null;
+}
+
 // Fetch strategy
 self.addEventListener('fetch', (event) => {
   const { request } = event;
@@ -66,28 +105,26 @@ self.addEventListener('fetch', (event) => {
 
   if (isAudioRequest) {
     event.respondWith(
-      caches.open(AUDIO_CACHE).then(async (audioCache) => {
-        const cached = await audioCache.match(request);
-        if (cached) return cached;
+      (async () => {
+        // Try to handle range request from caches
+        const rangeResponse = await handleRangeRequest(request, [SAVED_SONGS_CACHE, AUDIO_CACHE]);
+        if (rangeResponse) return rangeResponse;
 
-        // Also check the explicit user-saved songs cache
-        const savedCache = await caches.open(SAVED_SONGS_CACHE);
-        const savedCached = await savedCache.match(request);
-        if (savedCached) return savedCached;
-
+        // If not in cache, fetch from network
         try {
           const response = await fetch(request);
-          if (response.ok) {
-            audioCache.put(request, response.clone());
+          if (response.ok && response.status !== 206) {
+            const clone = response.clone();
+            caches.open(AUDIO_CACHE).then((cache) => cache.put(request, clone));
           }
           return response;
-        } catch {
-          // Last resort: try both caches with any matching URL
+        } catch (err) {
+          // Last resort fallback
           const fallback = await caches.match(request);
           if (fallback) return fallback;
-          throw new Error('Audio unavailable offline');
+          throw err;
         }
-      })
+      })()
     );
     return;
   }
@@ -140,3 +177,4 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+

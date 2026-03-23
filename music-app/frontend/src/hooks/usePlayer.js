@@ -160,23 +160,32 @@ const usePlayer = () => {
 
   // Set up Web Audio API analyser for waveform
   const setupAnalyser = useCallback(() => {
-    if (analyserRef.current) return;
+    if (analyserRef.current && audioCtxRef.current?.state !== 'suspended') return;
 
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      audioCtxRef.current = ctx;
+      if (!audioCtxRef.current) {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtxRef.current = ctx;
+      }
 
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 128;
-      analyser.smoothingTimeConstant = 0.8;
-      analyserRef.current = analyser;
+      if (audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume();
+      }
+
+      const ctx = audioCtxRef.current;
+      if (!analyserRef.current) {
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 128;
+        analyser.smoothingTimeConstant = 0.8;
+        analyserRef.current = analyser;
+      }
 
       // Try getting the Howler internal audio node
-      const howlNode = howlRef.current._sounds[0]?._node;
+      const howlNode = howlRef.current?._sounds?.[0]?._node;
       if (howlNode && !sourceRef.current) {
         const source = ctx.createMediaElementSource(howlNode);
-        source.connect(analyser);
-        analyser.connect(ctx.destination);
+        source.connect(analyserRef.current);
+        analyserRef.current.connect(ctx.destination);
         sourceRef.current = source;
       }
     } catch (e) {

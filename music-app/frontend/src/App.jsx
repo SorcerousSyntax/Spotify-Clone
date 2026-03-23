@@ -5,6 +5,7 @@ import GlobalCursor from './components/GlobalCursor';
 import LoadingScreen from './components/LoadingScreen';
 import BottomNav from './components/BottomNav';
 import MiniPlayer from './components/MiniPlayer';
+import IOSInstallPrompt from './components/IOSInstallPrompt';
 import GlobalCanvas from './components/GlobalCanvas';
 import SplineBackground from './components/SplineBackground';
 import SmoothScroll from './components/SmoothScroll';
@@ -269,6 +270,7 @@ const AppInner = () => {
 
       {showShell && <MiniPlayer />}
       {showShell && <BottomNav />}
+      {showShell && <IOSInstallPrompt />}
       <GlobalCursor />
     </div>
   );
