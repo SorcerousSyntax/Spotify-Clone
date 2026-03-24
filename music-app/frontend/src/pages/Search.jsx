@@ -156,6 +156,7 @@ const Search = () => {
                 border: '1px solid var(--color-border)',
                 borderRadius: 100,
                 color: '#fff',
+                boxShadow: query === cat ? '0 0 24px var(--color-accent-glow)' : 'inset 0 1px 0 #ffffff12',
                 whiteSpace: 'nowrap',
                 cursor: 'pointer'
               }}
@@ -182,7 +183,7 @@ const Search = () => {
                   key={song.id}
                   whileTap={{ scale: 0.98, background: 'rgba(255,255,255,0.03)' }}
                   onClick={() => handlePlay(song, i)}
-                  className="card-tap"
+                  className="card-tap tile-surface"
                   style={{
                     display: 'flex', 
                     alignItems: 'center', 
@@ -190,8 +191,6 @@ const Search = () => {
                     padding: '10px 12px',
                     borderRadius: 16, 
                     cursor: 'pointer',
-                    background: 'transparent',
-                    border: '1px solid transparent',
                     transition: 'all 0.2s ease'
                   }}
                 >

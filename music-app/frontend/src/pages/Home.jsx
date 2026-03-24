@@ -131,12 +131,10 @@ const Home = () => {
                 key={song.id}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => playSong(song, i, trendingSongs)}
-                className="card-tap"
+                className="card-tap tile-surface"
                 style={{ 
                   padding: 12, 
                   borderRadius: 20, 
-                  background: 'var(--color-bg-secondary)', 
-                  border: '1px solid var(--color-border)',
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: 12 
@@ -146,7 +144,7 @@ const Home = () => {
                   <img src={song.image?.[1]?.url || song.album_art_url} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                 </div>
                 <div style={{ overflow: 'hidden' }}>
-                  <h3 style={{ fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff', textTransform: 'uppercase' }}>{decodeSongTitle(song.name || song.title)}</h3>
+                  <h3 style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--color-text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{decodeSongTitle(song.name || song.title)}</h3>
                   <p style={{ fontSize: 10, color: 'var(--color-text-muted)', marginTop: 2 }}>{song.artist?.toUpperCase() || 'UNKNOWN'}</p>
                 </div>
               </motion.div>

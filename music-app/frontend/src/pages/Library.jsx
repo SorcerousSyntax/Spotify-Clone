@@ -185,11 +185,10 @@ const Library = () => {
                 key={song.id}
                 whileTap={{ scale: 0.98, background: 'rgba(255,255,255,0.03)' }}
                 onClick={() => handlePlay(song, i, displaySongs)}
-                className="card-tap"
+                className="card-tap tile-surface"
                 style={{
                   display: 'flex', alignItems: 'center', gap: 16, padding: '10px 12px',
                   borderRadius: 16, cursor: 'pointer', height: 64,
-                  border: '1px solid transparent',
                   transition: 'all 0.2s ease'
                 }}
               >

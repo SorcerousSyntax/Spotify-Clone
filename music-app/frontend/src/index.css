@@ -96,6 +96,64 @@ input, button, textarea, select {
   contain: paint layout style;
 }
 
+.liquid-glass {
+  background:
+    radial-gradient(120% 140% at 10% 0%, #ffffff10 0%, #00000000 42%),
+    radial-gradient(140% 140% at 100% 100%, #ff2d7814 0%, #00000000 55%),
+    linear-gradient(180deg, #111111f2 0%, #0a0a0ae6 100%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 12px 28px #00000066, inset 0 1px 0 #ffffff1a;
+  transform: translateZ(0);
+  contain: paint layout style;
+}
+
+.tile-surface {
+  background:
+    radial-gradient(120% 140% at 0% 0%, #ffffff0f 0%, #00000000 45%),
+    radial-gradient(140% 160% at 100% 100%, #ff2d781a 0%, #00000000 60%),
+    var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  box-shadow: 0 10px 24px #00000066, inset 0 1px 0 #ffffff14;
+}
+
+.tile-surface:active,
+.tile-surface:hover {
+  border-color: var(--color-border-accent);
+  box-shadow: 0 0 24px var(--color-accent-glow), inset 0 1px 0 #ffffff24;
+}
+
+.btn-premium {
+  background: var(--color-accent-primary);
+  color: var(--color-text-primary);
+  border: 1px solid #ff2d7840;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 0 0 30px #ff2d784d;
+}
+
+.btn-premium:active {
+  transform: scale(0.96);
+}
+
+.text-pink {
+  color: var(--color-accent-primary);
+}
+
+.pink-glow {
+  box-shadow: 0 0 34px var(--color-accent-glow);
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 button,
 a,
 .card-pressable,
@@ -113,6 +171,34 @@ button:active,
 .card-tap:active {
   transform: scale(0.98);
   filter: brightness(0.9);
+}
+
+.progress-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: #ffffff1f;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-accent-secondary), var(--color-accent-primary));
+  box-shadow: 0 0 14px #ff2d7866;
+}
+
+.progress-handle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-accent-primary);
+  border: 1px solid #ffffff88;
+  box-shadow: 0 0 18px #ff2d7866;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /* Background System */

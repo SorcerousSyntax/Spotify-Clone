@@ -47,6 +47,15 @@ const NowPlaying = () => {
   if (!currentSong) return null;
 
   const isDownloading = downloadingIds.has(currentSong.id);
+  const progressPercent = duration > 0 ? Math.min((progress / duration) * 100, 100) : 0;
+
+  const handleSeekBarClick = (event) => {
+    if (!duration) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(clickX / rect.width, 1));
+    seek(ratio * duration);
+  };
 
   return (
     <div style={{
@@ -168,6 +177,18 @@ const NowPlaying = () => {
       {/* WAVEFORM */}
       <div style={{ height: 60, padding: '0 32px', position: 'relative', zIndex: 10 }}>
         <Waveform />
+      </div>
+
+      {/* PROGRESS BAR */}
+      <div style={{ height: 22, padding: '0 32px', position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center' }}>
+        <div
+          className="progress-track"
+          onClick={handleSeekBarClick}
+          style={{ cursor: 'pointer' }}
+        >
+          <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
+          <div className="progress-handle" style={{ left: `${progressPercent}%` }} />
+        </div>
       </div>
 
       {/* TIME DISPLAY */}
