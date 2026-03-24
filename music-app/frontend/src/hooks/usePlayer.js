@@ -113,31 +113,43 @@ const usePlayer = () => {
           setupAnalyser();
           
           // Media Session API for Lock Screen & Background Playback
-          if ('mediaSession' in navigator && currentSong) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-              title: currentSong.title,
-              artist: currentSong.artist,
-              album: currentSong.album || 'Raabta',
-              artwork: [
-                { src: currentSong.album_art_url, sizes: '512x512', type: 'image/jpeg' }
-              ]
-            });
+          try {
+            if ('mediaSession' in navigator && window.MediaMetadata && currentSong) {
+              navigator.mediaSession.metadata = new MediaMetadata({
+                title: currentSong.title,
+                artist: currentSong.artist,
+                album: currentSong.album || 'Raabta',
+                artwork: [
+                  { src: currentSong.album_art_url, sizes: '512x512', type: 'image/jpeg' }
+                ]
+              });
 
-            const { togglePlay, nextSong, prevSong } = usePlayerStore.getState();
-            navigator.mediaSession.setActionHandler('play', () => togglePlay());
-            navigator.mediaSession.setActionHandler('pause', () => togglePlay());
-            navigator.mediaSession.setActionHandler('previoustrack', () => prevSong());
-            navigator.mediaSession.setActionHandler('nexttrack', () => nextSong());
-            
-            // Set playback state to 'playing'
-            navigator.mediaSession.playbackState = 'playing';
+              const state = usePlayerStore.getState();
+              navigator.mediaSession.setActionHandler('play', () => {
+                if (!usePlayerStore.getState().isPlaying) state.togglePlay();
+              });
+              navigator.mediaSession.setActionHandler('pause', () => {
+                if (usePlayerStore.getState().isPlaying) state.togglePlay();
+              });
+              navigator.mediaSession.setActionHandler('previoustrack', () => state.prevSong());
+              navigator.mediaSession.setActionHandler('nexttrack', () => state.nextSong());
+              
+              // Set playback state to 'playing'
+              navigator.mediaSession.playbackState = 'playing';
+            }
+          } catch (e) {
+            console.warn('MediaSession metadata/handler setup failed:', e);
           }
         },
         onpause: () => {
           setIsPlaying(false);
           cancelAnimationFrame(animFrameRef.current);
-          if ('mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = 'paused';
+          try {
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.playbackState = 'paused';
+            }
+          } catch (e) {
+            console.warn('MediaSession state update failed:', e);
           }
         },
         onend: () => {
