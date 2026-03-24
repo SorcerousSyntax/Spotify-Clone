@@ -31,13 +31,31 @@ const usePlayer = () => {
   // iOS Audio Unlock - ensures AudioContext starts on first interaction
   useEffect(() => {
     const unlock = () => {
+      // Create the context if it doesn't exist to ensure it's bound to a user gesture
+      if (!audioCtxRef.current) {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtxRef.current = ctx;
+      }
+      
       if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
         audioCtxRef.current.resume();
       }
-      // Resume Howler's global context if needed
+
+      // Resume Howler's global context
       if (typeof Howler !== 'undefined' && Howler.ctx && Howler.ctx.state === 'suspended') {
         Howler.ctx.resume();
       }
+
+      // Poke the audio engine with a silent buffer
+      if (audioCtxRef.current) {
+        const buffer = audioCtxRef.current.createBuffer(1, 1, 22050);
+        const source = audioCtxRef.current.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtxRef.current.destination);
+        source.start(0);
+      }
+
+      console.log('[Player] iOS Audio Unlocked');
       window.removeEventListener('click', unlock);
       window.removeEventListener('touchstart', unlock);
     };
