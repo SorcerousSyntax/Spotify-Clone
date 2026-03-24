@@ -31,53 +31,50 @@ const usePlayer = () => {
   // iOS Audio Unlock - ensures AudioContext starts on first interaction
   useEffect(() => {
     const unlock = () => {
-      console.log('[Player] Attempting Nuclear Unlock...');
-      
+      console.log('[Player] iOS Unlock Triggered');
+
       try {
-        // 1. Force Howler Global State
+        // 1. Resume Web Audio Contexts
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtxRef.current && AudioCtx) {
+          audioCtxRef.current = new AudioCtx();
+        }
+        if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
+
+        // 2. Global Howler Unlock
         if (typeof Howler !== 'undefined') {
           Howler.mute(false);
-          Howler.volume(volume || 1.0);
           if (Howler.ctx && Howler.ctx.state === 'suspended') {
             Howler.ctx.resume();
           }
         }
 
-        // 2. Resume/Create Web Audio Context
-        if (!audioCtxRef.current) {
-          audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtxRef.current.state === 'suspended') {
-          audioCtxRef.current.resume();
-        }
+        // 3. Play a tiny silent "poke" via Howler to unlock its internal engine
+        // This is a standard 100ms silent base64 wav
+        const silentPoke = new Howl({
+          src: ['data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA=='],
+          html5: false,
+          onplay: () => silentPoke.unload()
+        });
+        silentPoke.play();
 
-        // 3. Hardware "Poke" - play a split-second of silence
-        const buffer = audioCtxRef.current.createBuffer(1, 1, 22050);
-        const source = audioCtxRef.current.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioCtxRef.current.destination);
-        source.start(0);
-
-        console.log('[Player] iOS Audio Unlocked & Primed');
       } catch (e) {
-        console.error('[Player] Unlock failed:', e);
+        console.warn('[Player] Unlock failed:', e);
       }
 
       window.removeEventListener('click', unlock);
       window.removeEventListener('touchstart', unlock);
-      window.removeEventListener('touchend', unlock);
     };
 
     window.addEventListener('click', unlock);
     window.addEventListener('touchstart', unlock);
-    window.addEventListener('touchend', unlock);
-
     return () => {
       window.removeEventListener('click', unlock);
       window.removeEventListener('touchstart', unlock);
-      window.removeEventListener('touchend', unlock);
     };
-  }, [volume]);
+  }, []);
 
   // Create/destroy Howl when song changes
   useEffect(() => {
@@ -85,7 +82,7 @@ const usePlayer = () => {
 
     const initPlayer = async () => {
       if (!currentSong) return;
-      
+
       const requestedUrl = currentSong?.url || currentSong?.stream_url || '';
       const preferredUrl = getPreferredSongStreamUrl(currentSong);
       const candidateUrls = getSongAudioUrlCandidates(currentSong);
@@ -128,17 +125,15 @@ const usePlayer = () => {
         src: sources,
         html5: true, 
         preload: true,
-        autoplay: true,
         volume: isMuted ? 0 : volume,
         onload: () => {
-          setDuration(howl.duration());
+          if (!cancelled) setDuration(howl.duration());
         },
         onplay: () => {
           setIsPlaying(true);
           updateProgress();
-          // Delay analyser to ensure node is ready
-          setTimeout(setupAnalyser, 500);
-          
+
+          // MEDIA SESSION
           if ('mediaSession' in navigator && window.MediaMetadata) {
             try {
               navigator.mediaSession.metadata = new MediaMetadata({
@@ -147,26 +142,43 @@ const usePlayer = () => {
                 album: 'Raabta',
                 artwork: [{ src: currentSong.album_art_url, sizes: '512x512', type: 'image/jpeg' }]
               });
+
+              const state = usePlayerStore.getState();
+              navigator.mediaSession.setActionHandler('play', () => state.togglePlay());
+              navigator.mediaSession.setActionHandler('pause', () => state.togglePlay());
+              navigator.mediaSession.setActionHandler('nexttrack', () => state.nextSong());
+              navigator.mediaSession.setActionHandler('previoustrack', () => state.prevSong());
               navigator.mediaSession.playbackState = 'playing';
             } catch (e) {}
+          }
+
+          // ANALYSER: Only setup if context is running to avoid silencing iOS playback
+          if (audioCtxRef.current && audioCtxRef.current.state === 'running') {
+            setTimeout(setupAnalyser, 1000);
           }
         },
         onpause: () => {
           setIsPlaying(false);
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
         },
-        onplayerror: (id, err) => {
-          console.error('[Player] Play error:', err);
-          // Attempt to fix by calling play again on user interaction
-          howl.once('unlock', () => howl.play());
+        onend: () => {
+          const { repeat, nextSong } = usePlayerStore.getState();
+          if (repeat === 'one') {
+            howl.seek(0);
+            howl.play();
+          } else {
+            nextSong();
+          }
         },
-        onloaderror: (id, err) => {
-          console.error('[Player] Load error:', err);
+        onplayerror: () => {
+          howl.once('unlock', () => howl.play());
         }
       });
 
       howlRef.current = howl;
+      howl.play();
     };
+
 
     initPlayer();
 
