@@ -21,6 +21,16 @@ const mapJioSongToAppSong = (song = {}) => ({
   source: 'jiosaavn-public-fallback',
 });
 
+const dedupeById = (songs = []) => {
+  const seen = new Set();
+  return songs.filter((song) => {
+    const id = song?.id;
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+};
+
 const Search = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -74,7 +84,57 @@ const Search = () => {
 
   const handlePlay = (song, index) => {
     setCurrentSong(song);
-    setQueue(results, index);
+    setQueue([song], 0);
+
+    // Build next queue from similar tracks instead of current search list.
+    (async () => {
+      const queries = [
+        song.artist,
+        `${song.artist || ''} ${song.title || ''}`.trim(),
+        song.title,
+      ].filter(Boolean);
+
+      const collected = [];
+
+      for (const q of queries) {
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+          if (res.ok) {
+            const data = await res.json();
+            const extracted = Array.isArray(data?.results)
+              ? data.results
+              : Array.isArray(data?.songs)
+                ? data.songs
+                : [];
+            collected.push(...extracted);
+          }
+        } catch (err) {
+          // keep trying remaining queries/fallbacks
+        }
+
+        if (collected.length >= 25) break;
+      }
+
+      if (collected.length === 0) {
+        for (const q of queries) {
+          try {
+            const res = await fetch(`${PUBLIC_JIOSAAVN_SEARCH}?query=${encodeURIComponent(q)}&limit=20`);
+            if (res.ok) {
+              const data = await res.json();
+              collected.push(...(data?.data?.results || []).map(mapJioSongToAppSong));
+            }
+          } catch (err) {
+            // keep trying remaining queries
+          }
+
+          if (collected.length >= 25) break;
+        }
+      }
+
+      const similar = dedupeById(collected).filter((item) => item?.id && item.id !== song.id).slice(0, 30);
+      const queue = [song, ...similar];
+      setQueue(queue, 0);
+    })();
   };
 
   return (

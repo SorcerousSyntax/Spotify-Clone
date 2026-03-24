@@ -7,6 +7,7 @@ const Waveform = () => {
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const progress = usePlayerStore((s) => s.progress);
   const duration = usePlayerStore((s) => s.duration);
+  const currentSong = usePlayerStore((s) => s.currentSong);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -56,19 +57,36 @@ const Waveform = () => {
       const height = canvas.height;
       const mid = height / 2;
       const points = [];
-      const pulseWindow = 0.18;
-      const beatPhase = (t * 1.7) % 1;
+
+      const seedSource = `${currentSong?.id || ''}|${currentSong?.title || ''}|${currentSong?.artist || ''}`;
+      let hash = 0;
+      for (let i = 0; i < seedSource.length; i += 1) {
+        hash = (hash * 31 + seedSource.charCodeAt(i)) >>> 0;
+      }
+
+      // Song-specific tempo between ~92 and 138 BPM for natural pulse motion.
+      const bpm = 92 + (hash % 47);
+      const beat = (t * bpm) / 60;
+      const beatPulse = Math.pow((Math.sin(beat * Math.PI * 2) + 1) * 0.5, 3.6);
+
+      // Bass envelope + micro jitter gives "felt" vibration instead of simple oscillation.
+      const bass = 0.26 + beatPulse * 0.54;
 
       for (let x = 0; x <= width; x += 8) {
         const nx = x / width;
-        const pulseDistance = Math.abs(nx - beatPhase);
-        const pulse = Math.max(0, 1 - pulseDistance / pulseWindow);
-        const spike = Math.pow(pulse, 3.2);
-        const y = mid - spike * (height * 0.33);
+
+        const low = Math.sin((t * 4.3) + nx * 7.2 + (hash % 13));
+        const midBand = Math.sin((t * 9.6) + nx * 18.5 + (hash % 29) * 0.21);
+        const high = Math.sin((t * 16.8) + nx * 31.8 + (hash % 37) * 0.13);
+
+        const body = low * bass * 0.55 + midBand * 0.24 + high * 0.11;
+        const flutter = Math.sin((t * 44.0) + nx * 73.0 + (hash % 17)) * 0.04;
+
+        const y = mid - (body + flutter) * (height * 0.58);
         points.push({ x, y });
       }
 
-      drawLine(points, 2.6);
+      drawLine(points, 2.7);
     };
 
     const drawFromFrequency = (data, t) => {
@@ -124,7 +142,7 @@ const Waveform = () => {
 
     render();
     return () => cancelAnimationFrame(animationId);
-  }, [getFrequencyData, isPlaying, progress, duration]);
+  }, [getFrequencyData, isPlaying, progress, duration, currentSong?.id, currentSong?.title, currentSong?.artist]);
 
   return (
     <div style={{ width: '100%', height: 60, marginTop: 20, marginBottom: 20 }}>
