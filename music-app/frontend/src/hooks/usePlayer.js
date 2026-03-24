@@ -111,10 +111,34 @@ const usePlayer = () => {
           setIsPlaying(true);
           updateProgress();
           setupAnalyser();
+          
+          // Media Session API for Lock Screen & Background Playback
+          if ('mediaSession' in navigator && currentSong) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: currentSong.title,
+              artist: currentSong.artist,
+              album: currentSong.album || 'Raabta',
+              artwork: [
+                { src: currentSong.album_art_url, sizes: '512x512', type: 'image/jpeg' }
+              ]
+            });
+
+            const { togglePlay, nextSong, prevSong } = usePlayerStore.getState();
+            navigator.mediaSession.setActionHandler('play', () => togglePlay());
+            navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+            navigator.mediaSession.setActionHandler('previoustrack', () => prevSong());
+            navigator.mediaSession.setActionHandler('nexttrack', () => nextSong());
+            
+            // Set playback state to 'playing'
+            navigator.mediaSession.playbackState = 'playing';
+          }
         },
         onpause: () => {
           setIsPlaying(false);
           cancelAnimationFrame(animFrameRef.current);
+          if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'paused';
+          }
         },
         onend: () => {
           cancelAnimationFrame(animFrameRef.current);
