@@ -218,6 +218,10 @@ const AppInner = () => {
   const location = useLocation();
   const [session, setSession] = useState(null);
   const [authReady, setAuthReady] = useState(false);
+  const isIOS =
+    typeof navigator !== 'undefined' &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
   const hydrateFromSupabase = usePlayerStore((s) => s.hydrateFromSupabase);
 
   useEffect(() => {
@@ -252,7 +256,7 @@ const AppInner = () => {
       {!isProfilePage ? (
         <SplineBackground mode={isHomePage ? 'orange' : 'pink'} />
       ) : (
-        <GlobalCanvas />
+        isIOS ? <SplineBackground mode="pink" /> : <GlobalCanvas />
       )}
       <div className="noise" />
 

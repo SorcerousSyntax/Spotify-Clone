@@ -4,6 +4,10 @@ import Spline from '@splinetool/react-spline';
 function SplineBackground({ mode = 'pink' }) {
   const isOrange = mode === 'orange';
   const splineRef = useRef(null);
+  const isIOS =
+    typeof navigator !== 'undefined' &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
   const freezeSpline = useCallback((splineApp) => {
     if (!splineApp) return;
@@ -15,9 +19,10 @@ function SplineBackground({ mode = 'pink' }) {
   const onLoad = useCallback((splineApp) => {
     splineRef.current = splineApp;
 
-    // Force static mode right after load and once more after first frame.
-    freezeSpline(splineApp);
-    requestAnimationFrame(() => freezeSpline(splineApp));
+    // Allow one initial paint, then freeze to keep it static.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => freezeSpline(splineApp));
+    });
   }, [freezeSpline]);
 
   useEffect(() => {
@@ -47,13 +52,15 @@ function SplineBackground({ mode = 'pink' }) {
           : 'hue-rotate(300deg) saturate(1.8) brightness(0.85)',
       }}
     >
-      <Suspense fallback={null}>
-        <Spline
-          scene="https://prod.spline.design/8UnqH-PAIWlxTzeN/scene.splinecode"
-          onLoad={onLoad}
-          style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-        />
-      </Suspense>
+      {!isIOS && (
+        <Suspense fallback={null}>
+          <Spline
+            scene="https://prod.spline.design/8UnqH-PAIWlxTzeN/scene.splinecode"
+            onLoad={onLoad}
+            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+          />
+        </Suspense>
+      )}
       <div
         style={{
           position: 'absolute',
