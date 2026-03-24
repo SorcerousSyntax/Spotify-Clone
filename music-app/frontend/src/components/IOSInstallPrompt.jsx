@@ -49,8 +49,8 @@ const IOSInstallPrompt = () => {
           display: 'flex',
           flexDirection: 'column',
           gap: '15px',
-          border: '1px solid var(--color-border)',
-          boxShadow: '0 20px 40px #00000066',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
           borderRadius: '30px',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -66,7 +66,7 @@ const IOSInstallPrompt = () => {
               <p style={{ 
                 margin: '5px 0 0 0', 
                 fontSize: '12px', 
-                color: 'var(--color-text-secondary)',
+                color: 'rgba(255,255,255,0.7)',
                 lineHeight: '1.4'
               }}>
                 Enjoy a full-screen experience and better performance.
@@ -92,8 +92,7 @@ const IOSInstallPrompt = () => {
             alignItems: 'center', 
             gap: '10px',
             padding: '12px',
-            background: '#ffffff12',
-            border: '1px solid var(--color-border)',
+            background: 'rgba(255,255,255,0.05)',
             borderRadius: '12px',
             fontSize: '13px'
           }}>

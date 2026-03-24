@@ -31,7 +31,6 @@ const Search = () => {
   const isOffline = usePlayerStore((s) => s.isOffline);
   const toggleOffline = usePlayerStore((s) => s.toggleOffline);
   const currentPlayingId = usePlayerStore((s) => s.currentSong?.id);
-  const downloadingIds = usePlayerStore((s) => s.downloadingIds);
   
   const debounceRef = useRef(null);
 
@@ -79,29 +78,25 @@ const Search = () => {
   };
 
   return (
-    <div style={{ padding: '100px 24px 150px 24px', minHeight: '100vh', position: 'relative', zIndex: 10 }}>
+    <div style={{ padding: '100px 20px 150px 20px', minHeight: '100vh', position: 'relative', zIndex: 10 }}>
       {/* Header */}
       <header style={{ marginBottom: 40 }}>
-        <h1 className="page-title" style={{ marginBottom: 32 }}>
-          SEARCH<span>.</span>
+        <h1 style={{ fontSize: 42, color: '#fff', marginBottom: 30 }}>
+          SEARCH<span className="text-pink">.</span>
         </h1>
         
         {/* Search Input */}
         <div 
+          className="liquid-glass"
           style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            padding: '0 24px', 
-            height: 60,
-            background: 'var(--color-bg-secondary)',
-            border: focused ? '1.5px solid var(--color-accent-primary)' : '1.5px solid var(--color-border)',
-            boxShadow: focused ? '0 0 0 3px var(--color-accent-glow)' : 'none',
-            borderRadius: 100,
-            transition: 'all 0.2s ease',
-            position: 'relative'
+            display: 'flex', alignItems: 'center', padding: '0 20px', height: 60,
+            border: focused ? '1px solid var(--pink-hot)' : '1px solid rgba(255,255,255,0.2)',
+            boxShadow: focused ? '0 0 20px rgba(255,45,120,0.3)' : '0 10px 40px rgba(0,0,0,0.5)',
+            transition: 'all 0.4s var(--ease-main)',
+            borderRadius: 30
           }}
         >
-          <span style={{ fontSize: 20, marginRight: 16, color: 'var(--color-text-muted)' }}>⌕</span>
+          <span style={{ fontSize: 20, marginRight: 15, opacity: 0.8, color: '#fff' }}>⚲</span>
           <input
             type="text"
             value={query}
@@ -110,21 +105,15 @@ const Search = () => {
             onBlur={() => setFocused(false)}
             placeholder="ARTISTS, TRACKS, ALBUMS..."
             style={{ 
-              flex: 1, 
-              background: 'transparent', 
-              border: 'none', 
-              outline: 'none',
-              color: 'var(--color-text-primary)', 
-              fontSize: 14, 
-              fontWeight: 600, 
-              fontFamily: "'Inter', sans-serif",
-              letterSpacing: '0.02em'
+              flex: 1, background: 'transparent', border: 'none', outline: 'none',
+              color: '#fff', fontSize: 16, fontWeight: 900, fontFamily: "'Space Grotesk', sans-serif"
             }}
           />
           {loading && (
-            <div
-              className="loading-pulse"
-              style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-accent-primary)' }}
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
+              style={{ width: 20, height: 20, border: '2px solid var(--pink-hot)', borderTopColor: 'transparent', borderRadius: '50%' }}
             />
           )}
         </div>
@@ -132,37 +121,16 @@ const Search = () => {
 
       {/* Category Chips */}
       <section style={{ marginBottom: 40 }}>
-        <div style={{ 
-          display: 'flex', 
-          gap: 12, 
-          overflowX: 'auto',
-          marginLeft: -24,
-          paddingLeft: 24,
-          marginRight: -24,
-          paddingRight: 24
-        }} className="no-scrollbar">
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto' }} className="no-scrollbar">
           {['BOLLYWOOD', 'ENGLISH', 'TRENDING', 'POP', 'HIP-HOP', 'LO-FI'].map(cat => (
-            <motion.button
+            <button
               key={cat}
-              whileTap={{ scale: 0.96 }}
               onClick={() => { setQuery(cat); searchSongs(cat); }}
-              className="card-tap"
-              style={{ 
-                padding: '10px 20px', 
-                fontSize: '0.72rem',
-                fontWeight: 600,
-                letterSpacing: '0.08em',
-                background: query === cat ? 'var(--color-accent-primary)' : 'var(--color-bg-elevated)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 100,
-                color: '#fff',
-                boxShadow: query === cat ? '0 0 24px var(--color-accent-glow)' : 'inset 0 1px 0 #ffffff12',
-                whiteSpace: 'nowrap',
-                cursor: 'pointer'
-              }}
+              className="btn-premium"
+              style={{ padding: '8px 20px', fontSize: 9 }}
             >
               {cat}
-            </motion.button>
+            </button>
           ))}
         </div>
       </section>
@@ -176,58 +144,45 @@ const Search = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              style={{ display: 'flex', flexDirection: 'column', gap: 4 }}
+              style={{ display: 'flex', flexDirection: 'column', gap: 2 }}
             >
               {results.map((song, i) => (
                 <motion.div
                   key={song.id}
-                  whileTap={{ scale: 0.98, background: 'rgba(255,255,255,0.03)' }}
+                  whileHover={{ background: 'var(--glass-bg)' }}
                   onClick={() => handlePlay(song, i)}
-                  className="card-tap tile-surface"
                   style={{
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 16, 
-                    padding: '10px 12px',
-                    borderRadius: 16, 
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    display: 'flex', alignItems: 'center', gap: 15, padding: '10px 15px',
+                    borderRadius: 12, cursor: 'pointer', height: 64,
+                    borderBottom: '1px solid rgba(255,45,120,0.05)',
+                    transition: 'all 0.3s ease'
                   }}
                 >
-                  <div style={{ width: 48, height: 48, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: 'var(--color-bg-elevated)' }}>
-                    <img src={song.album_art_url} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+                    <img src={song.album_art_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{ 
-                      fontSize: 13, 
-                      fontWeight: 600, 
-                      whiteSpace: 'nowrap', 
-                      overflow: 'hidden', 
-                      textOverflow: 'ellipsis', 
-                      color: currentPlayingId === song.id ? 'var(--color-accent-primary)' : '#fff',
-                      textTransform: 'uppercase'
-                    }}>
-                      {decodeSongTitle(song.title)}
+                    <h3 style={{ fontSize: 13, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: currentPlayingId === song.id ? 'var(--pink-hot)' : '#fff' }}>
+                      {decodeSongTitle(song.title).toUpperCase()}
                     </h3>
-                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>{song.artist?.toUpperCase()}</p>
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{song.artist?.toUpperCase()}</p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
                     <motion.button
                       whileTap={{ scale: 0.8 }}
                       onClick={(e) => { e.stopPropagation(); toggleOffline(song); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--color-text-muted)' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
                     >
-                      {downloadingIds.has(song.id) ? (
-                        <div
-                          className="loading-pulse"
-                          style={{ width: 14, height: 14, border: '2px solid var(--color-accent-primary)', borderRadius: '50%' }}
+                      {usePlayerStore.getState().downloadingIds.has(song.id) ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                          style={{ width: 14, height: 14, border: '2px solid var(--pink-hot)', borderTopColor: 'transparent', borderRadius: '50%' }}
                         />
                       ) : isOffline(song.id) ? (
-                        <span style={{ color: 'var(--color-accent-primary)' }}>✓</span>
+                        <span style={{ color: 'var(--pink-hot)' }}>✓</span>
                       ) : (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                        </svg>
+                        <span style={{ opacity: 0.3 }}>📥</span>
                       )}
                     </motion.button>
                   </div>
@@ -235,12 +190,10 @@ const Search = () => {
               ))}
             </motion.div>
           ) : !loading && query ? (
-            <div style={{ textAlign: 'center', padding: 80 }}>
-              <p style={{ color: 'var(--color-accent-primary)', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em' }}>NO RESULTS FOUND</p>
-            </div>
+            <p className="font-mono" style={{ color: 'var(--pink-hot)', fontSize: 10, textAlign: 'center', padding: 40 }}>NO MATCHING DATA FOUND</p>
           ) : (
-            <div style={{ padding: 80, textAlign: 'center', opacity: 0.3 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em' }}>READY TO DISCOVER</p>
+            <div style={{ padding: 40, textAlign: 'center', opacity: 0.2 }}>
+              <p className="font-mono" style={{ fontSize: 10 }}>READY TO SEARCH...</p>
             </div>
           )}
         </AnimatePresence>

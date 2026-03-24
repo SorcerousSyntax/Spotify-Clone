@@ -6,7 +6,8 @@ import LoadingScreen from './components/LoadingScreen';
 import BottomNav from './components/BottomNav';
 import MiniPlayer from './components/MiniPlayer';
 import IOSInstallPrompt from './components/IOSInstallPrompt';
-import Background from './components/Background';
+import GlobalCanvas from './components/GlobalCanvas';
+import SplineBackground from './components/SplineBackground';
 import SmoothScroll from './components/SmoothScroll';
 import usePlayer from './hooks/usePlayer';
 import usePlayerStore from './store/playerStore';
@@ -21,10 +22,10 @@ const Profile = React.lazy(() => import('./pages/Profile'));
 
 const PageTransition = ({ children }) => (
   <motion.div
-    initial={{ opacity: 0, scale: 0.98 }}
+    initial={{ opacity: 0, scale: 0.97 }}
     animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.98 }}
-    transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+    exit={{ opacity: 0, scale: 0.97 }}
+    transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
     style={{ minHeight: '100dvh', willChange: 'opacity, transform' }}
   >
     {children}
@@ -58,11 +59,11 @@ const TopBar = ({ session }) => {
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
-      className="glass"
+      transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+      className="liquid-glass"
       style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        height: 70,
+        height: 80,
         borderTopLeftRadius: 0, borderTopRightRadius: 0,
         borderLeft: 'none', borderRight: 'none', borderTop: 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -70,25 +71,25 @@ const TopBar = ({ session }) => {
       }}
     >
       <Link to="/" style={{ textDecoration: 'none' }}>
-        <h1 className="wordmark" style={{
-          fontSize: 22, margin: 0, color: '#fff',
-          fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800,
-          letterSpacing: '-0.03em'
+        <h1 style={{
+          fontSize: 24, margin: 0, color: '#fff',
+          fontFamily: "'Space Grotesk', sans-serif", fontWeight: 900,
+          letterSpacing: '-0.02em'
         }}>
-          RAABTA<span style={{ color: 'var(--color-accent-primary)' }}>.</span>
+          RAABTA<span className="text-pink">.</span>
         </h1>
       </Link>
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', fontWeight: 600, letterSpacing: '0.05em' }}>
-          {display.toUpperCase()}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <span className="font-mono" style={{ fontSize: 10, color: '#fff' }}>
+          {display}
         </span>
         <Link to="/profile" style={{ textDecoration: 'none' }}>
           <div className="flex-center" style={{
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'var(--color-bg-elevated)',
-            border: '1px solid var(--color-border)',
-            fontSize: 14, fontWeight: 700, color: '#fff',
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'var(--glass-bg)',
+            border: '1px solid var(--glass-border)',
+            fontSize: 14, fontWeight: 900, color: '#fff',
             fontFamily: "'Space Grotesk', sans-serif",
             overflow: 'hidden'
           }}>
@@ -138,13 +139,12 @@ const AuthPage = ({ mode = 'login' }) => {
           padding: 60,
           display: 'grid',
           gap: 30,
-          borderRadius: 32
         }}
       >
         <div>
-          <h2 className="page-title">{isRegister ? 'JOIN' : 'LOGIN'}<span>.</span></h2>
-          <p style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600, letterSpacing: '0.1em' }}>
-            {isRegister ? 'START YOUR JOURNEY' : 'WELCOME BACK'}
+          <h2 style={{ fontSize: 48, marginBottom: 10 }}>{isRegister ? 'JOIN' : 'LOGIN'}</h2>
+          <p className="font-mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>
+            {isRegister ? 'START YOUR JOURNEY' : 'WELCOME BACK COMMANDER'}
           </p>
         </div>
 
@@ -155,8 +155,8 @@ const AuthPage = ({ mode = 'login' }) => {
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="NAME"
             style={{
-              background: 'transparent', border: 'none', borderBottom: '1px solid var(--color-border)',
-              color: '#fff', padding: '10px 0', outline: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 500
+              background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.2)',
+              color: '#fff', padding: '10px 0', outline: 'none', fontFamily: "'Share Tech Mono', monospace"
             }}
           />
         )}
@@ -166,8 +166,8 @@ const AuthPage = ({ mode = 'login' }) => {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="EMAIL"
           style={{
-            background: 'transparent', border: 'none', borderBottom: '1px solid var(--color-border)',
-            color: '#fff', padding: '10px 0', outline: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 500
+            background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.2)',
+            color: '#fff', padding: '10px 0', outline: 'none', fontFamily: "'Share Tech Mono', monospace"
           }}
         />
         <input
@@ -176,29 +176,18 @@ const AuthPage = ({ mode = 'login' }) => {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="PASSWORD"
           style={{
-            background: 'transparent', border: 'none', borderBottom: '1px solid var(--color-border)',
-            color: '#fff', padding: '10px 0', outline: 'none', fontFamily: "'Inter', sans-serif", fontWeight: 500
+            background: 'transparent', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.2)',
+            color: '#fff', padding: '10px 0', outline: 'none', fontFamily: "'Share Tech Mono', monospace"
           }}
         />
 
-        <button type="submit" className="card-pressable" style={{
-          background: 'var(--color-accent-primary)',
-          color: '#fff',
-          border: 'none',
-          padding: '16px',
-          borderRadius: 100,
-          fontWeight: 700,
-          fontSize: 14,
-          letterSpacing: '0.05em',
-          cursor: 'pointer',
-          boxShadow: '0 0 32px var(--color-accent-glow)'
-        }} disabled={loading}>
+        <button type="submit" className="btn-premium" disabled={loading}>
           {loading ? 'PROCESSING...' : isRegister ? 'CREATE ACCOUNT' : 'ENTER'}
         </button>
 
-        <p style={{ fontSize: 12, textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+        <p style={{ fontSize: 12, textAlign: 'center' }}>
           {isRegister ? 'ALREADY REGISTERED?' : 'NEW USER?'}{' '}
-          <Link to={isRegister ? '/login' : '/register'} style={{ color: 'var(--color-accent-primary)', textDecoration: 'none', fontWeight: 700 }}>
+          <Link to={isRegister ? '/login' : '/register'} style={{ color: '#ff2d78', textDecoration: 'none', fontWeight: 700 }}>
             {isRegister ? 'SIGN IN' : 'REGISTER'}
           </Link>
         </p>
@@ -253,12 +242,18 @@ const AppInner = () => {
   usePlayer();
 
   const isPublicAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isHomePage = location.pathname === '/';
+  const isProfilePage = location.pathname === '/profile';
   const showShell = authReady && session && !isPublicAuthPage;
   const isNowPlayingRoute = location.pathname === '/now-playing';
 
   const content = (
-    <div style={{ position: 'relative', minHeight: '100dvh', background: 'var(--color-bg-primary)', overflow: 'hidden' }}>
-      <Background />
+    <div style={{ position: 'relative', minHeight: '100dvh', background: '#000', overflow: 'hidden' }}>
+      {!isProfilePage ? (
+        <SplineBackground mode={isHomePage ? 'orange' : 'pink'} />
+      ) : (
+        <GlobalCanvas />
+      )}
       <div className="noise" />
 
       {showShell && !isNowPlayingRoute && <TopBar session={session} />}

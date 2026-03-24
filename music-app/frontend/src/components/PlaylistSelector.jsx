@@ -24,12 +24,7 @@ const PlaylistSelector = ({ song, onClose }) => {
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 3000,
-        background: 'rgba(0,0,0,0.8)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        willChange: 'transform',
-        transform: 'translateZ(0)',
-        contain: 'paint layout style',
+        background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center'
       }}
     >
@@ -39,7 +34,7 @@ const PlaylistSelector = ({ song, onClose }) => {
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="glass"
+        className="liquid-glass"
         style={{
           width: '100%', maxWidth: '500px',
           padding: '30px 20px ' + (30 + 40) + 'px', // Extra bottom for iOS & Nav bar
@@ -58,16 +53,14 @@ const PlaylistSelector = ({ song, onClose }) => {
               key={playlist.id}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleAdd(playlist.id)}
-              className="card-tap"
+              className="btn-premium"
               style={{
                 padding: '15px 20px', textAlign: 'left',
-                color: addedId === playlist.id ? 'var(--color-accent-primary)' : '#fff', 
-                fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                color: addedId === playlist.id ? 'var(--pink-hot)' : '#fff', 
+                fontSize: 12, fontWeight: 900, cursor: 'pointer',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                transition: 'all 160ms var(--ease-main)',
-                borderRadius: 15,
-                background: 'var(--color-bg-elevated)',
-                border: '1px solid var(--color-border)'
+                transition: 'all 0.3s ease',
+                borderRadius: 15
               }}
             >
               <span>{playlist.name.toUpperCase()}</span>
