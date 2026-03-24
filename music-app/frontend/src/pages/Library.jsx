@@ -5,7 +5,6 @@ import { decodeSongTitle } from '../lib/text';
 import PlaylistFolderCard from '../components/PlaylistFolderCard';
 
 const Library = () => {
-  console.log('Library mounting...');
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
@@ -19,6 +18,7 @@ const Library = () => {
   const toggleOffline = usePlayerStore((s) => s.toggleOffline);
   const isOffline = usePlayerStore((s) => s.isOffline);
   const offlineSongIds = usePlayerStore((s) => s.offlineSongIds);
+  const downloadingIds = usePlayerStore((s) => s.downloadingIds);
 
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId) || null;
 
@@ -58,44 +58,54 @@ const Library = () => {
   };
 
   return (
-    <div style={{ padding: '100px 20px 150px 20px', minHeight: '100vh', position: 'relative', zIndex: 10, background: 'transparent' }}>
+    <div style={{ padding: '100px 24px 150px 24px', minHeight: '100vh', position: 'relative', zIndex: 10 }}>
       {/* Header */}
-      <header style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <header style={{ marginBottom: 48, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1 style={{ fontSize: 42, color: '#fff' }}>
-            {selectedPlaylistId === 'offline-auto' ? 'OFFLINE' : selectedPlaylist ? selectedPlaylist.name.toUpperCase() : 'LIBRARY'}<span className="text-pink">.</span>
+          <h1 className="page-title">
+            {selectedPlaylistId === 'offline-auto' ? 'OFFLINE' : selectedPlaylist ? selectedPlaylist.name.toUpperCase() : 'LIBRARY'}<span>.</span>
           </h1>
-          <p className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 8 }}>
+          <p style={{ fontSize: 10, color: 'var(--color-text-muted)', fontWeight: 600, letterSpacing: '0.1em', marginTop: 8 }}>
             {selectedPlaylistId === 'offline-auto' ? `OFFLINE / ${offlineSongIds.size} ITEMS` : selectedPlaylist ? `COLLECTION / ${selectedPlaylist.songIds.length} ITEMS` : 'YOUR COLLECTIONS'}
           </p>
         </div>
         {!selectedPlaylist && selectedPlaylistId !== 'offline-auto' && (
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.96 }}
             onClick={() => setShowCreate(true)}
-            className="btn-premium" 
-            style={{ padding: '8px 20px', fontSize: 9 }}
+            style={{ 
+              padding: '10px 20px', 
+              fontSize: 10,
+              fontWeight: 700,
+              background: 'var(--color-accent-primary)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 100,
+              letterSpacing: '0.05em',
+              boxShadow: '0 0 20px var(--color-accent-glow)'
+            }}
           >
             + NEW
-          </button>
+          </motion.button>
         )}
       </header>
 
-      {/* Create Playlist Modal (Overlay) */}
+      {/* Create Playlist Modal */}
       <AnimatePresence>
         {showCreate && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)', display: 'grid', placeItems: 'center', padding: 20 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(24px)', display: 'grid', placeItems: 'center', padding: 24 }}
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="liquid-glass"
-              style={{ width: '100%', maxWidth: 400, padding: 40, textAlign: 'center', borderRadius: 30 }}
+              className="glass"
+              style={{ width: '100%', maxWidth: 400, padding: 48, textAlign: 'center', borderRadius: 32 }}
             >
-              <h2 style={{ fontSize: 24, marginBottom: 30, color: '#fff' }}>CREATE COLLECTION</h2>
+              <h2 className="section-heading" style={{ fontSize: 18, marginBottom: 32 }}>CREATE COLLECTION</h2>
               <input
                 type="text"
                 autoFocus
@@ -103,13 +113,13 @@ const Library = () => {
                 onChange={(e) => setNewPlaylistName(e.target.value)}
                 placeholder="NAME..."
                 style={{
-                  width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid var(--pink-hot)',
-                  color: '#fff', fontSize: 18, fontWeight: 900, textAlign: 'center', marginBottom: 30, outline: 'none'
+                  width: '100%', background: 'transparent', border: 'none', borderBottom: '2.5px solid var(--color-accent-primary)',
+                  color: '#fff', fontSize: 20, fontWeight: 800, textAlign: 'center', marginBottom: 40, outline: 'none'
                 }}
               />
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={onCreate} className="btn-premium" style={{ flex: 1, height: 50, borderRadius: 25 }}>CREATE</button>
-                <button onClick={() => setShowCreate(false)} className="btn-premium" style={{ flex: 1, height: 50, borderRadius: 25, background: 'rgba(255,255,255,0.05)' }}>CANCEL</button>
+              <div style={{ display: 'flex', gap: 16 }}>
+                <button onClick={onCreate} style={{ flex: 1, height: 52, borderRadius: 100, background: 'var(--color-accent-primary)', border: 'none', color: '#fff', fontWeight: 700, letterSpacing: '0.05em' }}>CREATE</button>
+                <button onClick={() => setShowCreate(false)} style={{ flex: 1, height: 52, borderRadius: 100, background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)', color: '#fff', fontWeight: 700, letterSpacing: '0.05em' }}>CANCEL</button>
               </div>
             </motion.div>
           </motion.div>
@@ -119,7 +129,7 @@ const Library = () => {
       {/* Playlist Grid */}
       {!selectedPlaylist && selectedPlaylistId !== 'offline-auto' && (
         <section style={{ marginBottom: 60 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16 }}>
             {/* Offline Special Card */}
             <PlaylistFolderCard
               playlist={offlinePlaylist}
@@ -145,60 +155,82 @@ const Library = () => {
       {/* Song List */}
       <section>
         {(selectedPlaylist || selectedPlaylistId === 'offline-auto') && (
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.96 }}
             onClick={() => setSelectedPlaylistId(null)}
-            className="font-mono"
-            style={{ background: 'none', border: 'none', color: 'var(--pink-hot)', fontSize: 10, cursor: 'pointer', marginBottom: 30 }}
+            style={{ 
+              background: 'var(--color-bg-elevated)', 
+              border: '1px solid var(--color-border)', 
+              color: '#fff', 
+              fontSize: 10, 
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              padding: '8px 16px',
+              borderRadius: 100,
+              cursor: 'pointer', 
+              marginBottom: 40 
+            }}
           >
             ← BACK TO LIBRARY
-          </button>
+          </motion.button>
         )}
         
-        <h2 style={{ fontSize: 18, marginBottom: 20 }}>{selectedPlaylistId === 'offline-auto' ? 'OFFLINE SONGS' : selectedPlaylist ? 'SONGS' : 'ALL SONGS'}</h2>
+        <h2 className="section-heading" style={{ fontSize: 14, marginBottom: 24 }}>{selectedPlaylistId === 'offline-auto' ? 'OFFLINE SONGS' : selectedPlaylist ? 'SONGS' : 'ALL SONGS'}</h2>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {displaySongs.map((song, i) => {
             const offline = isOffline(song.id);
             return (
               <motion.div
                 key={song.id}
-                whileHover={{ background: 'var(--glass-bg)' }}
+                whileTap={{ scale: 0.98, background: 'rgba(255,255,255,0.03)' }}
                 onClick={() => handlePlay(song, i, displaySongs)}
+                className="card-tap"
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 15, padding: '10px 15px',
-                  borderRadius: 12, cursor: 'pointer', height: 64,
-                  borderBottom: '1px solid rgba(255,45,120,0.05)',
-                  transition: 'background 0.3s ease'
+                  display: 'flex', alignItems: 'center', gap: 16, padding: '10px 12px',
+                  borderRadius: 16, cursor: 'pointer', height: 64,
+                  border: '1px solid transparent',
+                  transition: 'all 0.2s ease'
                 }}
               >
-                <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
-                  <img src={song.album_art_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                <div style={{ width: 44, height: 44, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: 'var(--color-bg-elevated)' }}>
+                  <img src={song.album_art_url} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: currentSong?.id === song.id ? 'var(--pink-hot)' : '#fff' }}>
-                    {decodeSongTitle(song.title).toUpperCase()}
+                  <h3 style={{ 
+                    fontSize: 13, 
+                    fontWeight: 600, 
+                    whiteSpace: 'nowrap', 
+                    overflow: 'hidden', 
+                    textOverflow: 'ellipsis', 
+                    color: currentSong?.id === song.id ? 'var(--color-accent-primary)' : '#fff',
+                    textTransform: 'uppercase'
+                  }}>
+                    {decodeSongTitle(song.title)}
                   </h3>
-                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{song.artist?.toUpperCase()}</p>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>{song.artist?.toUpperCase()}</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <motion.button
                     whileTap={{ scale: 0.8 }}
                     onClick={(e) => { e.stopPropagation(); toggleOffline(song); }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--color-text-muted)' }}
                   >
-                    {usePlayerStore.getState().downloadingIds.has(song.id) ? (
+                    {downloadingIds.has(song.id) ? (
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                        style={{ width: 14, height: 14, border: '2px solid var(--pink-hot)', borderTopColor: 'transparent', borderRadius: '50%' }}
+                        style={{ width: 14, height: 14, border: '2px solid var(--color-accent-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}
                       />
                     ) : offline ? (
-                      <span style={{ color: 'var(--pink-hot)' }}>✓</span>
+                      <span style={{ color: 'var(--color-accent-primary)' }}>✓</span>
                     ) : (
-                      <span style={{ opacity: 0.3 }}>📥</span>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                      </svg>
                     )}
                   </motion.button>
-                  <span className="font-mono" style={{ fontSize: 10, opacity: 0.3 }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-text-muted)', fontVariantNumeric: 'tabular-nums' }}>
                     {formatDuration(song.duration)}
                   </span>
                 </div>

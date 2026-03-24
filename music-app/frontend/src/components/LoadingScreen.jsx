@@ -12,13 +12,13 @@ const LoadingScreen = ({ onComplete }) => {
           clearInterval(timer);
           setTimeout(() => {
             setIsFinished(true);
-            setTimeout(onComplete, 1000);
-          }, 500);
+            setTimeout(onComplete, 800);
+          }, 400);
           return 100;
         }
-        return prev + Math.random() * 15;
+        return prev + Math.random() * 20;
       });
-    }, 150);
+    }, 120);
 
     return () => clearInterval(timer);
   }, [onComplete]);
@@ -27,13 +27,13 @@ const LoadingScreen = ({ onComplete }) => {
     <AnimatePresence>
       {!isFinished && (
         <motion.div
-          exit={{ y: '-100%' }}
-          transition={{ duration: 1, ease: [0.76, 0, 0.24, 1] }}
+          exit={{ opacity: 0, scale: 1.1 }}
+          transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
           style={{
             position: 'fixed',
             inset: 0,
             zIndex: 9999,
-            background: '#000',
+            background: 'var(--color-bg-primary)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -41,57 +41,69 @@ const LoadingScreen = ({ onComplete }) => {
             padding: 40,
           }}
         >
-          <div style={{ position: 'relative', width: '100%', maxWidth: 400 }}>
+          {/* Background Elements */}
+          <div style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+            <div style={{
+              position: 'absolute', top: '20%', right: '10%', width: '60vw', height: '60vw',
+              background: 'radial-gradient(circle, var(--color-accent-primary), transparent 70%)',
+              opacity: 0.08, filter: 'blur(100px)'
+            }} />
+            <div style={{
+              position: 'absolute', bottom: '10%', left: '5%', width: '50vw', height: '50vw',
+              background: 'radial-gradient(circle, var(--color-accent-secondary), transparent 70%)',
+              opacity: 0.05, filter: 'blur(80px)'
+            }} />
+          </div>
+
+          <div style={{ position: 'relative', width: '100%', maxWidth: 320, zIndex: 1 }}>
             <motion.h1
-              initial={{ opacity: 0, letterSpacing: '0.5em' }}
-              animate={{ opacity: 1, letterSpacing: '-0.05em' }}
-              transition={{ duration: 1.5, ease: [0.76, 0, 0.24, 1] }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: [0.34, 1.56, 0.64, 1] }}
+              className="page-title"
               style={{
-                fontSize: 48,
                 textAlign: 'center',
-                marginBottom: 20,
-                color: '#fff',
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontWeight: 900
+                marginBottom: 32,
+                color: '#fff'
               }}
             >
-              RAABTA<span style={{ color: '#ff2d78' }}>.</span>
+              RAABTA<span>.</span>
             </motion.h1>
 
             {/* Progress Bar Container */}
             <div style={{
               width: '100%',
               height: 2,
-              background: 'rgba(255,255,255,0.1)',
+              background: 'var(--color-border)',
               position: 'relative',
+              borderRadius: 100,
               overflow: 'hidden'
             }}>
-              {/* Progress Bar Fill */}
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.2 }}
                 style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
                   height: '100%',
-                  background: '#ff2d78',
-                  boxShadow: '0 0 15px #ff2d78'
+                  background: 'var(--color-accent-primary)',
+                  boxShadow: '0 0 20px var(--color-accent-glow)'
                 }}
               />
             </div>
 
             <div style={{
-              marginTop: 15,
+              marginTop: 16,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <span className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>
-                SYSTEM INITIALIZING...
+              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-muted)', letterSpacing: '0.15em' }}>
+                INITIALIZING
               </span>
-              <span className="font-mono" style={{ fontSize: 9, color: '#ff2d78' }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-accent-primary)', fontVariantNumeric: 'tabular-nums' }}>
                 {Math.round(progress)}%
               </span>
             </div>
@@ -101,17 +113,15 @@ const LoadingScreen = ({ onComplete }) => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
+            transition={{ delay: 0.5 }}
             style={{
               position: 'absolute',
-              bottom: 40,
-              left: 0,
-              right: 0,
+              bottom: 48,
               textAlign: 'center'
             }}
           >
-            <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.2)' }}>
-              &copy; 2026 RAABTA AUDIO LABS // ALL RIGHTS RESERVED
+            <p style={{ fontSize: 8, fontWeight: 600, color: 'var(--color-text-muted)', letterSpacing: '0.2em' }}>
+              RAABTA AUDIO LABS // 2026
             </p>
           </motion.div>
         </motion.div>
