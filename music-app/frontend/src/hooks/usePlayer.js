@@ -28,6 +28,27 @@ const usePlayer = () => {
     setPlayerControls,
   } = usePlayerStore();
 
+  // iOS Audio Unlock - ensures AudioContext starts on first interaction
+  useEffect(() => {
+    const unlock = () => {
+      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume();
+      }
+      // Resume Howler's global context if needed
+      if (typeof Howler !== 'undefined' && Howler.ctx && Howler.ctx.state === 'suspended') {
+        Howler.ctx.resume();
+      }
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('touchstart', unlock);
+    };
+    window.addEventListener('click', unlock);
+    window.addEventListener('touchstart', unlock);
+    return () => {
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('touchstart', unlock);
+    };
+  }, []);
+
   // Create/destroy Howl when song changes
   useEffect(() => {
     let cancelled = false;

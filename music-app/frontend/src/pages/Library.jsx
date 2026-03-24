@@ -80,7 +80,41 @@ const Library = () => {
         )}
       </header>
 
-      {/* ... AnimatePresence for showCreate remains same ... */}
+      {/* Create Playlist Modal (Overlay) */}
+      <AnimatePresence>
+        {showCreate && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)', display: 'grid', placeItems: 'center', padding: 20 }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="liquid-glass"
+              style={{ width: '100%', maxWidth: 400, padding: 40, textAlign: 'center', borderRadius: 30 }}
+            >
+              <h2 style={{ fontSize: 24, marginBottom: 30, color: '#fff' }}>CREATE COLLECTION</h2>
+              <input
+                type="text"
+                autoFocus
+                value={newPlaylistName}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+                placeholder="NAME..."
+                style={{
+                  width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid var(--pink-hot)',
+                  color: '#fff', fontSize: 18, fontWeight: 900, textAlign: 'center', marginBottom: 30, outline: 'none'
+                }}
+              />
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={onCreate} className="btn-premium" style={{ flex: 1, height: 50, borderRadius: 25 }}>CREATE</button>
+                <button onClick={() => setShowCreate(false)} className="btn-premium" style={{ flex: 1, height: 50, borderRadius: 25, background: 'rgba(255,255,255,0.05)' }}>CANCEL</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Playlist Grid */}
       {!selectedPlaylist && selectedPlaylistId !== 'offline-auto' && (
