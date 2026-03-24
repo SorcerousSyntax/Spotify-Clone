@@ -57,20 +57,18 @@ const usePlayer = () => {
       const requestedUrl = currentSong?.url || currentSong?.stream_url || '';
       console.log('[Player] requested song.url:', requestedUrl);
 
-      const streamUrl = getPreferredSongStreamUrl(currentSong);
+      const preferredUrl = getPreferredSongStreamUrl(currentSong);
       const candidateUrls = getSongAudioUrlCandidates(currentSong);
 
-      let songSrc = streamUrl;
+      let songSrc = preferredUrl;
+      let isBlob = false;
 
-      console.log('[Player] resolved stream source:', songSrc);
-
-      if (streamUrl && window.caches) {
+      if (preferredUrl && window.caches) {
         try {
           const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
           let offline = null;
 
           for (const url of candidateUrls) {
-            // Find any cached variant for this song before falling back to network.
             const hit = await cache.match(url);
             if (hit) {
               offline = hit;
@@ -86,6 +84,7 @@ const usePlayer = () => {
             }
             objectUrlRef.current = URL.createObjectURL(blob);
             songSrc = objectUrlRef.current;
+            isBlob = true;
           }
         } catch (err) {
           console.warn('Offline audio lookup failed:', err?.message || err);
@@ -100,9 +99,18 @@ const usePlayer = () => {
         howlRef.current.unload();
       }
 
+      // iOS Safari often fails on proxied URLs if the proxy doesn't support Range requests perfectly.
+      // We provide the preferred (proxied) URL first, but Howler allows multiple sources.
+      // We'll also add the raw original URL as a second candidate.
+      const sources = [songSrc];
+      if (!isBlob && requestedUrl && requestedUrl !== songSrc) {
+        sources.push(requestedUrl);
+      }
+
       const howl = new Howl({
-        src: [songSrc],
-        html5: true,
+        src: sources,
+        html5: true, // Required for long audio and background play
+        preload: true,
         volume: isMuted ? 0 : volume,
         onload: () => {
           setDuration(howl.duration());
