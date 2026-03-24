@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import usePlayerStore, { LIKED_SONGS_PLAYLIST_ID } from '../store/playerStore';
 import { decodeSongTitle } from '../lib/text';
 import PlaylistFolderCard from '../components/PlaylistFolderCard';
 
 const Library = () => {
-  console.log('Library mounting...');
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
+  const location = useLocation();
+  const initialPlaylistId = new URLSearchParams(location.search).get('playlist');
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState(initialPlaylistId);
   const [showCreate, setShowCreate] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
 

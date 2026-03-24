@@ -7,6 +7,9 @@ import {
   getSongAudioUrlCandidates,
 } from '../lib/offlineAudio';
 
+const SAFE_OUTPUT_HEADROOM = 0.82;
+const IOS_SAFE_OUTPUT_HEADROOM = 0.66;
+
 const usePlayer = () => {
   const howlRef = useRef(null);
   const animFrameRef = useRef(null);
@@ -14,6 +17,11 @@ const usePlayer = () => {
   const analyserRef = useRef(null);
   const audioCtxRef = useRef(null);
   const sourceRef = useRef(null);
+  const lowShelfRef = useRef(null);
+  const presenceDipRef = useRef(null);
+  const highShelfRef = useRef(null);
+  const compressorRef = useRef(null);
+  const outputGainRef = useRef(null);
   const frequencyDataRef = useRef(new Uint8Array(64));
 
   const {
@@ -29,6 +37,7 @@ const usePlayer = () => {
   } = usePlayerStore();
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const outputHeadroom = isIOS ? IOS_SAFE_OUTPUT_HEADROOM : SAFE_OUTPUT_HEADROOM;
 
   useEffect(() => {
     if (!isIOS) return;
@@ -126,7 +135,7 @@ const usePlayer = () => {
         src: sources,
         html5: true, // Crucial for backgrounding on iOS
         preload: true,
-        volume: isMuted ? 0 : volume,
+        volume: isMuted ? 0 : (volume * outputHeadroom),
         onload: () => {
           if (!cancelled) setDuration(howl.duration());
         },
@@ -166,7 +175,10 @@ const usePlayer = () => {
             howl.seek(0);
             howl.play();
           } else {
-            nextSong();
+            const advanced = nextSong();
+            if (!advanced) {
+              setIsPlaying(false);
+            }
           }
         },
         onplayerror: () => {
@@ -206,8 +218,8 @@ const usePlayer = () => {
   // Sync volume
   useEffect(() => {
     if (!howlRef.current) return;
-    howlRef.current.volume(isMuted ? 0 : volume);
-  }, [volume, isMuted]);
+    howlRef.current.volume(isMuted ? 0 : (volume * outputHeadroom));
+  }, [volume, isMuted, outputHeadroom]);
 
   // Update progress loop
   const updateProgress = useCallback(() => {
@@ -219,8 +231,6 @@ const usePlayer = () => {
 
   // Set up Web Audio API analyser for waveform
   const setupAnalyser = useCallback(() => {
-    if (analyserRef.current && audioCtxRef.current?.state !== 'suspended') return;
-
     try {
       if (!audioCtxRef.current) {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -239,11 +249,57 @@ const usePlayer = () => {
         analyserRef.current = analyser;
       }
 
+      if (!lowShelfRef.current) {
+        const lowShelf = ctx.createBiquadFilter();
+        lowShelf.type = 'lowshelf';
+        lowShelf.frequency.value = 130;
+        lowShelf.gain.value = 1.8;
+        lowShelfRef.current = lowShelf;
+      }
+
+      if (!presenceDipRef.current) {
+        const presenceDip = ctx.createBiquadFilter();
+        presenceDip.type = 'peaking';
+        presenceDip.frequency.value = 3600;
+        presenceDip.Q.value = 1.1;
+        presenceDip.gain.value = -2.6;
+        presenceDipRef.current = presenceDip;
+      }
+
+      if (!highShelfRef.current) {
+        const highShelf = ctx.createBiquadFilter();
+        highShelf.type = 'highshelf';
+        highShelf.frequency.value = 9200;
+        highShelf.gain.value = -2.8;
+        highShelfRef.current = highShelf;
+      }
+
+      if (!compressorRef.current) {
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.value = -19;
+        compressor.knee.value = 22;
+        compressor.ratio.value = 2.5;
+        compressor.attack.value = 0.005;
+        compressor.release.value = 0.2;
+        compressorRef.current = compressor;
+      }
+
+      if (!outputGainRef.current) {
+        const outputGain = ctx.createGain();
+        outputGain.gain.value = 0.92;
+        outputGainRef.current = outputGain;
+      }
+
       // Try getting the Howler internal audio node
       const howlNode = howlRef.current?._sounds?.[0]?._node;
       if (howlNode && !sourceRef.current) {
         const source = ctx.createMediaElementSource(howlNode);
-        source.connect(analyserRef.current);
+        source.connect(lowShelfRef.current);
+        lowShelfRef.current.connect(presenceDipRef.current);
+        presenceDipRef.current.connect(highShelfRef.current);
+        highShelfRef.current.connect(compressorRef.current);
+        compressorRef.current.connect(outputGainRef.current);
+        outputGainRef.current.connect(analyserRef.current);
         analyserRef.current.connect(ctx.destination);
         sourceRef.current = source;
       }

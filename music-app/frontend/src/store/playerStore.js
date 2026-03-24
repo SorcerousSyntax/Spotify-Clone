@@ -265,7 +265,7 @@ const usePlayerStore = create((set, get) => ({
   isPlaying: false,
   progress: 0,
   duration: 0,
-  volume: 1,
+  volume: 0.72,
   isMuted: false,
 
   // Modes
@@ -555,7 +555,10 @@ const usePlayerStore = create((set, get) => ({
   setProgress: (val) => set({ progress: val }),
   setDuration: (val) => set({ duration: val }),
 
-  setVolume: (val) => set({ volume: val, isMuted: val === 0 }),
+  setVolume: (val) => {
+    const safeVolume = Math.max(0, Math.min(0.9, Number(val) || 0));
+    set({ volume: safeVolume, isMuted: safeVolume === 0 });
+  },
   toggleMute: () => set((state) => ({
     isMuted: !state.isMuted,
     volume: state.isMuted ? (state.volume || 0.5) : 0,
@@ -563,17 +566,24 @@ const usePlayerStore = create((set, get) => ({
 
   nextSong: () => {
     const { queue, queueIndex, shuffle, repeat } = get();
-    if (queue.length === 0) return;
+    if (queue.length === 0) return false;
 
     let nextIndex;
     if (shuffle) {
-      nextIndex = Math.floor(Math.random() * queue.length);
+      if (queue.length === 1) {
+        nextIndex = 0;
+      } else {
+        do {
+          nextIndex = Math.floor(Math.random() * queue.length);
+        } while (nextIndex === queueIndex);
+      }
     } else if (queueIndex < queue.length - 1) {
       nextIndex = queueIndex + 1;
     } else if (repeat === 'all') {
       nextIndex = 0;
     } else {
-      return;
+      set({ isPlaying: false });
+      return false;
     }
 
     set({
@@ -582,25 +592,41 @@ const usePlayerStore = create((set, get) => ({
       isPlaying: true,
       progress: 0,
     });
+
+    return true;
   },
 
   prevSong: () => {
-    const { queue, queueIndex, progress } = get();
-    if (queue.length === 0) return;
+    const { queue, queueIndex, progress, shuffle } = get();
+    if (queue.length === 0) return false;
 
     // If more than 3 seconds in, restart current song
     if (progress > 3) {
       set({ progress: 0 });
-      return;
+      return true;
     }
 
-    const prevIndex = queueIndex > 0 ? queueIndex - 1 : queue.length - 1;
+    let prevIndex;
+    if (shuffle) {
+      if (queue.length === 1) {
+        prevIndex = 0;
+      } else {
+        do {
+          prevIndex = Math.floor(Math.random() * queue.length);
+        } while (prevIndex === queueIndex);
+      }
+    } else {
+      prevIndex = queueIndex > 0 ? queueIndex - 1 : queue.length - 1;
+    }
+
     set({
       queueIndex: prevIndex,
       currentSong: queue[prevIndex],
       isPlaying: true,
       progress: 0,
     });
+
+    return true;
   },
 
   toggleShuffle: () => set((state) => ({ shuffle: !state.shuffle })),

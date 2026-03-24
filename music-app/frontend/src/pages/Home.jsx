@@ -70,10 +70,7 @@ const Home = () => {
                   ...playlist,
                   songs: playlist.songIds.map(id => usePlayerStore.getState().songsById[id]).filter(Boolean)
                 }}
-                onClick={() => {
-                  const pSongs = playlist.songIds.map(id => usePlayerStore.getState().songsById[id]).filter(Boolean);
-                  if (pSongs.length > 0) playSong(pSongs[0], 0, pSongs);
-                }}
+                onClick={() => navigate(`/library?playlist=${encodeURIComponent(playlist.id)}`)}
               />
             ))}
           </div>
