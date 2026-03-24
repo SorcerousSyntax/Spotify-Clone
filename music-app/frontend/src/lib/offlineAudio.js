@@ -72,9 +72,14 @@ export const cacheSongForOffline = async (song = {}) => {
   const primary = getPreferredSongStreamUrl(song);
 
   const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
-  const existing = await Promise.any(
-    candidates.map((url) => cache.match(url).then((hit) => hit || Promise.reject(new Error('miss'))))
-  ).catch(() => null);
+  let existing = null;
+  for (const url of candidates) {
+    const hit = await cache.match(url);
+    if (hit) {
+      existing = hit;
+      break;
+    }
+  }
 
   if (existing) {
     return { ok: true, reason: 'already-cached' };

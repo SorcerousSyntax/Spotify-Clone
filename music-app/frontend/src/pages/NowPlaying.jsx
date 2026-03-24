@@ -113,7 +113,8 @@ const NowPlaying = () => {
       flexDirection: 'column',
       overflow: 'hidden',
       height: '100dvh',
-      touchAction: 'none'
+      touchAction: 'none',
+      paddingTop: 'env(safe-area-inset-top, 0px)'
     }}>
       <style>{`
         @keyframes marquee {

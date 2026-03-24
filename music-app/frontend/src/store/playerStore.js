@@ -241,7 +241,7 @@ const persistOfflineLibrarySnapshot = ({ likedSongIds, recentlyPlayed, songsById
 };
 
 const cacheSongForOffline = async (songInput) => {
-  if (typeof window === 'undefined' || !window.caches || !navigator.onLine) return;
+  if (typeof window === 'undefined' || !window.caches) return;
 
   const song = normalizeSong(songInput);
   if (!getPreferredSongStreamUrl(song)) return;
