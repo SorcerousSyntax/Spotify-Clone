@@ -28,22 +28,13 @@ const usePlayer = () => {
     setPlayerControls,
   } = usePlayerStore();
 
-  // iOS Audio Unlock - ensures AudioContext starts on first interaction
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  // iOS Audio Unlock - critical for both Safari and PWA mode
   useEffect(() => {
     const unlock = () => {
-      console.log('[Player] iOS Unlock Triggered');
-
+      console.log('[Player] iOS Gesture Unlock');
       try {
-        // 1. Resume Web Audio Contexts
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!audioCtxRef.current && AudioCtx) {
-          audioCtxRef.current = new AudioCtx();
-        }
-        if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-          audioCtxRef.current.resume();
-        }
-
-        // 2. Global Howler Unlock
         if (typeof Howler !== 'undefined') {
           Howler.mute(false);
           if (Howler.ctx && Howler.ctx.state === 'suspended') {
@@ -51,23 +42,17 @@ const usePlayer = () => {
           }
         }
 
-        // 3. Play a tiny silent "poke" via Howler to unlock its internal engine
-        // This is a standard 100ms silent base64 wav
-        const silentPoke = new Howl({
-          src: ['data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA=='],
-          html5: false,
-          onplay: () => silentPoke.unload()
-        });
-        silentPoke.play();
-
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+          if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
+        }
       } catch (e) {
-        console.warn('[Player] Unlock failed:', e);
+        console.warn('Unlock error:', e);
       }
-
       window.removeEventListener('click', unlock);
       window.removeEventListener('touchstart', unlock);
     };
-
     window.addEventListener('click', unlock);
     window.addEventListener('touchstart', unlock);
     return () => {
@@ -83,39 +68,39 @@ const usePlayer = () => {
     const initPlayer = async () => {
       if (!currentSong) return;
 
-      const requestedUrl = currentSong?.url || currentSong?.stream_url || '';
+      const requestedUrl = currentSong.stream_url || currentSong.url || currentSong.r2_url || '';
       const preferredUrl = getPreferredSongStreamUrl(currentSong);
       const candidateUrls = getSongAudioUrlCandidates(currentSong);
 
       let songSrc = preferredUrl;
       let isBlob = false;
 
+      // Check cache
       if (preferredUrl && window.caches) {
         try {
           const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
-          let offline = null;
           for (const url of candidateUrls) {
             const hit = await cache.match(url);
-            if (hit) { offline = hit; break; }
+            if (hit) {
+              const blob = await hit.blob();
+              if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+              objectUrlRef.current = URL.createObjectURL(blob);
+              songSrc = objectUrlRef.current;
+              isBlob = true;
+              break;
+            }
           }
-          if (offline) {
-            const blob = await offline.blob();
-            if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-            objectUrlRef.current = URL.createObjectURL(blob);
-            songSrc = objectUrlRef.current;
-            isBlob = true;
-          }
-        } catch (err) {
-          console.warn('Offline lookup failed:', err);
-        }
+        } catch (e) {}
       }
 
-      if (!songSrc || cancelled) return;
+      if (cancelled) return;
 
       if (howlRef.current) {
         howlRef.current.unload();
       }
 
+      // iOS is extremely picky with source URLs. 
+      // If not a blob, we provide both proxied and original to let Howler decide.
       const sources = [songSrc];
       if (!isBlob && requestedUrl && requestedUrl !== songSrc) {
         sources.push(requestedUrl);
@@ -123,7 +108,7 @@ const usePlayer = () => {
 
       const howl = new Howl({
         src: sources,
-        html5: true, 
+        html5: true, // Crucial for backgrounding on iOS
         preload: true,
         volume: isMuted ? 0 : volume,
         onload: () => {
@@ -133,8 +118,12 @@ const usePlayer = () => {
           setIsPlaying(true);
           updateProgress();
 
-          // MEDIA SESSION
-          if ('mediaSession' in navigator && window.MediaMetadata) {
+          // Disable analyser on iOS as it silences the HTML5 audio element
+          if (!isIOS) {
+            setupAnalyser();
+          }
+
+          if ('mediaSession' in navigator) {
             try {
               navigator.mediaSession.metadata = new MediaMetadata({
                 title: currentSong.title,
@@ -142,7 +131,6 @@ const usePlayer = () => {
                 album: 'Raabta',
                 artwork: [{ src: currentSong.album_art_url, sizes: '512x512', type: 'image/jpeg' }]
               });
-
               const state = usePlayerStore.getState();
               navigator.mediaSession.setActionHandler('play', () => state.togglePlay());
               navigator.mediaSession.setActionHandler('pause', () => state.togglePlay());
@@ -150,11 +138,6 @@ const usePlayer = () => {
               navigator.mediaSession.setActionHandler('previoustrack', () => state.prevSong());
               navigator.mediaSession.playbackState = 'playing';
             } catch (e) {}
-          }
-
-          // ANALYSER: Only setup if context is running to avoid silencing iOS playback
-          if (audioCtxRef.current && audioCtxRef.current.state === 'running') {
-            setTimeout(setupAnalyser, 1000);
           }
         },
         onpause: () => {
@@ -178,7 +161,6 @@ const usePlayer = () => {
       howlRef.current = howl;
       howl.play();
     };
-
 
     initPlayer();
 
