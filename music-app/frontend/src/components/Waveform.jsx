@@ -21,6 +21,10 @@ const Waveform = () => {
     let smoothedHighAccent = 0;
     const barCount = 42;
     let smoothedBars = new Array(barCount).fill(0.12);
+    let beatPulse = 0;
+    let lowEnergyAvg = 0;
+    let lowEnergyVar = 0;
+    let lastBeatAt = 0;
 
     const drawBars = (levels = [], accent = 0) => {
       const width = canvas.width;
@@ -111,17 +115,41 @@ const Waveform = () => {
 
     const drawFromFrequency = (data, t) => {
       const drift = (t * 0.22) % 1;
+      const nowMs = performance.now();
 
       // Split frequency space to drive low/mid/high note response.
       const lowEnd = Math.floor(dataLength * 0.25);
       const highStart = Math.floor(dataLength * 0.68);
+      let lowSum = 0;
+      let lowCount = 0;
       let highSum = 0;
       let highCount = 0;
+      for (let i = 0; i < lowEnd; i += 1) {
+        lowSum += data[i] || 0;
+        lowCount += 1;
+      }
       for (let i = highStart; i < dataLength; i += 1) {
         highSum += data[i] || 0;
         highCount += 1;
       }
+
+      const lowEnergy = lowCount > 0 ? (lowSum / lowCount) / 255 : 0;
       const highEnergy = highCount > 0 ? (highSum / highCount) / 255 : 0;
+
+      // Adaptive beat detector based on low-band onset against moving average.
+      lowEnergyAvg = lowEnergyAvg * 0.92 + lowEnergy * 0.08;
+      const delta = Math.max(0, lowEnergy - lowEnergyAvg);
+      lowEnergyVar = lowEnergyVar * 0.9 + delta * 0.1;
+      const adaptiveThreshold = 0.035 + lowEnergyVar * 1.35;
+      const beatCooldownMs = 95;
+
+      if (delta > adaptiveThreshold && nowMs - lastBeatAt > beatCooldownMs) {
+        beatPulse = 1;
+        lastBeatAt = nowMs;
+      } else {
+        beatPulse *= 0.86;
+      }
+
       smoothedHighAccent = smoothedHighAccent * 0.82 + highEnergy * 0.18;
       const highAccent = Math.min(1, Math.max(0, smoothedHighAccent));
 
@@ -147,14 +175,18 @@ const Waveform = () => {
         if (bandPos < 0.25) bandScale = 0.86;
         else if (bandPos > 0.68) bandScale = 1 + highAccent * 0.58;
 
-        const target = 0.08 + shaped * bandScale * 0.96;
+        // Beat punch: stronger in low-mid bars, slight lift everywhere.
+        const bassWeight = Math.max(0, 1 - bandPos * 1.35);
+        const beatBoost = beatPulse * (0.22 + bassWeight * 0.42);
+
+        const target = 0.08 + shaped * bandScale * 0.96 + beatBoost;
         const prev = smoothedBars[i] ?? 0.08;
         const smooth = prev * 0.74 + target * 0.26;
         smoothedBars[i] = smooth;
         levels.push(smooth);
       }
 
-      drawBars(levels, highAccent);
+      drawBars(levels, Math.max(highAccent, beatPulse * 0.8));
     };
 
     const render = () => {
