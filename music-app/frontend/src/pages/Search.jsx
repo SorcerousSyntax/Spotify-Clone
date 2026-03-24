@@ -87,16 +87,16 @@ const Search = () => {
         
         {/* Search Input */}
         <div 
-          className="glass"
+          className="liquid-glass"
           style={{ 
             display: 'flex', alignItems: 'center', padding: '0 20px', height: 60,
-            border: focused ? '1px solid var(--pink-hot)' : '1px solid var(--glass-border)',
-            boxShadow: focused ? '0 0 20px rgba(255,45,120,0.3)' : 'none',
+            border: focused ? '1px solid var(--pink-hot)' : '1px solid rgba(255,255,255,0.2)',
+            boxShadow: focused ? '0 0 20px rgba(255,45,120,0.3)' : '0 10px 40px rgba(0,0,0,0.5)',
             transition: 'all 0.4s var(--ease-main)',
             borderRadius: 30
           }}
         >
-          <span style={{ fontSize: 20, marginRight: 15, opacity: 0.5 }}>⚲</span>
+          <span style={{ fontSize: 20, marginRight: 15, opacity: 0.8, color: '#fff' }}>⚲</span>
           <input
             type="text"
             value={query}
@@ -126,8 +126,8 @@ const Search = () => {
             <button
               key={cat}
               onClick={() => { setQuery(cat); searchSongs(cat); }}
-              className="glass"
-              style={{ padding: '8px 20px', borderRadius: 20, border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 10, fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}
+              className="btn-premium"
+              style={{ padding: '8px 20px', fontSize: 9 }}
             >
               {cat}
             </button>

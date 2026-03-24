@@ -44,13 +44,14 @@ const IOSInstallPrompt = () => {
           pointerEvents: 'auto',
         }}
       >
-        <div className="glass" style={{
+        <div className="liquid-glass" style={{
           padding: '20px',
           display: 'flex',
           flexDirection: 'column',
           gap: '15px',
-          border: '1px solid rgba(255, 45, 120, 0.3)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
           boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+          borderRadius: '30px',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
@@ -138,11 +139,11 @@ const IOSInstallPrompt = () => {
           </div>
 
           <button 
-            className="btn-primary" 
+            className="btn-premium" 
             onClick={() => setShowPrompt(false)}
             style={{ 
-              padding: '10px', 
-              fontSize: '12px',
+              padding: '12px', 
+              fontSize: '10px',
               width: '100%'
             }}
           >

@@ -72,8 +72,8 @@ const Library = () => {
         {!selectedPlaylist && selectedPlaylistId !== 'offline-auto' && (
           <button 
             onClick={() => setShowCreate(true)}
-            className="glass" 
-            style={{ padding: '10px 20px', fontSize: 10, fontWeight: 900, borderRadius: 20, border: 'none', color: '#fff', cursor: 'pointer' }}
+            className="btn-premium" 
+            style={{ padding: '8px 20px', fontSize: 9 }}
           >
             + NEW
           </button>

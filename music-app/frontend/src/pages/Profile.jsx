@@ -121,7 +121,7 @@ const Profile = () => {
           { label: 'PLAYLISTS', value: playlistCount },
           { label: 'RECENT', value: recentlyPlayedCount }
         ].map(stat => (
-          <div key={stat.label} className="glass" style={{ padding: '20px 10px', textAlign: 'center' }}>
+          <div key={stat.label} className="liquid-glass" style={{ padding: '20px 10px', textAlign: 'center', borderRadius: 24 }}>
             <p className="font-mono" style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>{stat.label}</p>
             <p style={{ fontSize: 24, fontWeight: 900, color: '#fff' }}>{stat.value}</p>
           </div>
@@ -133,19 +133,19 @@ const Profile = () => {
         {SETTINGS_ITEMS.map(item => (
           <motion.div
             key={item.label}
-            whileHover={{ x: 5, background: 'rgba(255,255,255,0.12)' }}
+            whileHover={{ x: 5, background: 'rgba(255,255,255,0.05)' }}
             onClick={item.onClick}
-            className="glass"
+            className="liquid-glass"
             style={{
               padding: '18px 25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)'
+              cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
               <span style={{ fontSize: 18 }}>{item.icon}</span>
               <span style={{ fontSize: 12, fontWeight: 900, color: '#fff' }}>{item.label}</span>
             </div>
-            {item.right || <span style={{ opacity: 0.3 }}>→</span>}
+            {item.right || <span style={{ opacity: 0.3, color: '#fff' }}>→</span>}
           </motion.div>
         ))}
 
@@ -153,10 +153,10 @@ const Profile = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={onSignOut}
+          className="btn-premium"
           style={{
-            marginTop: 30, height: 60, borderRadius: 30, background: 'rgba(255,45,120,0.1)',
-            border: '1px solid var(--pink-hot)', color: 'var(--pink-hot)',
-            fontSize: 12, fontWeight: 900, cursor: 'pointer'
+            marginTop: 30, height: 60, borderRadius: 30,
+            fontSize: 12, fontWeight: 900, width: '100%'
           }}
         >
           SIGN OUT
@@ -172,7 +172,7 @@ const Profile = () => {
             exit={{ opacity: 0 }}
             style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)', display: 'grid', placeItems: 'center', padding: 20 }}
           >
-            <motion.div initial={{ scale: 0.9 }} className="glass" style={{ width: '100%', maxWidth: 400, padding: 40 }}>
+            <motion.div initial={{ scale: 0.9 }} className="liquid-glass" style={{ width: '100%', maxWidth: 400, padding: 40, borderRadius: 30 }}>
               <h2 style={{ fontSize: 24, marginBottom: 30 }}>EDIT PROFILE</h2>
               <input
                 type="text"
@@ -182,8 +182,8 @@ const Profile = () => {
                 style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid var(--pink-hot)', color: '#fff', fontSize: 18, fontWeight: 900, marginBottom: 30, outline: 'none' }}
               />
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={handleUpdateName} className="btn-primary" style={{ flex: 1, height: 50, borderRadius: 25 }}>SAVE</button>
-                <button onClick={() => setShowEdit(false)} className="glass" style={{ flex: 1, height: 50, borderRadius: 25, border: 'none', color: '#fff' }}>CANCEL</button>
+                <button onClick={handleUpdateName} className="btn-premium" style={{ flex: 1, height: 50, borderRadius: 25 }}>SAVE</button>
+                <button onClick={() => setShowEdit(false)} className="btn-premium" style={{ flex: 1, height: 50, borderRadius: 25, background: 'rgba(255,255,255,0.05)' }}>CANCEL</button>
               </div>
             </motion.div>
           </motion.div>
@@ -196,7 +196,7 @@ const Profile = () => {
             exit={{ opacity: 0 }}
             style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)', display: 'grid', placeItems: 'center', padding: 20 }}
           >
-            <motion.div initial={{ scale: 0.9 }} className="glass" style={{ width: '100%', maxWidth: 400, padding: 40 }}>
+            <motion.div initial={{ scale: 0.9 }} className="liquid-glass" style={{ width: '100%', maxWidth: 400, padding: 40, borderRadius: 30 }}>
               <h2 style={{ fontSize: 24, marginBottom: 30 }}>CHANGE PASSWORD</h2>
               <input
                 type="password"
@@ -206,8 +206,8 @@ const Profile = () => {
                 style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid var(--pink-hot)', color: '#fff', fontSize: 18, fontWeight: 900, marginBottom: 30, outline: 'none' }}
               />
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={handleUpdatePassword} className="btn-primary" style={{ flex: 1, height: 50, borderRadius: 25 }}>UPDATE</button>
-                <button onClick={() => setShowPassword(false)} className="glass" style={{ flex: 1, height: 50, borderRadius: 25, border: 'none', color: '#fff' }}>CANCEL</button>
+                <button onClick={handleUpdatePassword} className="btn-premium" style={{ flex: 1, height: 50, borderRadius: 25 }}>UPDATE</button>
+                <button onClick={() => setShowPassword(false)} className="btn-premium" style={{ flex: 1, height: 50, borderRadius: 25, background: 'rgba(255,255,255,0.05)' }}>CANCEL</button>
               </div>
             </motion.div>
           </motion.div>

@@ -434,15 +434,10 @@ const NowPlaying = () => {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => setShowPlaylistSelector(true)}
+          className="btn-premium"
           style={{ 
-            background: 'rgba(255,255,255,0.05)', 
-            border: '1px solid rgba(255,255,255,0.1)', 
-            padding: '6px 16px', 
-            borderRadius: 20, 
-            color: '#fff', 
-            fontSize: 11, 
-            fontWeight: 700,
-            cursor: 'pointer'
+            padding: '8px 20px', 
+            fontSize: 10
           }}
         >
           ADD TO PLAYLIST +

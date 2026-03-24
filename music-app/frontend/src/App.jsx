@@ -60,7 +60,7 @@ const TopBar = ({ session }) => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
-      className="glass"
+      className="liquid-glass"
       style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         height: 80,
@@ -181,7 +181,7 @@ const AuthPage = ({ mode = 'login' }) => {
           }}
         />
 
-        <button type="submit" className="btn-primary" disabled={loading}>
+        <button type="submit" className="btn-premium" disabled={loading}>
           {loading ? 'PROCESSING...' : isRegister ? 'CREATE ACCOUNT' : 'ENTER'}
         </button>
 
