@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { Howl } from 'howler';
+import { Howl, Howler } from 'howler';
 import usePlayerStore from '../store/playerStore';
 import {
   OFFLINE_AUDIO_CACHE_NAME,
@@ -29,6 +29,21 @@ const usePlayer = () => {
   } = usePlayerStore();
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  useEffect(() => {
+    if (!isIOS) return;
+
+    // Keep iOS in media playback mode so audio can continue on lock screen.
+    try {
+      if (navigator.audioSession) {
+        navigator.audioSession.type = 'playback';
+      }
+    } catch (e) {}
+
+    try {
+      Howler.autoSuspend = false;
+    } catch (e) {}
+  }, [isIOS]);
 
   // iOS Audio Unlock - critical for both Safari and PWA mode
   useEffect(() => {
@@ -75,8 +90,9 @@ const usePlayer = () => {
       let songSrc = preferredUrl;
       let isBlob = false;
 
-      // Check cache
-      if (preferredUrl && window.caches) {
+      // On iOS, avoid blob/object URLs for playback because lock-screen/background
+      // playback is more reliable with a direct stream URL.
+      if (!isIOS && preferredUrl && window.caches) {
         try {
           const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
           for (const url of candidateUrls) {
@@ -175,7 +191,7 @@ const usePlayer = () => {
         objectUrlRef.current = null;
       }
     };
-  }, [currentSong?.id, currentSong?.r2_url, currentSong?.stream_url, currentSong?.url]);
+  }, [currentSong?.id, currentSong?.r2_url, currentSong?.stream_url, currentSong?.url, isIOS]);
 
   // Sync play/pause state
   useEffect(() => {
