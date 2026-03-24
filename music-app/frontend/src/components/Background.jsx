@@ -10,8 +10,12 @@ const Background = () => {
     const ctx = canvas.getContext('2d');
     let animationFrameId;
     let running = false;
+    let lastFrameTime = 0;
     let particles = [];
     const motionQuery = window.matchMedia('(prefers-reduced-motion: no-preference)');
+    const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    const targetFps = coarsePointer ? 30 : 45;
+    const frameInterval = 1000 / targetFps;
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -99,6 +103,12 @@ const Background = () => {
     };
 
     const draw = (time) => {
+      if (time - lastFrameTime < frameInterval) {
+        animationFrameId = requestAnimationFrame(draw);
+        return;
+      }
+
+      lastFrameTime = time;
       paint(time);
       animationFrameId = requestAnimationFrame(draw);
     };
