@@ -31,50 +31,62 @@ const usePlayer = () => {
   // iOS Audio Unlock - ensures AudioContext starts on first interaction
   useEffect(() => {
     const unlock = () => {
-      // Create the context if it doesn't exist to ensure it's bound to a user gesture
-      if (!audioCtxRef.current) {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        audioCtxRef.current = ctx;
-      }
+      console.log('[Player] Attempting Nuclear Unlock...');
       
-      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-        audioCtxRef.current.resume();
-      }
+      try {
+        // 1. Force Howler Global State
+        if (typeof Howler !== 'undefined') {
+          Howler.mute(false);
+          Howler.volume(volume || 1.0);
+          if (Howler.ctx && Howler.ctx.state === 'suspended') {
+            Howler.ctx.resume();
+          }
+        }
 
-      // Resume Howler's global context
-      if (typeof Howler !== 'undefined' && Howler.ctx && Howler.ctx.state === 'suspended') {
-        Howler.ctx.resume();
-      }
+        // 2. Resume/Create Web Audio Context
+        if (!audioCtxRef.current) {
+          audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtxRef.current.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
 
-      // Poke the audio engine with a silent buffer
-      if (audioCtxRef.current) {
+        // 3. Hardware "Poke" - play a split-second of silence
         const buffer = audioCtxRef.current.createBuffer(1, 1, 22050);
         const source = audioCtxRef.current.createBufferSource();
         source.buffer = buffer;
         source.connect(audioCtxRef.current.destination);
         source.start(0);
+
+        console.log('[Player] iOS Audio Unlocked & Primed');
+      } catch (e) {
+        console.error('[Player] Unlock failed:', e);
       }
 
-      console.log('[Player] iOS Audio Unlocked');
       window.removeEventListener('click', unlock);
       window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('touchend', unlock);
     };
+
     window.addEventListener('click', unlock);
     window.addEventListener('touchstart', unlock);
+    window.addEventListener('touchend', unlock);
+
     return () => {
       window.removeEventListener('click', unlock);
       window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('touchend', unlock);
     };
-  }, []);
+  }, [volume]);
 
   // Create/destroy Howl when song changes
   useEffect(() => {
     let cancelled = false;
 
     const initPlayer = async () => {
+      if (!currentSong) return;
+      
       const requestedUrl = currentSong?.url || currentSong?.stream_url || '';
-      console.log('[Player] requested song.url:', requestedUrl);
-
       const preferredUrl = getPreferredSongStreamUrl(currentSong);
       const candidateUrls = getSongAudioUrlCandidates(currentSong);
 
@@ -85,41 +97,28 @@ const usePlayer = () => {
         try {
           const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
           let offline = null;
-
           for (const url of candidateUrls) {
             const hit = await cache.match(url);
-            if (hit) {
-              offline = hit;
-              break;
-            }
+            if (hit) { offline = hit; break; }
           }
-
           if (offline) {
             const blob = await offline.blob();
-            if (objectUrlRef.current) {
-              URL.revokeObjectURL(objectUrlRef.current);
-              objectUrlRef.current = null;
-            }
+            if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
             objectUrlRef.current = URL.createObjectURL(blob);
             songSrc = objectUrlRef.current;
             isBlob = true;
           }
         } catch (err) {
-          console.warn('Offline audio lookup failed:', err?.message || err);
+          console.warn('Offline lookup failed:', err);
         }
       }
 
-      if (!songSrc) return;
-      if (cancelled) return;
+      if (!songSrc || cancelled) return;
 
-      // Cleanup previous
       if (howlRef.current) {
         howlRef.current.unload();
       }
 
-      // iOS Safari often fails on proxied URLs if the proxy doesn't support Range requests perfectly.
-      // We provide the preferred (proxied) URL first, but Howler allows multiple sources.
-      // We'll also add the raw original URL as a second candidate.
       const sources = [songSrc];
       if (!isBlob && requestedUrl && requestedUrl !== songSrc) {
         sources.push(requestedUrl);
@@ -127,8 +126,9 @@ const usePlayer = () => {
 
       const howl = new Howl({
         src: sources,
-        html5: true, // Required for long audio and background play
+        html5: true, 
         preload: true,
+        autoplay: true,
         volume: isMuted ? 0 : volume,
         onload: () => {
           setDuration(howl.duration());
@@ -136,70 +136,36 @@ const usePlayer = () => {
         onplay: () => {
           setIsPlaying(true);
           updateProgress();
-          setupAnalyser();
+          // Delay analyser to ensure node is ready
+          setTimeout(setupAnalyser, 500);
           
-          // Media Session API for Lock Screen & Background Playback
-          try {
-            if ('mediaSession' in navigator && window.MediaMetadata && currentSong) {
+          if ('mediaSession' in navigator && window.MediaMetadata) {
+            try {
               navigator.mediaSession.metadata = new MediaMetadata({
                 title: currentSong.title,
                 artist: currentSong.artist,
-                album: currentSong.album || 'Raabta',
-                artwork: [
-                  { src: currentSong.album_art_url, sizes: '512x512', type: 'image/jpeg' }
-                ]
+                album: 'Raabta',
+                artwork: [{ src: currentSong.album_art_url, sizes: '512x512', type: 'image/jpeg' }]
               });
-
-              const state = usePlayerStore.getState();
-              navigator.mediaSession.setActionHandler('play', () => {
-                if (!usePlayerStore.getState().isPlaying) state.togglePlay();
-              });
-              navigator.mediaSession.setActionHandler('pause', () => {
-                if (usePlayerStore.getState().isPlaying) state.togglePlay();
-              });
-              navigator.mediaSession.setActionHandler('previoustrack', () => state.prevSong());
-              navigator.mediaSession.setActionHandler('nexttrack', () => state.nextSong());
-              
-              // Set playback state to 'playing'
               navigator.mediaSession.playbackState = 'playing';
-            }
-          } catch (e) {
-            console.warn('MediaSession metadata/handler setup failed:', e);
+            } catch (e) {}
           }
         },
         onpause: () => {
           setIsPlaying(false);
-          cancelAnimationFrame(animFrameRef.current);
-          try {
-            if ('mediaSession' in navigator) {
-              navigator.mediaSession.playbackState = 'paused';
-            }
-          } catch (e) {
-            console.warn('MediaSession state update failed:', e);
-          }
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
         },
-        onend: () => {
-          cancelAnimationFrame(animFrameRef.current);
-          const { repeat: currentRepeat, nextSong: playNextSong } = usePlayerStore.getState();
-          if (currentRepeat === 'one') {
-            howl.seek(0);
-            howl.play();
-          } else {
-            playNextSong();
-          }
-        },
-        onstop: () => {
-          cancelAnimationFrame(animFrameRef.current);
+        onplayerror: (id, err) => {
+          console.error('[Player] Play error:', err);
+          // Attempt to fix by calling play again on user interaction
+          howl.once('unlock', () => howl.play());
         },
         onloaderror: (id, err) => {
-          console.error('Howler load error:', err);
-        },
+          console.error('[Player] Load error:', err);
+        }
       });
 
       howlRef.current = howl;
-      console.log('[Player] calling howl.play()');
-      howl.play();
-
     };
 
     initPlayer();
