@@ -5,61 +5,126 @@ const Waveform = () => {
   const canvasRef = useRef(null);
   const getFrequencyData = usePlayerStore((s) => s.playerControls.getFrequencyData);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const progress = usePlayerStore((s) => s.progress);
+  const duration = usePlayerStore((s) => s.duration);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let animationId;
 
-    const render = () => {
-      const data = getFrequencyData?.() || new Uint8Array(64);
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationId;
+    const dataLength = 64;
+
+    const drawLine = (points, lineWidth = 2.8) => {
+      if (!points.length) return;
+
       ctx.beginPath();
-      ctx.lineWidth = 3;
+      ctx.lineWidth = lineWidth;
       ctx.strokeStyle = '#ff2d78';
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      
-      // ECG / Waveform style
-      const width = canvas.width;
-      const height = canvas.height;
-      const step = width / (data.length - 1);
-      
-      ctx.moveTo(0, height / 2);
-      
-      for (let i = 0; i < data.length; i++) {
-        const x = i * step;
-        const amplitude = (data[i] / 255.0) * (height / 1.5);
-        const y = height / 2 + (i % 2 === 0 ? -amplitude : amplitude);
-        
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          // Smooth the line a bit
-          const prevX = (i - 1) * step;
-          const prevAmplitude = (data[i - 1] / 255.0) * (height / 1.5);
-          const prevY = height / 2 + ((i - 1) % 2 === 0 ? -prevAmplitude : prevAmplitude);
-          
-          const cpX = prevX + (x - prevX) / 2;
-          ctx.quadraticCurveTo(cpX, prevY, x, y);
-        }
+
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i += 1) {
+        const prev = points[i - 1];
+        const curr = points[i];
+        const cpX = (prev.x + curr.x) / 2;
+        ctx.quadraticCurveTo(cpX, prev.y, curr.x, curr.y);
       }
-      
-      // Glow effect
-      ctx.shadowBlur = 15;
+
+      ctx.shadowBlur = 14;
       ctx.shadowColor = '#ff2d78';
       ctx.stroke();
+      ctx.shadowBlur = 0;
+    };
+
+    const drawIdle = () => {
+      const y = canvas.height / 2;
+      ctx.beginPath();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255,45,120,0.45)';
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    };
+
+    const drawSyncedFallback = (t) => {
+      const width = canvas.width;
+      const height = canvas.height;
+      const mid = height / 2;
+      const points = [];
+      const pulseWindow = 0.18;
+      const beatPhase = (t * 1.7) % 1;
+
+      for (let x = 0; x <= width; x += 8) {
+        const nx = x / width;
+        const pulseDistance = Math.abs(nx - beatPhase);
+        const pulse = Math.max(0, 1 - pulseDistance / pulseWindow);
+        const spike = Math.pow(pulse, 3.2);
+        const y = mid - spike * (height * 0.33);
+        points.push({ x, y });
+      }
+
+      drawLine(points, 2.6);
+    };
+
+    const drawFromFrequency = (data, t) => {
+      const width = canvas.width;
+      const height = canvas.height;
+      const mid = height / 2;
+      const points = [];
+      const step = width / (dataLength - 1);
+      const drift = (t * 0.22) % 1;
+
+      for (let i = 0; i < dataLength; i += 1) {
+        const idx = (i + Math.floor(drift * dataLength)) % dataLength;
+        const value = data[idx] / 255;
+        const shaped = Math.pow(value, 1.45);
+        const x = i * step;
+        const y = mid - (shaped - 0.12) * (height * 0.8);
+        points.push({ x, y });
+      }
+
+      drawLine(points, 3);
+    };
+
+    const render = () => {
+      const data = getFrequencyData?.() || new Uint8Array(64);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!isPlaying) {
+        drawIdle();
+        animationId = requestAnimationFrame(render);
+        return;
+      }
+
+      const timeRatio = duration > 0 ? progress / duration : 0;
+      const syncedTime = progress + timeRatio;
+      let hasEnergy = false;
+
+      for (let i = 0; i < data.length; i += 1) {
+        if (data[i] > 2) {
+          hasEnergy = true;
+          break;
+        }
+      }
+
+      if (hasEnergy) {
+        drawFromFrequency(data, syncedTime);
+      } else {
+        // Mobile fallback: keep ECG moving in sync with song progress.
+        drawSyncedFallback(syncedTime);
+      }
       
       animationId = requestAnimationFrame(render);
     };
 
     render();
     return () => cancelAnimationFrame(animationId);
-  }, [getFrequencyData]);
+  }, [getFrequencyData, isPlaying, progress, duration]);
 
   return (
     <div style={{ width: '100%', height: 60, marginTop: 20, marginBottom: 20 }}>
