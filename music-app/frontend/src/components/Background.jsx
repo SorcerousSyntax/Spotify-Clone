@@ -41,6 +41,48 @@ const Background = () => {
       if (!ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      const t = time * 0.00015;
+
+      const drawRibbon = (offset, color, width, alpha) => {
+        const h = canvas.height;
+        const w = canvas.width;
+        const yBase = h * (0.2 + offset * 0.22);
+
+        ctx.beginPath();
+        ctx.moveTo(0, yBase + Math.sin(t + offset * 2.3) * 22);
+        ctx.bezierCurveTo(
+          w * 0.22,
+          yBase + Math.cos(t * 1.3 + offset) * 34,
+          w * 0.44,
+          yBase + Math.sin(t * 1.7 + offset * 1.8) * 38,
+          w * 0.66,
+          yBase + Math.cos(t * 1.1 + offset * 2.1) * 26
+        );
+        ctx.bezierCurveTo(
+          w * 0.8,
+          yBase + Math.sin(t * 1.8 + offset * 2.4) * 30,
+          w * 0.9,
+          yBase + Math.cos(t * 1.2 + offset * 1.4) * 20,
+          w,
+          yBase + Math.sin(t * 1.5 + offset * 2.8) * 18
+        );
+
+        ctx.lineWidth = width;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = alpha;
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = color;
+        ctx.stroke();
+      };
+
+      drawRibbon(0.35, 'rgba(255,45,120,0.75)', 2.8, 0.7);
+      drawRibbon(0.95, 'rgba(139,92,246,0.7)', 2.2, 0.55);
+      drawRibbon(1.55, 'rgba(255,216,77,0.72)', 1.7, 0.42);
+
+      ctx.globalAlpha = 1;
+
       particles.forEach((p) => {
         const x = p.baseX + Math.sin(time * p.frequency + p.phase) * p.amplitudeX;
         const y = p.baseY + Math.cos(time * p.frequency + p.phase) * p.amplitudeY;
@@ -126,7 +168,8 @@ const Background = () => {
           inset: 0, 
           zIndex: -1, 
           pointerEvents: 'none',
-          opacity: 0.6,
+          opacity: 0.72,
+          mixBlendMode: 'screen',
           transform: 'translateZ(0)',
           contain: 'paint layout style',
           willChange: 'auto'
