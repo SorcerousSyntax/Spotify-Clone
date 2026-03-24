@@ -37,6 +37,7 @@ const usePlayer = () => {
   } = usePlayerStore();
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isAndroid = /Android/i.test(navigator.userAgent);
   const outputHeadroom = isIOS ? IOS_SAFE_OUTPUT_HEADROOM : SAFE_OUTPUT_HEADROOM;
 
   useEffect(() => {
@@ -126,9 +127,14 @@ const usePlayer = () => {
 
       // iOS is extremely picky with source URLs. 
       // If not a blob, we provide both proxied and original to let Howler decide.
-      const sources = [songSrc];
-      if (!isBlob && requestedUrl && requestedUrl !== songSrc) {
-        sources.push(requestedUrl);
+      const sources = [songSrc, !isBlob ? requestedUrl : null]
+        .filter(Boolean)
+        .filter((value, index, arr) => arr.indexOf(value) === index);
+
+      if (sources.length === 0) {
+        console.warn('[Player] No playable audio source for song', currentSong?.id);
+        setIsPlaying(false);
+        return;
       }
 
       const howl = new Howl({
@@ -143,8 +149,8 @@ const usePlayer = () => {
           setIsPlaying(true);
           updateProgress();
 
-          // Disable analyser on iOS as it silences the HTML5 audio element
-          if (!isIOS) {
+          // Avoid routing HTML5 audio through WebAudio on mobile to prevent silent playback.
+          if (!isIOS && !isAndroid) {
             setupAnalyser();
           }
 
@@ -203,7 +209,7 @@ const usePlayer = () => {
         objectUrlRef.current = null;
       }
     };
-  }, [currentSong?.id, currentSong?.r2_url, currentSong?.stream_url, currentSong?.url, isIOS]);
+  }, [currentSong?.id, currentSong?.r2_url, currentSong?.stream_url, currentSong?.url, isIOS, isAndroid, outputHeadroom, setDuration, setIsPlaying]);
 
   // Sync play/pause state
   useEffect(() => {
