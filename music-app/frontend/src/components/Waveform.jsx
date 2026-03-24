@@ -18,6 +18,7 @@ const Waveform = () => {
 
     let animationId;
     const dataLength = 64;
+    let smoothedHighAccent = 0;
 
     const drawLine = (points, lineWidth = 2.8) => {
       if (!points.length) return;
@@ -64,20 +65,26 @@ const Waveform = () => {
         hash = (hash * 31 + seedSource.charCodeAt(i)) >>> 0;
       }
 
-      // Song-specific tempo between ~92 and 138 BPM for natural pulse motion.
+      // Song-specific tempo between ~92 and 138 BPM for deterministic pulse motion.
       const bpm = 92 + (hash % 47);
       const beat = (t * bpm) / 60;
       const beatPulse = Math.pow((Math.sin(beat * Math.PI * 2) + 1) * 0.5, 3.6);
 
+      // Emphasize section energy by playback progress so movement feels musical, not random.
+      const songProgress = duration > 0 ? Math.min(1, Math.max(0, progress / duration)) : 0;
+      const sectionRise = Math.sin(songProgress * Math.PI);
+      const sectionEnergy = 0.62 + sectionRise * 0.38;
+
       // Bass envelope + micro jitter gives "felt" vibration instead of simple oscillation.
-      const bass = 0.26 + beatPulse * 0.54;
+      const bass = (0.24 + beatPulse * 0.56) * sectionEnergy;
+      const highAccent = Math.pow((Math.sin(beat * Math.PI * 4 + (hash % 11)) + 1) * 0.5, 6.5) * 0.22;
 
       for (let x = 0; x <= width; x += 8) {
         const nx = x / width;
 
         const low = Math.sin((t * 4.3) + nx * 7.2 + (hash % 13));
         const midBand = Math.sin((t * 9.6) + nx * 18.5 + (hash % 29) * 0.21);
-        const high = Math.sin((t * 16.8) + nx * 31.8 + (hash % 37) * 0.13);
+        const high = Math.sin((t * 16.8) + nx * 31.8 + (hash % 37) * 0.13) * (1 + highAccent);
 
         const body = low * bass * 0.55 + midBand * 0.24 + high * 0.11;
         const flutter = Math.sin((t * 44.0) + nx * 73.0 + (hash % 17)) * 0.04;
@@ -97,12 +104,30 @@ const Waveform = () => {
       const step = width / (dataLength - 1);
       const drift = (t * 0.22) % 1;
 
+      // Split frequency space to drive low/mid/high note response.
+      const lowEnd = Math.floor(dataLength * 0.25);
+      const highStart = Math.floor(dataLength * 0.68);
+      let highSum = 0;
+      let highCount = 0;
+      for (let i = highStart; i < dataLength; i += 1) {
+        highSum += data[i] || 0;
+        highCount += 1;
+      }
+      const highEnergy = highCount > 0 ? (highSum / highCount) / 255 : 0;
+      smoothedHighAccent = smoothedHighAccent * 0.82 + highEnergy * 0.18;
+      const highAccent = Math.min(1, Math.max(0, smoothedHighAccent));
+
       for (let i = 0; i < dataLength; i += 1) {
         const idx = (i + Math.floor(drift * dataLength)) % dataLength;
         const value = data[idx] / 255;
         const shaped = Math.pow(value, 1.45);
         const x = i * step;
-        const y = mid - (shaped - 0.12) * (height * 0.8);
+
+        let bandScale = 1;
+        if (i < lowEnd) bandScale = 0.78;
+        else if (i >= highStart) bandScale = 1 + highAccent * 0.5;
+
+        const y = mid - (shaped * bandScale - 0.12) * (height * 0.8);
         points.push({ x, y });
       }
 
