@@ -9,7 +9,9 @@ const Background = () => {
 
     const ctx = canvas.getContext('2d');
     let animationFrameId;
+    let running = false;
     let particles = [];
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: no-preference)');
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -19,65 +21,94 @@ const Background = () => {
 
     const initParticles = () => {
       particles = [];
-      const count = 20;
+      const count = 18;
       for (let i = 0; i < count; i++) {
+        const driftDurationMs = 8000 + Math.random() * 4000;
         particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
+          baseX: Math.random() * canvas.width,
+          baseY: Math.random() * canvas.height,
           radius: Math.random() * 2 + 2,
           opacity: Math.random() * 0.3 + 0.3,
-          speedX: (Math.random() - 0.5) * 0.2,
-          speedY: (Math.random() - 0.5) * 0.2,
-          offset: Math.random() * Math.PI * 2
+          amplitudeX: 6 + Math.random() * 12,
+          amplitudeY: 4 + Math.random() * 10,
+          frequency: (Math.PI * 2) / driftDurationMs,
+          phase: Math.random() * Math.PI * 2
         });
       }
     };
 
-    const draw = (time) => {
+    const paint = (time = 0) => {
+      if (!ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      particles.forEach(p => {
-        // Drift movement using Math.sin()
-        const driftX = Math.sin(time * 0.0005 + p.offset) * 0.5;
-        const driftY = Math.cos(time * 0.0005 + p.offset) * 0.5;
-        
-        p.x += p.speedX + driftX;
-        p.y += p.speedY + driftY;
 
-        // Wrap around
-        if (p.x < 0) p.x = canvas.width;
-        if (p.x > canvas.width) p.x = 0;
-        if (p.y < 0) p.y = canvas.height;
-        if (p.y > canvas.height) p.y = 0;
+      particles.forEach((p) => {
+        const x = p.baseX + Math.sin(time * p.frequency + p.phase) * p.amplitudeX;
+        const y = p.baseY + Math.cos(time * p.frequency + p.phase) * p.amplitudeY;
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.arc(x, y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 45, 120, ${p.opacity})`;
-        ctx.filter = 'blur(4px)';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(255, 45, 120, 0.35)';
         ctx.fill();
       });
 
+      ctx.shadowBlur = 0;
+    };
+
+    const draw = (time) => {
+      paint(time);
       animationFrameId = requestAnimationFrame(draw);
     };
 
+    const start = () => {
+      if (running) return;
+      running = true;
+      animationFrameId = requestAnimationFrame(draw);
+    };
+
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(animationFrameId);
+    };
+
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        cancelAnimationFrame(animationFrameId);
+      if (document.visibilityState !== 'visible') {
+        stop();
       } else {
-        animationFrameId = requestAnimationFrame(draw);
+        if (motionQuery.matches) {
+          start();
+        } else {
+          paint();
+        }
+      }
+    };
+
+    const handleMotionChange = () => {
+      if (motionQuery.matches && document.visibilityState === 'visible') {
+        start();
+      } else {
+        stop();
+        paint();
       }
     };
 
     window.addEventListener('resize', resize);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    motionQuery.addEventListener('change', handleMotionChange);
     
     resize();
-    animationFrameId = requestAnimationFrame(draw);
+    if (motionQuery.matches) {
+      start();
+    } else {
+      paint();
+    }
 
     return () => {
       window.removeEventListener('resize', resize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      cancelAnimationFrame(animationFrameId);
+      motionQuery.removeEventListener('change', handleMotionChange);
+      stop();
     };
   }, []);
 
@@ -95,7 +126,10 @@ const Background = () => {
           inset: 0, 
           zIndex: -1, 
           pointerEvents: 'none',
-          opacity: 0.6
+          opacity: 0.6,
+          transform: 'translateZ(0)',
+          contain: 'paint layout style',
+          willChange: 'auto'
         }} 
       />
     </>

@@ -56,13 +56,15 @@ const Waveform = () => {
       ctx.shadowBlur = 12;
       ctx.shadowColor = '#ff2d78';
       ctx.stroke();
-      
-      animationId = requestAnimationFrame(render);
+
+      if (isPlaying) {
+        animationId = requestAnimationFrame(render);
+      }
     };
 
     render();
     return () => cancelAnimationFrame(animationId);
-  }, [getFrequencyData]);
+  }, [getFrequencyData, isPlaying]);
 
   return (
     <div style={{ width: '100%', height: 60 }}>

@@ -12,18 +12,18 @@ const PlaylistCover = ({ playlist, songsById = {}, size = 120 }) => {
       style={{
         width: size,
         height: size,
-        borderRadius: 2,
+        borderRadius: 12,
         overflow: 'hidden',
-        border: '1px solid rgba(255,45,120,0.2)',
-        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid var(--color-border-accent)',
+        background: 'var(--color-bg-secondary)',
         position: 'relative',
       }}
     >
       {covers.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', width: '100%', height: '100%' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', width: '100%', height: '100%', gap: 3 }}>
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} style={{ background: '#111' }}>
-              {covers[i] && <img src={covers[i]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+            <div key={i} style={{ background: '#111111', borderRadius: 8, overflow: 'hidden' }}>
+              {covers[i] && <img src={covers[i]} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
             </div>
           ))}
         </div>
@@ -32,7 +32,7 @@ const PlaylistCover = ({ playlist, songsById = {}, size = 120 }) => {
           {playlist?.emoji || '🎵'}
         </div>
       )}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(255,45,120,0.1), transparent)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #ff2d781a, transparent)' }} />
     </div>
   );
 };

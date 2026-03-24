@@ -70,7 +70,7 @@ const TopBar = ({ session }) => {
       }}
     >
       <Link to="/" style={{ textDecoration: 'none' }}>
-        <h1 style={{
+        <h1 className="wordmark" style={{
           fontSize: 22, margin: 0, color: '#fff',
           fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800,
           letterSpacing: '-0.03em'

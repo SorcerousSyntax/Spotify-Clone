@@ -117,10 +117,9 @@ const NowPlaying = () => {
           style={{ width: 40, height: 40, border: 'none', background: 'transparent', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           {isDownloading ? (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              style={{ width: 18, height: 18, border: '2px solid var(--color-accent-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}
+            <div
+              className="loading-pulse"
+              style={{ width: 18, height: 18, border: '2px solid var(--color-accent-primary)', borderRadius: '50%' }}
             />
           ) : (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -252,7 +251,7 @@ const NowPlaying = () => {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
           <motion.button whileTap={{ scale: 0.9 }} onClick={prevSong} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 6h2v12H6zm3.5 6L18 18V6z"/>
             </svg>
           </motion.button>
@@ -262,8 +261,8 @@ const NowPlaying = () => {
             onClick={togglePlay}
             className="card-tap"
             style={{
-              width: 72, 
-              height: 72, 
+              width: 64, 
+              height: 64, 
               borderRadius: '50%', 
               background: 'var(--color-accent-primary)', 
               border: 'none', 
@@ -272,22 +271,22 @@ const NowPlaying = () => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              boxShadow: '0 0 32px rgba(255,45,120,0.6)',
+              boxShadow: '0 0 32px #ff2d7860',
             }}
           >
             {isPlaying ? (
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
               </svg>
             ) : (
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 4 }}>
                 <path d="M8 5v14l11-7z"/>
               </svg>
             )}
           </motion.button>
 
           <motion.button whileTap={{ scale: 0.9 }} onClick={nextSong} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 18l8.5-6L6 6zm9-12v12h2V6z"/>
             </svg>
           </motion.button>
@@ -309,13 +308,13 @@ const NowPlaying = () => {
           onClick={() => setShowPlaylistSelector(true)}
           style={{ 
             padding: '12px 28px', 
-            fontSize: 10,
+            fontSize: '0.75rem',
             background: 'var(--color-bg-elevated)',
             border: '1px solid var(--color-border)',
             color: 'white',
             borderRadius: 100,
             letterSpacing: '0.1em',
-            fontWeight: 700,
+            fontWeight: 600,
             cursor: 'pointer'
           }}
         >

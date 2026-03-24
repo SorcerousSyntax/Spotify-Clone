@@ -49,7 +49,7 @@ const AlbumCard = ({ song, index = 0, onClick }) => {
           whiteSpace: 'nowrap', 
           overflow: 'hidden', 
           textOverflow: 'ellipsis', 
-          color: '#fff', 
+          color: 'var(--color-text-primary)', 
           letterSpacing: '0.02em',
           textTransform: 'uppercase'
         }}>
@@ -59,9 +59,12 @@ const AlbumCard = ({ song, index = 0, onClick }) => {
           fontSize: 11, 
           color: 'var(--color-text-muted)', 
           fontWeight: 400,
-          whiteSpace: 'nowrap', 
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
           overflow: 'hidden', 
-          textOverflow: 'ellipsis'
+          textOverflow: 'ellipsis',
+          lineHeight: 1.2
         }}>
           {artist}
         </p>

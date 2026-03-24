@@ -9,6 +9,10 @@ const PlaylistFolderCard = ({ playlist, onClick, isLikedSongs = false, isOffline
 
   return (
     <motion.div
+      whileHover={{
+        borderColor: 'var(--color-border-accent)',
+        boxShadow: '0 0 24px var(--color-accent-glow)'
+      }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
       className="card-tap"
@@ -22,7 +26,7 @@ const PlaylistFolderCard = ({ playlist, onClick, isLikedSongs = false, isOffline
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
-        transition: 'all 0.2s ease',
+        transition: 'all 160ms var(--ease-main)',
         position: 'relative'
       }}
     >
@@ -56,7 +60,7 @@ const PlaylistFolderCard = ({ playlist, onClick, isLikedSongs = false, isOffline
         <h3 style={{ 
           fontSize: 12, 
           fontWeight: 600, 
-          color: '#fff', 
+          color: 'var(--color-text-primary)', 
           textTransform: 'uppercase', 
           letterSpacing: '0.08em',
           whiteSpace: 'nowrap',

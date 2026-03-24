@@ -217,10 +217,9 @@ const Library = () => {
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--color-text-muted)' }}
                   >
                     {downloadingIds.has(song.id) ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                        style={{ width: 14, height: 14, border: '2px solid var(--color-accent-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}
+                      <div
+                        className="loading-pulse"
+                        style={{ width: 14, height: 14, border: '2px solid var(--color-accent-primary)', borderRadius: '50%' }}
                       />
                     ) : offline ? (
                       <span style={{ color: 'var(--color-accent-primary)' }}>✓</span>

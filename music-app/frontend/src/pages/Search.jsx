@@ -122,10 +122,9 @@ const Search = () => {
             }}
           />
           {loading && (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
-              style={{ width: 18, height: 18, border: '2px solid var(--color-accent-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}
+            <div
+              className="loading-pulse"
+              style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-accent-primary)' }}
             />
           )}
         </div>
@@ -220,10 +219,9 @@ const Search = () => {
                       style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--color-text-muted)' }}
                     >
                       {downloadingIds.has(song.id) ? (
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                          style={{ width: 14, height: 14, border: '2px solid var(--color-accent-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}
+                        <div
+                          className="loading-pulse"
+                          style={{ width: 14, height: 14, border: '2px solid var(--color-accent-primary)', borderRadius: '50%' }}
                         />
                       ) : isOffline(song.id) ? (
                         <span style={{ color: 'var(--color-accent-primary)' }}>✓</span>

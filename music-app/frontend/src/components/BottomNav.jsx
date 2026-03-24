@@ -44,6 +44,8 @@ const BottomNav = () => {
           height: 72,
           borderRadius: 24,
           padding: '0 12px',
+          background: 'rgba(10,10,10,0.85)',
+          borderTop: '1px solid var(--color-border)',
           boxShadow: '0 -1px 0 var(--color-border)',
           pointerEvents: 'auto'
         }}
@@ -73,7 +75,7 @@ const BottomNav = () => {
               <span style={{
                 fontSize: 22,
                 color: active ? 'var(--color-accent-primary)' : 'var(--color-text-muted)',
-                transition: 'color 0.2s ease',
+                transition: 'color 160ms var(--ease-main)',
                 lineHeight: 1
               }}>
                 {item.icon}
@@ -83,8 +85,8 @@ const BottomNav = () => {
                 fontSize: 8,
                 fontWeight: 700,
                 letterSpacing: '0.1em',
-                color: active ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
-                transition: 'color 0.2s ease'
+                color: active ? 'var(--color-accent-primary)' : 'var(--color-text-muted)',
+                transition: 'color 160ms var(--ease-main)'
               }}>
                 {item.label}
               </span>

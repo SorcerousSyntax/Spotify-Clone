@@ -31,22 +31,29 @@
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-  transition: all 160ms var(--ease-main);
 }
 
 body {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
-  font-family: 'Inter', 'Geist', sans-serif;
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
   font-weight: 800;
   letter-spacing: -0.03em;
+}
+
+input, button, textarea, select {
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+}
+
+.wordmark {
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 .page-title {
@@ -81,13 +88,25 @@ h1, h2, h3, h4, h5, h6 {
 /* Glassmorphism Redefined */
 .glass {
   background: rgba(10, 10, 10, 0.85);
-  backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--color-border);
   will-change: transform;
+  transform: translateZ(0);
+  contain: paint layout style;
 }
 
-.card-pressable:active {
+button,
+a,
+.card-pressable,
+.card-tap,
+[role='button'] {
+  transition: all 160ms var(--ease-main);
+}
+
+.card-pressable:active,
+button:active,
+[role='button']:active {
   transform: scale(0.96);
 }
 
@@ -102,6 +121,8 @@ h1, h2, h3, h4, h5, h6 {
   inset: 0;
   background: var(--color-bg-primary);
   z-index: -3;
+  transform: translateZ(0);
+  contain: paint layout style;
 }
 
 .bg-layer-2 {
@@ -109,6 +130,10 @@ h1, h2, h3, h4, h5, h6 {
   inset: 0;
   z-index: -2;
   pointer-events: none;
+  transform: translateZ(0);
+  contain: paint layout style;
+  will-change: auto;
+  content-visibility: auto;
 }
 
 .gradient-a {
@@ -119,6 +144,9 @@ h1, h2, h3, h4, h5, h6 {
   height: 100vh;
   background: radial-gradient(circle at 80% 20%, var(--color-accent-primary), transparent 40vw);
   opacity: 0.12;
+  transform: translateZ(0);
+  contain: paint layout style;
+  will-change: auto;
 }
 
 .gradient-b {
@@ -129,6 +157,53 @@ h1, h2, h3, h4, h5, h6 {
   height: 100vh;
   background: radial-gradient(circle at 20% 80%, var(--color-accent-secondary), transparent 30vw);
   opacity: 0.08;
+  transform: translateZ(0);
+  contain: paint layout style;
+  will-change: auto;
+}
+
+@supports (background: conic-gradient(from 0deg, #000000, #ffffff)) {
+  .bg-layer-2::before {
+    content: '';
+    position: absolute;
+    inset: -15%;
+    background: conic-gradient(from var(--gradient-angle), #ff2d781a, #00000000 40%, #ff2d7810 70%, #00000000);
+    opacity: 0.14;
+    transform: translateZ(0);
+    contain: paint layout style;
+    will-change: auto;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gradient-a,
+  .gradient-b,
+  .bg-layer-2::before {
+    animation: ambient-fade 10s ease-in-out infinite;
+  }
+
+  .bg-layer-2::before {
+    animation: ambient-fade 10s ease-in-out infinite, gradient-angle-shift 16s linear infinite;
+  }
+}
+
+@keyframes ambient-fade {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes gradient-angle-shift {
+  from {
+    --gradient-angle: 0deg;
+  }
+  to {
+    --gradient-angle: 360deg;
+  }
 }
 
 /* Scrollbar */
@@ -152,11 +227,14 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
   opacity: 0.015;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  transform: translateZ(0);
+  contain: paint layout style;
+  will-change: auto;
 }
 
 /* Performance Optimized Animations */
 .will-change-composite {
-  will-change: transform, opacity;
+  will-change: opacity;
   transform: translateZ(0);
 }
 
@@ -187,6 +265,33 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-heart {
   animation: heart-beat 300ms var(--ease-main);
+}
+
+@keyframes opacity-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.loading-pulse {
+  animation: opacity-pulse 1.2s ease-in-out infinite;
+  transform: translateZ(0);
+  contain: paint layout style;
+}
+
+main > *,
+section,
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 420px;
+}
+
+input::placeholder {
+  color: var(--color-text-muted);
 }
 
 /* Image optimization */
