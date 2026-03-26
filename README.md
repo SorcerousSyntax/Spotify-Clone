@@ -209,4 +209,4 @@ music-app/
 
 ---
 
-Built with 💜 for Harsh
+Built with 💜 
