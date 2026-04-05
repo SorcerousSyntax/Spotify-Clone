@@ -70,6 +70,7 @@ const Search = () => {
   const isOffline = usePlayerStore((s) => s.isOffline);
   const toggleOffline = usePlayerStore((s) => s.toggleOffline);
   const currentPlayingId = usePlayerStore((s) => s.currentSong?.id);
+  const recentPlayed = usePlayerStore((s) => s.recentlyPlayed || []);
   
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
@@ -91,34 +92,75 @@ const Search = () => {
     };
   }, []);
 
-  const suggestionWords = useMemo(() => {
-    const q = query.trim().toLowerCase();
+  const recentListItems = useMemo(() => {
+    const fromSearches = recentSearches.map((item) => ({
+      key: `search-${item}`,
+      label: item,
+      query: item,
+      kind: 'SEARCH',
+    }));
 
-    const fromResults = results
+    const fromPlayed = recentPlayed
+      .filter((song) => song?.title)
+      .map((song) => {
+        const title = decodeSongTitle(song.title).trim();
+        const artist = String(song.artist || '').trim();
+        return {
+          key: `played-${song.id || title}`,
+          label: title,
+          subLabel: artist,
+          query: `${title} ${artist}`.trim(),
+          kind: 'PLAYED',
+        };
+      });
+
+    const seen = new Set();
+    const merged = [];
+    [...fromSearches, ...fromPlayed].forEach((item) => {
+      const low = item.query.toLowerCase();
+      if (!low || seen.has(low)) return;
+      seen.add(low);
+      merged.push(item);
+    });
+
+    return merged.slice(0, 12);
+  }, [recentPlayed, recentSearches]);
+
+  const keywordSuggestions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+
+    const resultTokens = results
       .flatMap((song) => [song?.title, song?.artist])
       .filter(Boolean)
       .flatMap((value) => String(value).split(/[^a-zA-Z0-9]+/))
       .map((word) => word.trim())
-      .filter((word) => word.length >= 3);
+      .filter((word) => word.length >= 2);
 
-    const pool = [...recentSearches, ...fromResults];
+    const historyTokens = [
+      ...recentSearches,
+      ...recentPlayed.flatMap((song) => [song?.title, song?.artist]).filter(Boolean),
+    ]
+      .flatMap((value) => String(value).split(/[^a-zA-Z0-9]+/))
+      .map((word) => word.trim())
+      .filter((word) => word.length >= 2);
+
+    const pool = [...historyTokens, ...resultTokens];
     const seen = new Set();
     const filtered = [];
 
-    for (const item of pool) {
-      const value = String(item || '').trim();
-      if (!value) continue;
-      const lower = value.toLowerCase();
-      if (q && lower === q) continue;
-      if (q && !lower.includes(q)) continue;
-      if (seen.has(lower)) continue;
-      seen.add(lower);
-      filtered.push(value);
+    for (const token of pool) {
+      const low = token.toLowerCase();
+      if (!low.startsWith(q)) continue;
+      if (low === q) continue;
+      if (seen.has(low)) continue;
+      seen.add(low);
+      filtered.push(token);
       if (filtered.length >= 8) break;
     }
 
     return filtered;
-  }, [query, results, recentSearches]);
+  }, [query, recentPlayed, recentSearches, results]);
 
   const searchSongs = useCallback(async (q, options = {}) => {
     const normalized = String(q || '').trim();
@@ -326,7 +368,7 @@ const Search = () => {
             />
           )}
 
-          {focused && recentSearches.length > 0 && (
+          {focused && (recentListItems.length > 0 || keywordSuggestions.length > 0) && (
             <div
               className="glass"
               style={{
@@ -341,62 +383,85 @@ const Search = () => {
                 zIndex: 20,
               }}
             >
-              <div className="font-mono" style={{ fontSize: 9, opacity: 0.55, padding: '6px 10px', letterSpacing: '0.08em' }}>
-                RECENT SEARCHES
-              </div>
-              {recentSearches.map((item) => (
-                <button
-                  key={`recent-${item}`}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleSuggestionClick(item);
-                  }}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    border: 'none',
-                    background: 'transparent',
-                    color: '#fff',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    borderRadius: 12,
-                    padding: '10px 12px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {item.toUpperCase()}
-                </button>
-              ))}
+              {recentListItems.length > 0 && (
+                <>
+                  <div className="font-mono" style={{ fontSize: 9, opacity: 0.55, padding: '6px 10px', letterSpacing: '0.08em' }}>
+                    RECENT SEARCHES & PLAYED
+                  </div>
+                  {recentListItems.map((item) => (
+                    <button
+                      key={item.key}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSuggestionClick(item.query);
+                      }}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#fff',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        borderRadius: 12,
+                        padding: '10px 12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 10,
+                      }}
+                    >
+                      <span style={{ minWidth: 0, flex: 1 }}>
+                        <span style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {item.label.toUpperCase()}
+                        </span>
+                        {item.subLabel ? (
+                          <span style={{ display: 'block', fontSize: 10, opacity: 0.55, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {item.subLabel.toUpperCase()}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="font-mono" style={{ fontSize: 8, opacity: 0.5 }}>{item.kind}</span>
+                    </button>
+                  ))}
+                </>
+              )}
+
+              {keywordSuggestions.length > 0 && (
+                <>
+                  <div className="font-mono" style={{ fontSize: 9, opacity: 0.55, padding: '8px 10px 6px', letterSpacing: '0.08em' }}>
+                    KEYWORD SUGGESTIONS
+                  </div>
+                  {keywordSuggestions.map((keyword) => (
+                    <button
+                      key={`keyword-${keyword}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSuggestionClick(keyword);
+                      }}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#fff',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        borderRadius: 12,
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {keyword.toUpperCase()}
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
       </header>
-
-      {/* Category Chips */}
-      <section style={{ marginBottom: 40 }}>
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto' }} className="no-scrollbar">
-          {suggestionWords.map((suggestion) => (
-            <button
-              key={`sugg-${suggestion}`}
-              onClick={() => handleSuggestionClick(suggestion)}
-              className="btn-premium"
-              style={{ padding: '8px 20px', fontSize: 9 }}
-            >
-              {suggestion.toUpperCase()}
-            </button>
-          ))}
-          {['BOLLYWOOD', 'ENGLISH', 'TRENDING', 'POP', 'HIP-HOP', 'LO-FI'].map(cat => (
-            <button
-              key={cat}
-              onClick={() => { setQuery(cat); searchSongs(cat); }}
-              className="btn-premium"
-              style={{ padding: '8px 20px', fontSize: 9 }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </section>
 
       {/* Results */}
       <section>

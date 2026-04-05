@@ -21,9 +21,9 @@ const Home = () => {
   useEffect(() => {
     const loadData = async () => {
       const trendingQueries = [
-        'Trending Songs India',
-        'India Top Hits',
-        'Bollywood Trending',
+        'Most Listened Songs This Week',
+        'Top Songs This Week India',
+        'Weekly Top Hindi Songs',
       ];
 
       let loadedTrending = [];
@@ -136,29 +136,49 @@ const Home = () => {
         </section>
       )}
 
-      {/* Trending Songs (Simplified from Pick a Mood) */}
+      {/* Most Listened This Week */}
       <section style={{ marginBottom: 40 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 20 }}>NOW TRENDING IN INDIA</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 15 }}>
-          {trendingSongs.slice(0, 6).map((song, i) => (
+        <h2 style={{ fontSize: 18, marginBottom: 20 }}>MOST LISTENED THIS WEEK</h2>
+        <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10 }} className="no-scrollbar">
+          {trendingSongs.slice(0, 12).map((song, i) => (
             <motion.div
               key={song.id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => playSong(song, i, trendingSongs)}
               className="glass"
-              style={{ padding: 12, borderRadius: 24, display: 'flex', alignItems: 'center', gap: 12 }}
+              style={{
+                minWidth: 170,
+                width: 170,
+                padding: 12,
+                borderRadius: 20,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                gap: 10,
+                cursor: 'pointer',
+              }}
             >
-              <div style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ width: '100%', height: 120, borderRadius: 14, overflow: 'hidden', flexShrink: 0 }}>
                 <img src={song.image?.[1]?.url || song.album_art_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
               </div>
-              <div style={{ overflow: 'hidden' }}>
-                <h3 style={{ fontSize: 10, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{decodeSongTitle(song.name || song.title).toUpperCase()}</h3>
-                <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>{song.artist?.toUpperCase() || 'UNKNOWN'}</p>
+              <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                <h3 style={{ fontSize: 10, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>
+                  {decodeSongTitle(song.name || song.title).toUpperCase()}
+                </h3>
+                <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {(song.artist || 'UNKNOWN').toUpperCase()}
+                </p>
               </div>
             </motion.div>
           ))}
         </div>
+
+        {trendingSongs.length === 0 && (
+          <p className="font-mono" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>
+            UNABLE TO LOAD WEEKLY LIST RIGHT NOW.
+          </p>
+        )}
       </section>
       </div>
     </div>
