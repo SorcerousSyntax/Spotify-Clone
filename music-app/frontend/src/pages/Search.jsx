@@ -9,6 +9,47 @@ const RECENT_SEARCHES_KEY = 'raabta_recent_searches_v1';
 const RECENT_SEARCHED_SONGS_KEY = 'raabta_recent_searched_songs_v1';
 const RECENT_SEARCHES_LIMIT = 10;
 
+const GENRE_BUCKETS = {
+  punjabi: ['punjabi', 'punjabi pop', 'bhangra'],
+  hindi: ['hindi', 'bollywood', 'desi'],
+  english: ['english', 'international', 'pop', 'rock'],
+  tamil: ['tamil', 'kollywood'],
+  telugu: ['telugu', 'tollywood'],
+  bhojpuri: ['bhojpuri'],
+  marathi: ['marathi'],
+  bengali: ['bengali', 'bangla'],
+  lofi: ['lofi', 'lo-fi', 'chill'],
+  devotional: ['bhakti', 'devotional', 'aarti', 'mantra'],
+};
+
+const normalizeText = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const detectGenreBucket = (value) => {
+  const text = normalizeText(value);
+  if (!text) return '';
+
+  for (const [bucket, keywords] of Object.entries(GENRE_BUCKETS)) {
+    if (keywords.some((keyword) => text.includes(keyword))) {
+      return bucket;
+    }
+  }
+
+  return '';
+};
+
+const getSongGenreSource = (song = {}) => normalizeText(`${song.title || ''} ${song.artist || ''} ${song.album || ''}`);
+
+const isInGenreBucket = (song = {}, bucket = '') => {
+  if (!bucket) return true;
+  const text = getSongGenreSource(song);
+  const keywords = GENRE_BUCKETS[bucket] || [];
+  return keywords.some((keyword) => text.includes(keyword));
+};
+
 const mapJioSongToAppSong = (song = {}) => ({
   id: song.id,
   title: song.name,
@@ -115,7 +156,6 @@ const Search = () => {
   const abortRef = useRef(null);
   const requestRef = useRef(0);
   const cacheRef = useRef(new Map());
-  const restoredSearchRanRef = useRef(false);
 
   useEffect(() => {
     const recent = readJsonArray(RECENT_SEARCHES_KEY);
@@ -288,24 +328,28 @@ const Search = () => {
 
     // Build next queue from similar tracks instead of current search list.
     (async () => {
-      const normalizeArtist = (value) =>
-        String(value || '')
-          .toLowerCase()
-          .replace(/\s+/g, ' ')
-          .trim();
-
-      const currentArtist = normalizeArtist(song.artist);
+      const currentArtist = normalizeText(song.artist);
       const queryWords = String(query || '')
         .split(/[^a-zA-Z0-9]+/)
         .map((item) => item.trim())
         .filter((item) => item.length >= 3)
         .slice(0, 3);
 
+      const targetGenreBucket =
+        detectGenreBucket(query) ||
+        detectGenreBucket(`${song.title || ''} ${song.artist || ''} ${song.album || ''}`);
+
       const genreSeed = queryWords.length > 0
         ? queryWords.join(' ')
         : String(song.title || '').split(/[^a-zA-Z0-9]+/).filter((item) => item.length >= 3).slice(0, 3).join(' ');
 
+      const targetGenreQuery = targetGenreBucket
+        ? (GENRE_BUCKETS[targetGenreBucket]?.[0] || targetGenreBucket)
+        : '';
+
       const queries = [
+        targetGenreQuery ? `${targetGenreQuery} songs` : '',
+        targetGenreQuery ? `${targetGenreQuery} hits` : '',
         genreSeed,
         `${genreSeed} songs`.trim(),
         `${song.title || ''} similar`.trim(),
@@ -353,12 +397,20 @@ const Search = () => {
       const allCandidates = dedupeById([...collected, ...fallbackFromVisibleResults])
         .filter((item) => item?.id && item.id !== song.id);
 
+      const genreMatchedCandidates = targetGenreBucket
+        ? allCandidates.filter((item) => isInGenreBucket(item, targetGenreBucket))
+        : allCandidates;
+
+      const rankedCandidates = genreMatchedCandidates.length >= 6
+        ? genreMatchedCandidates
+        : [...genreMatchedCandidates, ...allCandidates.filter((item) => !genreMatchedCandidates.some((m) => m.id === item.id))];
+
       const uniqueArtistFirst = [];
       const bySameArtistLater = [];
       const seenArtists = new Set();
 
-      allCandidates.forEach((item) => {
-        const artist = normalizeArtist(item.artist);
+      rankedCandidates.forEach((item) => {
+        const artist = normalizeText(item.artist);
         if (!artist || artist === currentArtist) {
           bySameArtistLater.push(item);
           return;

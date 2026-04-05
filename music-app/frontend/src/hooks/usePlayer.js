@@ -40,6 +40,63 @@ const usePlayer = () => {
   const isAndroid = /Android/i.test(navigator.userAgent);
   const outputHeadroom = isIOS ? IOS_SAFE_OUTPUT_HEADROOM : SAFE_OUTPUT_HEADROOM;
 
+  const updateMediaSessionMetadata = useCallback((song) => {
+    if (!song || !('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
+
+    const title = song.title || 'Unknown Title';
+    const artist = song.artist || 'Unknown Artist';
+    const artworkSrc = song.album_art_url || '/placeholder-album.svg';
+
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title,
+        artist,
+        album: song.album || 'Raabta',
+        // Skip strict "type" so browsers don't reject non-jpeg artwork URLs.
+        artwork: [96, 128, 192, 256, 384, 512].map((size) => ({
+          src: artworkSrc,
+          sizes: `${size}x${size}`,
+        })),
+      });
+    } catch (_error) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({ title, artist, album: song.album || 'Raabta' });
+      } catch (_innerError) {}
+    }
+  }, []);
+
+  const setMediaSessionHandlers = useCallback(() => {
+    if (!('mediaSession' in navigator)) return;
+    const state = usePlayerStore.getState();
+
+    const handlers = {
+      play: () => state.togglePlay(),
+      pause: () => state.togglePlay(),
+      nexttrack: () => state.nextSong(),
+      previoustrack: () => state.prevSong(),
+    };
+
+    Object.entries(handlers).forEach(([action, fn]) => {
+      try {
+        navigator.mediaSession.setActionHandler(action, fn);
+      } catch (_error) {}
+    });
+  }, []);
+
+  const updateMediaSessionPosition = useCallback((position, durationValue) => {
+    if (!('mediaSession' in navigator) || typeof navigator.mediaSession.setPositionState !== 'function') return;
+    if (!Number.isFinite(durationValue) || durationValue <= 0) return;
+
+    const boundedPosition = Math.max(0, Math.min(Number(position) || 0, durationValue));
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: durationValue,
+        playbackRate: 1,
+        position: boundedPosition,
+      });
+    } catch (_error) {}
+  }, []);
+
   useEffect(() => {
     if (!isIOS) return;
 
@@ -155,25 +212,18 @@ const usePlayer = () => {
           }
 
           if ('mediaSession' in navigator) {
-            try {
-              navigator.mediaSession.metadata = new MediaMetadata({
-                title: currentSong.title,
-                artist: currentSong.artist,
-                album: 'Raabta',
-                artwork: [{ src: currentSong.album_art_url, sizes: '512x512', type: 'image/jpeg' }]
-              });
-              const state = usePlayerStore.getState();
-              navigator.mediaSession.setActionHandler('play', () => state.togglePlay());
-              navigator.mediaSession.setActionHandler('pause', () => state.togglePlay());
-              navigator.mediaSession.setActionHandler('nexttrack', () => state.nextSong());
-              navigator.mediaSession.setActionHandler('previoustrack', () => state.prevSong());
-              navigator.mediaSession.playbackState = 'playing';
-            } catch (e) {}
+            updateMediaSessionMetadata(currentSong);
+            setMediaSessionHandlers();
+            navigator.mediaSession.playbackState = 'playing';
+            updateMediaSessionPosition(howl.seek(), howl.duration());
           }
         },
         onpause: () => {
           setIsPlaying(false);
-          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+          if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'paused';
+            updateMediaSessionPosition(howl.seek(), howl.duration());
+          }
         },
         onend: () => {
           const { repeat, nextSong } = usePlayerStore.getState();
@@ -209,7 +259,14 @@ const usePlayer = () => {
         objectUrlRef.current = null;
       }
     };
-  }, [currentSong?.id, currentSong?.r2_url, currentSong?.stream_url, currentSong?.url, isIOS, isAndroid, outputHeadroom, setDuration, setIsPlaying]);
+  }, [currentSong?.id, currentSong?.r2_url, currentSong?.stream_url, currentSong?.url, isIOS, isAndroid, outputHeadroom, setDuration, setIsPlaying, setMediaSessionHandlers, updateMediaSessionMetadata, updateMediaSessionPosition]);
+
+  useEffect(() => {
+    if (!currentSong || !('mediaSession' in navigator)) return;
+    updateMediaSessionMetadata(currentSong);
+    setMediaSessionHandlers();
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+  }, [currentSong, isPlaying, setMediaSessionHandlers, updateMediaSessionMetadata]);
 
   // Sync play/pause state
   useEffect(() => {
@@ -230,10 +287,13 @@ const usePlayer = () => {
   // Update progress loop
   const updateProgress = useCallback(() => {
     if (howlRef.current && howlRef.current.playing()) {
-      setProgress(howlRef.current.seek());
+      const position = howlRef.current.seek();
+      const currentDuration = howlRef.current.duration();
+      setProgress(position);
+      updateMediaSessionPosition(position, currentDuration);
       animFrameRef.current = requestAnimationFrame(updateProgress);
     }
-  }, [setProgress]);
+  }, [setProgress, updateMediaSessionPosition]);
 
   // Set up Web Audio API analyser for waveform
   const setupAnalyser = useCallback(() => {
