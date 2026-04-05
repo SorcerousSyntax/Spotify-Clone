@@ -23,6 +23,8 @@ const usePlayer = () => {
   const compressorRef = useRef(null);
   const outputGainRef = useRef(null);
   const frequencyDataRef = useRef(new Uint8Array(64));
+  const wasPlayingBeforeHideRef = useRef(false);
+  const resumeAttemptsRef = useRef(0);
 
   const {
     currentSong,
@@ -98,6 +100,11 @@ const usePlayer = () => {
   }, []);
 
   useEffect(() => {
+    // Prevent Howler from suspending audio context in background (helps Android + iOS).
+    try {
+      Howler.autoSuspend = false;
+    } catch (e) {}
+
     if (!isIOS) return;
 
     // Keep iOS in media playback mode so audio can continue on lock screen.
@@ -105,10 +112,6 @@ const usePlayer = () => {
       if (navigator.audioSession) {
         navigator.audioSession.type = 'playback';
       }
-    } catch (e) {}
-
-    try {
-      Howler.autoSuspend = false;
     } catch (e) {}
   }, [isIOS]);
 
@@ -267,6 +270,61 @@ const usePlayer = () => {
     setMediaSessionHandlers();
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
   }, [currentSong, isPlaying, setMediaSessionHandlers, updateMediaSessionMetadata]);
+
+  useEffect(() => {
+    const tryResumePlayback = () => {
+      const howl = howlRef.current;
+      if (!howl || !isPlaying) return;
+      if (howl.playing()) {
+        resumeAttemptsRef.current = 0;
+        return;
+      }
+
+      // Prevent aggressive loops: retry only a few times while app is in background.
+      if (resumeAttemptsRef.current >= 4) return;
+      resumeAttemptsRef.current += 1;
+
+      try {
+        if (Howler.ctx && Howler.ctx.state === 'suspended') {
+          Howler.ctx.resume();
+        }
+      } catch (_error) {}
+
+      try {
+        howl.play();
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'playing';
+        }
+      } catch (_error) {}
+    };
+
+    const onVisibilityChange = () => {
+      const hidden = document.visibilityState === 'hidden';
+      if (hidden) {
+        wasPlayingBeforeHideRef.current = isPlaying;
+        return;
+      }
+
+      // App became visible again: if user expected playback, recover quickly.
+      if (wasPlayingBeforeHideRef.current && isPlaying) {
+        tryResumePlayback();
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    // Watchdog for lock-screen/background interruptions.
+    const watchdog = window.setInterval(() => {
+      if (!document.hidden) return;
+      if (!isPlaying) return;
+      tryResumePlayback();
+    }, 8000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.clearInterval(watchdog);
+    };
+  }, [isPlaying]);
 
   // Sync play/pause state
   useEffect(() => {
