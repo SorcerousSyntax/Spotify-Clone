@@ -32,6 +32,48 @@ const PageTransition = ({ children }) => (
   </motion.div>
 );
 
+class AppErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('App crashed:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100dvh',
+          display: 'grid',
+          placeItems: 'center',
+          padding: '40px 20px',
+          background: '#000',
+          color: '#fff',
+        }}>
+          <div className="glass" style={{ width: 'min(420px, 90%)', padding: 32, textAlign: 'center' }}>
+            <h2 style={{ marginBottom: 10, fontSize: 26 }}>SOMETHING WENT WRONG</h2>
+            <p className="font-mono" style={{ marginBottom: 24, opacity: 0.7, fontSize: 10 }}>
+              THE APP HIT AN UNEXPECTED ERROR. TAP TO RECOVER.
+            </p>
+            <button className="btn-premium" onClick={() => window.location.reload()}>
+              RESTART APP
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const ProtectedRoute = ({ session, authReady, children }) => {
   if (!authReady) return <PageSkeleton />;
   if (!session) return <Navigate to="/login" replace />;
@@ -287,7 +329,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <LoadingScreen onComplete={() => setAppLoaded(true)} />
-      {appLoaded && <AppInner />}
+      {appLoaded && (
+        <AppErrorBoundary>
+          <AppInner />
+        </AppErrorBoundary>
+      )}
     </BrowserRouter>
   );
 }

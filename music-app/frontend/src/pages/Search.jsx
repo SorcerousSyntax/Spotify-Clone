@@ -1,9 +1,12 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import usePlayerStore from '../store/playerStore';
 import { decodeSongTitle } from '../lib/text';
 
 const PUBLIC_JIOSAAVN_SEARCH = 'https://jiosavan-api2.vercel.app/api/search/songs';
+const LAST_SEARCH_KEY = 'raabta_last_search_v1';
+const RECENT_SEARCHES_KEY = 'raabta_recent_searches_v1';
+const RECENT_SEARCHES_LIMIT = 10;
 
 const mapJioSongToAppSong = (song = {}) => ({
   id: song.id,
@@ -31,11 +34,37 @@ const dedupeById = (songs = []) => {
   });
 };
 
+const readJsonArray = (key) => {
+  try {
+    const value = localStorage.getItem(key);
+    const parsed = value ? JSON.parse(value) : [];
+    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === 'string') : [];
+  } catch (_error) {
+    return [];
+  }
+};
+
+const persistSearchMemory = (term) => {
+  const clean = String(term || '').trim();
+  if (!clean) return;
+
+  try {
+    localStorage.setItem(LAST_SEARCH_KEY, clean);
+    const existing = readJsonArray(RECENT_SEARCHES_KEY);
+    const next = [clean, ...existing.filter((item) => item.toLowerCase() !== clean.toLowerCase())]
+      .slice(0, RECENT_SEARCHES_LIMIT);
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+  } catch (_error) {
+    // Ignore storage errors to avoid breaking search on private mode/storage limits.
+  }
+};
+
 const Search = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [recentSearches, setRecentSearches] = useState([]);
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
   const setQueue = usePlayerStore((s) => s.setQueue);
   const isOffline = usePlayerStore((s) => s.isOffline);
@@ -43,30 +72,125 @@ const Search = () => {
   const currentPlayingId = usePlayerStore((s) => s.currentSong?.id);
   
   const debounceRef = useRef(null);
+  const abortRef = useRef(null);
+  const requestRef = useRef(0);
+  const cacheRef = useRef(new Map());
+  const restoredSearchRanRef = useRef(false);
 
-  const searchSongs = useCallback(async (q) => {
-    if (!q.trim()) { setResults([]); setLoading(false); return; }
+  useEffect(() => {
+    const last = (localStorage.getItem(LAST_SEARCH_KEY) || '').trim();
+    const recent = readJsonArray(RECENT_SEARCHES_KEY);
+    setRecentSearches(recent);
+    if (last) {
+      setQuery(last);
+    }
+
+    return () => {
+      clearTimeout(debounceRef.current);
+      abortRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (restoredSearchRanRef.current) return;
+    const restored = String(query || '').trim();
+    if (!restored) return;
+
+    restoredSearchRanRef.current = true;
+    searchSongs(restored, { skipMemory: true });
+  }, [query, searchSongs]);
+
+  const suggestionWords = useMemo(() => {
+    const q = query.trim().toLowerCase();
+
+    const fromResults = results
+      .flatMap((song) => [song?.title, song?.artist])
+      .filter(Boolean)
+      .flatMap((value) => String(value).split(/[^a-zA-Z0-9]+/))
+      .map((word) => word.trim())
+      .filter((word) => word.length >= 3);
+
+    const pool = [...recentSearches, ...fromResults];
+    const seen = new Set();
+    const filtered = [];
+
+    for (const item of pool) {
+      const value = String(item || '').trim();
+      if (!value) continue;
+      const lower = value.toLowerCase();
+      if (q && lower === q) continue;
+      if (q && !lower.includes(q)) continue;
+      if (seen.has(lower)) continue;
+      seen.add(lower);
+      filtered.push(value);
+      if (filtered.length >= 8) break;
+    }
+
+    return filtered;
+  }, [query, results, recentSearches]);
+
+  const searchSongs = useCallback(async (q, options = {}) => {
+    const normalized = String(q || '').trim();
+    if (!normalized) {
+      abortRef.current?.abort();
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
+    const cacheKey = normalized.toLowerCase();
+    const cached = cacheRef.current.get(cacheKey);
+    if (cached && Array.isArray(cached)) {
+      setResults(cached);
+      setLoading(false);
+      if (!options.skipMemory) {
+        persistSearchMemory(normalized);
+        setRecentSearches(readJsonArray(RECENT_SEARCHES_KEY));
+      }
+      return;
+    }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const requestId = ++requestRef.current;
     setLoading(true);
+
+    let finalResults = [];
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(normalized)}`, { signal: controller.signal });
       if (res.ok) {
         const data = await res.json();
         const extracted = Array.isArray(data?.results) ? data.results : Array.isArray(data?.songs) ? data.songs : [];
         if (extracted.length > 0) {
-          setResults(extracted);
-          setLoading(false);
-          return;
+          finalResults = dedupeById(extracted);
         }
       }
 
-      const directRes = await fetch(`${PUBLIC_JIOSAAVN_SEARCH}?query=${encodeURIComponent(q)}&limit=20`);
-      if (directRes.ok) {
-        const directData = await directRes.json();
-        setResults((directData?.data?.results || []).map(mapJioSongToAppSong));
+      if (finalResults.length === 0) {
+        const directRes = await fetch(`${PUBLIC_JIOSAAVN_SEARCH}?query=${encodeURIComponent(normalized)}&limit=20`, { signal: controller.signal });
+        if (directRes.ok) {
+          const directData = await directRes.json();
+          finalResults = dedupeById((directData?.data?.results || []).map(mapJioSongToAppSong));
+        }
       }
     } catch (err) {
-      console.error(err);
+      if (err?.name !== 'AbortError') {
+        console.error(err);
+      }
     } finally {
+      if (requestId !== requestRef.current) {
+        return;
+      }
+
+      setResults(finalResults);
+      cacheRef.current.set(cacheKey, finalResults);
+
+      if (!options.skipMemory) {
+        persistSearchMemory(normalized);
+        setRecentSearches(readJsonArray(RECENT_SEARCHES_KEY));
+      }
+
       setLoading(false);
     }
   }, []);
@@ -76,22 +200,32 @@ const Search = () => {
     setQuery(v);
     clearTimeout(debounceRef.current);
     if (v.trim()) {
-      debounceRef.current = setTimeout(() => searchSongs(v), 500);
+      debounceRef.current = setTimeout(() => searchSongs(v), 350);
     } else {
+      abortRef.current?.abort();
       setResults([]);
     }
   };
 
-  const handlePlay = (song, index) => {
-    setCurrentSong(song);
+  const handlePlay = (song) => {
+    if (!song?.id) return;
+
     setQueue([song], 0);
+    setCurrentSong(song);
 
     // Build next queue from similar tracks instead of current search list.
     (async () => {
+      const queryWords = String(query || '')
+        .split(/[^a-zA-Z0-9]+/)
+        .map((item) => item.trim())
+        .filter((item) => item.length >= 3)
+        .slice(0, 3);
+
       const queries = [
         song.artist,
         `${song.artist || ''} ${song.title || ''}`.trim(),
         song.title,
+        ...queryWords,
       ].filter(Boolean);
 
       const collected = [];
@@ -131,10 +265,20 @@ const Search = () => {
         }
       }
 
-      const similar = dedupeById(collected).filter((item) => item?.id && item.id !== song.id).slice(0, 30);
+      const fallbackFromVisibleResults = (results || []).filter((item) => item?.id && item.id !== song.id);
+      const similar = dedupeById([...collected, ...fallbackFromVisibleResults])
+        .filter((item) => item?.id && item.id !== song.id)
+        .slice(0, 30);
       const queue = [song, ...similar];
       setQueue(queue, 0);
     })();
+  };
+
+  const handleSuggestionClick = (value) => {
+    const next = String(value || '').trim();
+    if (!next) return;
+    setQuery(next);
+    searchSongs(next);
   };
 
   return (
@@ -182,6 +326,16 @@ const Search = () => {
       {/* Category Chips */}
       <section style={{ marginBottom: 40 }}>
         <div style={{ display: 'flex', gap: 10, overflowX: 'auto' }} className="no-scrollbar">
+          {suggestionWords.map((suggestion) => (
+            <button
+              key={`sugg-${suggestion}`}
+              onClick={() => handleSuggestionClick(suggestion)}
+              className="btn-premium"
+              style={{ padding: '8px 20px', fontSize: 9 }}
+            >
+              {suggestion.toUpperCase()}
+            </button>
+          ))}
           {['BOLLYWOOD', 'ENGLISH', 'TRENDING', 'POP', 'HIP-HOP', 'LO-FI'].map(cat => (
             <button
               key={cat}
@@ -210,7 +364,7 @@ const Search = () => {
                 <motion.div
                   key={song.id}
                   whileHover={{ background: 'var(--glass-bg)' }}
-                  onClick={() => handlePlay(song, i)}
+                  onClick={() => handlePlay(song)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 15, padding: '10px 15px',
                     borderRadius: 12, cursor: 'pointer', height: 64,

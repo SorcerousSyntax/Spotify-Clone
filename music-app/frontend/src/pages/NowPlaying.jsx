@@ -35,6 +35,12 @@ const NowPlaying = () => {
   const isDragging = useRef(false);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
+
+  useEffect(() => {
     if (titleRef.current) {
       setIsTitleOverflowing(titleRef.current.scrollWidth > titleRef.current.clientWidth);
     }
@@ -99,6 +105,8 @@ const NowPlaying = () => {
 
   const offlineStatus = isOffline(currentSong.id);
   const isDownloading = downloadingIds.has(currentSong.id);
+  const safeSongTitle = decodeSongTitle(currentSong?.title || 'Unknown Title').toUpperCase();
+  const safeSongArtist = String(currentSong?.artist || 'Unknown Artist').toUpperCase();
 
   return (
     <div style={{
@@ -265,7 +273,7 @@ const NowPlaying = () => {
             }}
           >
             <img 
-              src={currentSong.album_art_url} 
+              src={currentSong?.album_art_url || '/placeholder-album.svg'} 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
               alt="" 
             />
@@ -306,7 +314,7 @@ const NowPlaying = () => {
                 display: isTitleOverflowing ? 'inline-block' : 'block'
               }}
             >
-              {decodeSongTitle(currentSong.title).toUpperCase()}
+              {safeSongTitle}
             </h1>
           </div>
           <p style={{ 
@@ -319,7 +327,7 @@ const NowPlaying = () => {
             whiteSpace: 'nowrap',
             maxWidth: '100%'
           }}>
-            {currentSong.artist.toUpperCase()}
+            {safeSongArtist}
           </p>
         </div>
         <motion.button
