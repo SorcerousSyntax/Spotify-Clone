@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import usePlayerStore from '../store/playerStore';
 import { supabase } from '../lib/supabase';
 import { decodeSongTitle } from '../lib/text';
-import PlaylistFolderCard from '../components/PlaylistFolderCard';
-import SplineBackground from '../components/SplineBackground';
+
+const PUBLIC_JIOSAAVN_SEARCH = 'https://jiosavan-api2.vercel.app/api/search/songs';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -17,16 +17,66 @@ const Home = () => {
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
   const setQueue = usePlayerStore((s) => s.setQueue);
   const recentFromStore = usePlayerStore((s) => s.recentlyPlayed);
-  const playlists = usePlayerStore((s) => s.playlists);
 
   useEffect(() => {
     const loadData = async () => {
-      const res = await fetch(`/api/search?q=Arijit Singh`);
-      if (res.ok) {
-        const data = await res.json();
-        const results = (data?.results || data?.songs || []).slice(0, 10);
-        setTrendingSongs(results);
+      const trendingQueries = [
+        'Trending Songs India',
+        'India Top Hits',
+        'Bollywood Trending',
+      ];
+
+      let loadedTrending = [];
+      for (const term of trendingQueries) {
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
+          if (!res.ok) continue;
+
+          const data = await res.json();
+          const results = (data?.results || data?.songs || []).filter((song) => song?.id);
+          if (results.length > 0) {
+            loadedTrending = results;
+            break;
+          }
+        } catch (_error) {
+          // Continue to fallback queries.
+        }
       }
+
+      if (loadedTrending.length === 0) {
+        for (const term of trendingQueries) {
+          try {
+            const res = await fetch(`${PUBLIC_JIOSAAVN_SEARCH}?query=${encodeURIComponent(term)}&limit=20`);
+            if (!res.ok) continue;
+
+            const data = await res.json();
+            const results = (data?.data?.results || []).map((song) => ({
+              id: song.id,
+              title: song.name,
+              name: song.name,
+              artist:
+                song.primaryArtists ||
+                song.artists?.primary?.map((artist) => artist?.name).filter(Boolean).join(', ') ||
+                'Unknown Artist',
+              album_art_url: song.image?.[2]?.url || song.image?.[1]?.url || song.image?.[0]?.url || '/placeholder-album.svg',
+              image: song.image,
+              stream_url: song.downloadUrl?.[4]?.url || song.downloadUrl?.[3]?.url || song.downloadUrl?.[2]?.url || '',
+              url: song.downloadUrl?.[4]?.url || song.downloadUrl?.[3]?.url || song.downloadUrl?.[2]?.url || '',
+              r2_url: song.downloadUrl?.[4]?.url || song.downloadUrl?.[3]?.url || song.downloadUrl?.[2]?.url || '',
+              duration: song.duration || 0,
+            })).filter((song) => song?.id);
+
+            if (results.length > 0) {
+              loadedTrending = results;
+              break;
+            }
+          } catch (_error) {
+            // Continue trying remaining fallbacks.
+          }
+        }
+      }
+
+      setTrendingSongs(loadedTrending.slice(0, 12));
 
       if (supabase) {
         const { data: { user } } = await supabase.auth.getUser();
@@ -59,24 +109,6 @@ const Home = () => {
         </p>
       </section>
 
-      {/* Playlist Folders */}
-      {playlists.length > 0 && (
-        <section style={{ marginBottom: 40 }}>
-          <div style={{ display: 'flex', gap: 15, overflowX: 'auto', paddingBottom: 15 }} className="no-scrollbar">
-            {playlists.map((playlist) => (
-              <PlaylistFolderCard
-                key={playlist.id}
-                playlist={{
-                  ...playlist,
-                  songs: playlist.songIds.map(id => usePlayerStore.getState().songsById[id]).filter(Boolean)
-                }}
-                onClick={() => navigate(`/library?playlist=${encodeURIComponent(playlist.id)}`)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Recently Played */}
       {recentFromStore.length > 0 && (
         <section style={{ marginBottom: 40 }}>
@@ -106,7 +138,7 @@ const Home = () => {
 
       {/* Trending Songs (Simplified from Pick a Mood) */}
       <section style={{ marginBottom: 40 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 20 }}>TRENDING NOW</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 20 }}>NOW TRENDING IN INDIA</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 15 }}>
           {trendingSongs.slice(0, 6).map((song, i) => (
             <motion.div

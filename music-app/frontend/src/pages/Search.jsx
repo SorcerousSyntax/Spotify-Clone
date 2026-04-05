@@ -279,6 +279,7 @@ const Search = () => {
     if (!next) return;
     setQuery(next);
     searchSongs(next);
+    setFocused(false);
   };
 
   return (
@@ -293,6 +294,7 @@ const Search = () => {
         <div 
           className="liquid-glass"
           style={{ 
+            position: 'relative',
             display: 'flex', alignItems: 'center', padding: '0 20px', height: 60,
             border: focused ? '1px solid var(--pink-hot)' : '1px solid rgba(255,255,255,0.2)',
             boxShadow: focused ? '0 0 20px rgba(255,45,120,0.3)' : '0 10px 40px rgba(0,0,0,0.5)',
@@ -306,7 +308,10 @@ const Search = () => {
             value={query}
             onChange={handleChange}
             onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
+            onBlur={() => {
+              // Delay close to allow taps/clicks on dropdown items.
+              setTimeout(() => setFocused(false), 100);
+            }}
             placeholder="ARTISTS, TRACKS, ALBUMS..."
             style={{ 
               flex: 1, background: 'transparent', border: 'none', outline: 'none',
@@ -319,6 +324,50 @@ const Search = () => {
               transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
               style={{ width: 20, height: 20, border: '2px solid var(--pink-hot)', borderTopColor: 'transparent', borderRadius: '50%' }}
             />
+          )}
+
+          {focused && recentSearches.length > 0 && (
+            <div
+              className="glass"
+              style={{
+                position: 'absolute',
+                top: 66,
+                left: 0,
+                right: 0,
+                maxHeight: 260,
+                overflowY: 'auto',
+                borderRadius: 18,
+                padding: '8px 6px',
+                zIndex: 20,
+              }}
+            >
+              <div className="font-mono" style={{ fontSize: 9, opacity: 0.55, padding: '6px 10px', letterSpacing: '0.08em' }}>
+                RECENT SEARCHES
+              </div>
+              {recentSearches.map((item) => (
+                <button
+                  key={`recent-${item}`}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSuggestionClick(item);
+                  }}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#fff',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    borderRadius: 12,
+                    padding: '10px 12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {item.toUpperCase()}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </header>
