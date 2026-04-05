@@ -118,14 +118,10 @@ const Search = () => {
   const restoredSearchRanRef = useRef(false);
 
   useEffect(() => {
-    const last = (localStorage.getItem(LAST_SEARCH_KEY) || '').trim();
     const recent = readJsonArray(RECENT_SEARCHES_KEY);
     const recentSongs = readRecentSearchedSongs();
     setRecentSearches(recent);
     setRecentSearchedSongs(recentSongs);
-    if (last) {
-      setQuery(last);
-    }
 
     return () => {
       clearTimeout(debounceRef.current);
@@ -269,15 +265,6 @@ const Search = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (restoredSearchRanRef.current) return;
-    const restored = String(query || '').trim();
-    if (!restored) return;
-
-    restoredSearchRanRef.current = true;
-    searchSongs(restored, { skipMemory: true });
-  }, [query, searchSongs]);
-
   const handleChange = (e) => {
     const v = e.target.value;
     setQuery(v);
@@ -301,16 +288,27 @@ const Search = () => {
 
     // Build next queue from similar tracks instead of current search list.
     (async () => {
+      const normalizeArtist = (value) =>
+        String(value || '')
+          .toLowerCase()
+          .replace(/\s+/g, ' ')
+          .trim();
+
+      const currentArtist = normalizeArtist(song.artist);
       const queryWords = String(query || '')
         .split(/[^a-zA-Z0-9]+/)
         .map((item) => item.trim())
         .filter((item) => item.length >= 3)
         .slice(0, 3);
 
+      const genreSeed = queryWords.length > 0
+        ? queryWords.join(' ')
+        : String(song.title || '').split(/[^a-zA-Z0-9]+/).filter((item) => item.length >= 3).slice(0, 3).join(' ');
+
       const queries = [
-        song.artist,
-        `${song.artist || ''} ${song.title || ''}`.trim(),
-        song.title,
+        genreSeed,
+        `${genreSeed} songs`.trim(),
+        `${song.title || ''} similar`.trim(),
         ...queryWords,
       ].filter(Boolean);
 
@@ -352,9 +350,26 @@ const Search = () => {
       }
 
       const fallbackFromVisibleResults = (results || []).filter((item) => item?.id && item.id !== song.id);
-      const similar = dedupeById([...collected, ...fallbackFromVisibleResults])
-        .filter((item) => item?.id && item.id !== song.id)
-        .slice(0, 30);
+      const allCandidates = dedupeById([...collected, ...fallbackFromVisibleResults])
+        .filter((item) => item?.id && item.id !== song.id);
+
+      const uniqueArtistFirst = [];
+      const bySameArtistLater = [];
+      const seenArtists = new Set();
+
+      allCandidates.forEach((item) => {
+        const artist = normalizeArtist(item.artist);
+        if (!artist || artist === currentArtist) {
+          bySameArtistLater.push(item);
+          return;
+        }
+
+        if (seenArtists.has(artist)) return;
+        seenArtists.add(artist);
+        uniqueArtistFirst.push(item);
+      });
+
+      const similar = [...uniqueArtistFirst, ...bySameArtistLater].slice(0, 30);
       const queue = [song, ...similar];
       setQueue(queue, 0);
     })();
