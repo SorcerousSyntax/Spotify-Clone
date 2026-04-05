@@ -414,7 +414,6 @@ const Search = () => {
 
           {focused && (recentListItems.length > 0 || keywordSuggestions.length > 0) && (
             <div
-              className="glass"
               style={{
                 position: 'absolute',
                 top: 66,
@@ -424,7 +423,12 @@ const Search = () => {
                 overflowY: 'auto',
                 borderRadius: 18,
                 padding: '8px 6px',
-                zIndex: 20,
+                zIndex: 60,
+                background: 'rgba(6,6,10,0.96)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                boxShadow: '0 18px 45px rgba(0,0,0,0.65), 0 6px 20px rgba(0,0,0,0.5)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
               }}
             >
               {recentListItems.length > 0 && (
