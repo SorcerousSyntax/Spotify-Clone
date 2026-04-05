@@ -91,15 +91,6 @@ const Search = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (restoredSearchRanRef.current) return;
-    const restored = String(query || '').trim();
-    if (!restored) return;
-
-    restoredSearchRanRef.current = true;
-    searchSongs(restored, { skipMemory: true });
-  }, [query, searchSongs]);
-
   const suggestionWords = useMemo(() => {
     const q = query.trim().toLowerCase();
 
@@ -194,6 +185,15 @@ const Search = () => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (restoredSearchRanRef.current) return;
+    const restored = String(query || '').trim();
+    if (!restored) return;
+
+    restoredSearchRanRef.current = true;
+    searchSongs(restored, { skipMemory: true });
+  }, [query, searchSongs]);
 
   const handleChange = (e) => {
     const v = e.target.value;
