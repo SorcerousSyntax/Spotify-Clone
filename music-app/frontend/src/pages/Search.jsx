@@ -6,6 +6,7 @@ import { decodeSongTitle } from '../lib/text';
 const PUBLIC_JIOSAAVN_SEARCH = 'https://jiosavan-api2.vercel.app/api/search/songs';
 const LAST_SEARCH_KEY = 'raabta_last_search_v1';
 const RECENT_SEARCHES_KEY = 'raabta_recent_searches_v1';
+const RECENT_SEARCHED_SONGS_KEY = 'raabta_recent_searched_songs_v1';
 const RECENT_SEARCHES_LIMIT = 10;
 
 const mapJioSongToAppSong = (song = {}) => ({
@@ -44,6 +45,43 @@ const readJsonArray = (key) => {
   }
 };
 
+const readRecentSearchedSongs = () => {
+  try {
+    const value = localStorage.getItem(RECENT_SEARCHED_SONGS_KEY);
+    const parsed = value ? JSON.parse(value) : [];
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .filter((item) => item && typeof item === 'object' && item.id && item.title)
+      .slice(0, RECENT_SEARCHES_LIMIT);
+  } catch (_error) {
+    return [];
+  }
+};
+
+const persistRecentSearchedSong = (song) => {
+  if (!song?.id || !song?.title) return;
+
+  const normalized = {
+    id: song.id,
+    title: song.title,
+    artist: song.artist || 'Unknown Artist',
+    album_art_url: song.album_art_url || '/placeholder-album.svg',
+    url: song.url || song.stream_url || song.r2_url || '',
+    stream_url: song.stream_url || song.url || song.r2_url || '',
+    r2_url: song.r2_url || song.stream_url || song.url || '',
+    duration: song.duration || 0,
+  };
+
+  try {
+    const existing = readRecentSearchedSongs();
+    const next = [normalized, ...existing.filter((item) => item.id !== normalized.id)].slice(0, RECENT_SEARCHES_LIMIT);
+    localStorage.setItem(RECENT_SEARCHED_SONGS_KEY, JSON.stringify(next));
+  } catch (_error) {
+    // Ignore storage failures.
+  }
+};
+
 const persistSearchMemory = (term) => {
   const clean = String(term || '').trim();
   if (!clean) return;
@@ -65,6 +103,7 @@ const Search = () => {
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
+  const [recentSearchedSongs, setRecentSearchedSongs] = useState([]);
   const setCurrentSong = usePlayerStore((s) => s.setCurrentSong);
   const setQueue = usePlayerStore((s) => s.setQueue);
   const isOffline = usePlayerStore((s) => s.isOffline);
@@ -81,7 +120,9 @@ const Search = () => {
   useEffect(() => {
     const last = (localStorage.getItem(LAST_SEARCH_KEY) || '').trim();
     const recent = readJsonArray(RECENT_SEARCHES_KEY);
+    const recentSongs = readRecentSearchedSongs();
     setRecentSearches(recent);
+    setRecentSearchedSongs(recentSongs);
     if (last) {
       setQuery(last);
     }
@@ -251,6 +292,9 @@ const Search = () => {
 
   const handlePlay = (song) => {
     if (!song?.id) return;
+
+    persistRecentSearchedSong(song);
+    setRecentSearchedSongs(readRecentSearchedSongs());
 
     setQueue([song], 0);
     setCurrentSong(song);
@@ -462,6 +506,51 @@ const Search = () => {
           )}
         </div>
       </header>
+
+      {!query && recentSearchedSongs.length > 0 && (
+        <section style={{ marginBottom: 30 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
+            <h2 style={{ fontSize: 16 }}>RECENT SEARCHES</h2>
+            <p className="font-mono" style={{ fontSize: 9, color: 'var(--pink-hot)' }}>
+              {recentSearchedSongs.length.toString().padStart(2, '0')} / 10
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {recentSearchedSongs.slice(0, 10).map((song) => (
+              <motion.button
+                key={`recent-song-${song.id}`}
+                whileHover={{ background: 'var(--glass-bg)' }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handlePlay(song)}
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  background: 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  textAlign: 'left',
+                  padding: '8px 10px',
+                  borderRadius: 12,
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ width: 42, height: 42, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+                  <img src={song.album_art_url || '/placeholder-album.svg'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 900, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {decodeSongTitle(song.title).toUpperCase()}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {(song.artist || 'UNKNOWN ARTIST').toUpperCase()}
+                  </div>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Results */}
       <section>
