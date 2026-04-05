@@ -203,41 +203,36 @@ const Search = () => {
     return merged.slice(0, 12);
   }, [recentPlayed, recentSearches]);
 
-  const keywordSuggestions = useMemo(() => {
+  const relatedSongSuggestions = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
 
-    const resultTokens = results
-      .flatMap((song) => [song?.title, song?.artist])
-      .filter(Boolean)
-      .flatMap((value) => String(value).split(/[^a-zA-Z0-9]+/))
-      .map((word) => word.trim())
-      .filter((word) => word.length >= 2);
-
-    const historyTokens = [
-      ...recentSearches,
-      ...recentPlayed.flatMap((song) => [song?.title, song?.artist]).filter(Boolean),
-    ]
-      .flatMap((value) => String(value).split(/[^a-zA-Z0-9]+/))
-      .map((word) => word.trim())
-      .filter((word) => word.length >= 2);
-
-    const pool = [...historyTokens, ...resultTokens];
     const seen = new Set();
     const filtered = [];
 
-    for (const token of pool) {
-      const low = token.toLowerCase();
-      if (!low.startsWith(q)) continue;
-      if (low === q) continue;
-      if (seen.has(low)) continue;
-      seen.add(low);
-      filtered.push(token);
-      if (filtered.length >= 8) break;
-    }
+    results.forEach((song) => {
+      if (!song?.id || !song?.title) return;
 
-    return filtered;
-  }, [query, recentPlayed, recentSearches, results]);
+      const title = decodeSongTitle(song.title);
+      const artist = String(song.artist || 'Unknown Artist');
+      const haystack = `${title} ${artist}`.toLowerCase();
+      if (!haystack.includes(q)) return;
+
+      const key = `${song.id}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+
+      filtered.push({
+        id: song.id,
+        title,
+        artist,
+        album_art_url: song.album_art_url,
+        sourceSong: song,
+      });
+    });
+
+    return filtered.slice(0, 8);
+  }, [query, results]);
 
   const searchSongs = useCallback(async (q, options = {}) => {
     const normalized = String(q || '').trim();
@@ -479,7 +474,7 @@ const Search = () => {
             />
           )}
 
-          {focused && (recentListItems.length > 0 || keywordSuggestions.length > 0) && (
+          {focused && (recentListItems.length > 0 || relatedSongSuggestions.length > 0) && (
             <div
               style={{
                 position: 'absolute',
@@ -543,17 +538,18 @@ const Search = () => {
                 </>
               )}
 
-              {keywordSuggestions.length > 0 && (
+              {relatedSongSuggestions.length > 0 && (
                 <>
                   <div className="font-mono" style={{ fontSize: 9, opacity: 0.55, padding: '8px 10px 6px', letterSpacing: '0.08em' }}>
-                    KEYWORD SUGGESTIONS
+                    RELATED SONGS
                   </div>
-                  {keywordSuggestions.map((keyword) => (
+                  {relatedSongSuggestions.map((item) => (
                     <button
-                      key={`keyword-${keyword}`}
+                      key={`related-song-${item.id}`}
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        handleSuggestionClick(keyword);
+                        handlePlay(item.sourceSong);
+                        setFocused(false);
                       }}
                       style={{
                         width: '100%',
@@ -566,9 +562,26 @@ const Search = () => {
                         borderRadius: 12,
                         padding: '8px 12px',
                         cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
                       }}
                     >
-                      {keyword.toUpperCase()}
+                      <div style={{ width: 28, height: 28, borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
+                        <img
+                          src={item.album_art_url || '/placeholder-album.svg'}
+                          alt=""
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+                      <span style={{ minWidth: 0, flex: 1 }}>
+                        <span style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {item.title.toUpperCase()}
+                        </span>
+                        <span style={{ display: 'block', fontSize: 10, opacity: 0.6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {item.artist.toUpperCase()}
+                        </span>
+                      </span>
                     </button>
                   ))}
                 </>
