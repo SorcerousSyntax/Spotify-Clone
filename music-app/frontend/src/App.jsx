@@ -274,7 +274,18 @@ const AppInner = () => {
         return;
       }
       try {
-        const { data } = await supabase.auth.getSession();
+        const sessionResult = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise((resolve) =>
+            setTimeout(() => resolve({ data: { session: null }, timedOut: true }), 5000)
+          ),
+        ]);
+
+        if (sessionResult?.timedOut) {
+          console.warn('Session bootstrap timed out, continuing without remote auth state.');
+        }
+
+        const { data } = sessionResult;
         if (mounted) {
           setSession(data?.session || null);
         }

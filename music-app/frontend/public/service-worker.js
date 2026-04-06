@@ -10,6 +10,61 @@ const APP_SHELL = [
 ];
 
 const ASSET_URL_REGEX = /(?:src|href)=["']([^"']+)["']/g;
+const JS_IMPORT_ASSET_REGEX = /["'`](\.\/[^"'`]+\.(?:js|css)|\/assets\/[^"'`]+\.(?:js|css))["'`]/g;
+
+const toSameOriginPath = (rawUrl, baseUrl = self.location.origin) => {
+  try {
+    const absolute = new URL(rawUrl, baseUrl);
+    return absolute.origin === self.location.origin ? absolute.pathname : null;
+  } catch (_err) {
+    return null;
+  }
+};
+
+async function discoverNestedAssets(entryAssetUrls) {
+  const discovered = new Set();
+  const visitedScripts = new Set();
+  const scriptQueue = [];
+
+  for (const assetUrl of entryAssetUrls) {
+    const normalized = toSameOriginPath(assetUrl);
+    if (!normalized) continue;
+
+    discovered.add(normalized);
+    if (normalized.endsWith('.js')) {
+      scriptQueue.push(normalized);
+    }
+  }
+
+  while (scriptQueue.length > 0) {
+    const scriptPath = scriptQueue.shift();
+    if (!scriptPath || visitedScripts.has(scriptPath)) continue;
+    visitedScripts.add(scriptPath);
+
+    try {
+      const response = await fetch(scriptPath, { cache: 'no-store' });
+      if (!response.ok) continue;
+
+      const source = await response.text();
+      const base = new URL(scriptPath, self.location.origin);
+      let match;
+
+      while ((match = JS_IMPORT_ASSET_REGEX.exec(source)) !== null) {
+        const nested = toSameOriginPath(match[1], base.href);
+        if (!nested || discovered.has(nested)) continue;
+
+        discovered.add(nested);
+        if (nested.endsWith('.js')) {
+          scriptQueue.push(nested);
+        }
+      }
+    } catch (_err) {
+      // Ignore per-script parse failures and continue collecting what we can.
+    }
+  }
+
+  return [...discovered];
+}
 
 async function precacheShellAndAssets() {
   const cache = await caches.open(CACHE_NAME);
@@ -30,6 +85,9 @@ async function precacheShellAndAssets() {
       const normalized = rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`;
       urls.add(normalized);
     }
+
+    const nestedAssets = await discoverNestedAssets([...urls]);
+    nestedAssets.forEach((assetPath) => urls.add(assetPath));
 
     await Promise.all(
       [...urls].map(async (assetUrl) => {

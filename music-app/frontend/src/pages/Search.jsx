@@ -76,6 +76,21 @@ const dedupeById = (songs = []) => {
   });
 };
 
+const normalizeSongIdentity = (song = {}) => {
+  const title = normalizeText(decodeSongTitle(song.title || ''));
+  const artist = normalizeText(song.artist || '');
+  return `${title}::${artist}`;
+};
+
+const shuffleList = (items = []) => {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
 const readJsonArray = (key) => {
   try {
     const value = localStorage.getItem(key);
@@ -151,6 +166,7 @@ const Search = () => {
   const toggleOffline = usePlayerStore((s) => s.toggleOffline);
   const currentPlayingId = usePlayerStore((s) => s.currentSong?.id);
   const recentPlayed = usePlayerStore((s) => s.recentlyPlayed || []);
+  const songsById = usePlayerStore((s) => s.songsById || {});
   
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
@@ -388,9 +404,20 @@ const Search = () => {
         }
       }
 
-      const fallbackFromVisibleResults = (results || []).filter((item) => item?.id && item.id !== song.id);
-      const allCandidates = dedupeById([...collected, ...fallbackFromVisibleResults])
+      const recentPool = Array.isArray(recentPlayed) ? recentPlayed : [];
+      const libraryPool = Object.values(songsById || {});
+
+      const rawCandidates = dedupeById([...collected, ...recentPool, ...libraryPool])
         .filter((item) => item?.id && item.id !== song.id);
+
+      const selectedIdentity = normalizeSongIdentity(song);
+      const seenIdentity = new Set([selectedIdentity]);
+      const allCandidates = rawCandidates.filter((item) => {
+        const identity = normalizeSongIdentity(item);
+        if (!identity || seenIdentity.has(identity)) return false;
+        seenIdentity.add(identity);
+        return true;
+      });
 
       const genreMatchedCandidates = targetGenreBucket
         ? allCandidates.filter((item) => isInGenreBucket(item, targetGenreBucket))
@@ -398,7 +425,10 @@ const Search = () => {
 
       const rankedCandidates = genreMatchedCandidates.length >= 6
         ? genreMatchedCandidates
-        : [...genreMatchedCandidates, ...allCandidates.filter((item) => !genreMatchedCandidates.some((m) => m.id === item.id))];
+        : [
+            ...genreMatchedCandidates,
+            ...allCandidates.filter((item) => !genreMatchedCandidates.some((m) => m.id === item.id)),
+          ];
 
       const uniqueArtistFirst = [];
       const bySameArtistLater = [];
@@ -416,7 +446,10 @@ const Search = () => {
         uniqueArtistFirst.push(item);
       });
 
-      const similar = [...uniqueArtistFirst, ...bySameArtistLater].slice(0, 30);
+      const diversifiedPool = [...uniqueArtistFirst, ...bySameArtistLater];
+      const head = shuffleList(diversifiedPool.slice(0, 18));
+      const tail = shuffleList(diversifiedPool.slice(18));
+      const similar = [...head, ...tail].slice(0, 30);
       const queue = [song, ...similar];
       setQueue(queue, 0);
     })();
