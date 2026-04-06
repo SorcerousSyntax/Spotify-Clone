@@ -273,8 +273,21 @@ const AppInner = () => {
         if (mounted) { setSession(null); setAuthReady(true); }
         return;
       }
-      const { data } = await supabase.auth.getSession();
-      if (mounted) { setSession(data?.session || null); setAuthReady(true); }
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (mounted) {
+          setSession(data?.session || null);
+        }
+      } catch (error) {
+        console.warn('Session bootstrap failed, continuing in offline mode:', error?.message || error);
+        if (mounted) {
+          setSession(null);
+        }
+      } finally {
+        if (mounted) {
+          setAuthReady(true);
+        }
+      }
     };
     loadSession();
     const { data: authSub } = supabase ? supabase.auth.onAuthStateChange((_event, nextSession) => { setSession(nextSession || null); }) : { data: { subscription: { unsubscribe: () => {} } } };

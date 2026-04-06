@@ -9,13 +9,48 @@ const APP_SHELL = [
   '/manifest.json',
 ];
 
+const ASSET_URL_REGEX = /(?:src|href)=["']([^"']+)["']/g;
+
+async function precacheShellAndAssets() {
+  const cache = await caches.open(CACHE_NAME);
+  await cache.addAll(APP_SHELL);
+
+  try {
+    const indexResponse = await fetch('/index.html', { cache: 'no-store' });
+    if (!indexResponse.ok) return;
+
+    const html = await indexResponse.text();
+    const urls = new Set(APP_SHELL);
+    let match;
+
+    while ((match = ASSET_URL_REGEX.exec(html)) !== null) {
+      const rawUrl = match[1];
+      if (!rawUrl || rawUrl.startsWith('http') || rawUrl.startsWith('//')) continue;
+
+      const normalized = rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`;
+      urls.add(normalized);
+    }
+
+    await Promise.all(
+      [...urls].map(async (assetUrl) => {
+        try {
+          const response = await fetch(assetUrl, { cache: 'no-store' });
+          if (response.ok) {
+            await cache.put(assetUrl, response.clone());
+          }
+        } catch (_err) {
+          // Ignore per-asset failures so install can still complete.
+        }
+      })
+    );
+  } catch (_err) {
+    // Fall back to the minimal app shell if asset discovery fails.
+  }
+}
+
 // Install: cache app shell
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(APP_SHELL);
-    })
-  );
+  event.waitUntil(precacheShellAndAssets());
   self.skipWaiting();
 });
 
