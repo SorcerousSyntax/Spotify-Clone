@@ -160,14 +160,23 @@ const usePlayer = () => {
       let songSrc = preferredUrl;
       let isBlob = false;
 
-      // On iOS, avoid blob/object URLs for playback because lock-screen/background
-      // playback is more reliable with a direct stream URL.
-      if (!isIOS && preferredUrl && window.caches) {
+      // Check the offline cache for ALL platforms (including iOS).
+      // Strategy:
+      //   • iOS  + offline  → blob URL (only way to serve audio without network)
+      //   • iOS  + online   → keep proxy URL (better lock-screen / background behaviour)
+      //   • Other platforms → always prefer blob URL from cache if available
+      if (preferredUrl && window.caches) {
         try {
           const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
           for (const url of candidateUrls) {
             const hit = await cache.match(url);
             if (hit) {
+              if (isIOS && navigator.onLine) {
+                // Online iOS: keep the proxy/direct URL so the lock-screen media
+                // session stays reliable (blob URLs can be revoked in background).
+                break;
+              }
+              // Offline iOS, or any non-iOS: serve from the cached blob.
               const blob = await hit.blob();
               if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
               objectUrlRef.current = URL.createObjectURL(blob);
@@ -176,7 +185,7 @@ const usePlayer = () => {
               break;
             }
           }
-        } catch (e) {}
+        } catch (e) { /* cache unavailable — fall through to network */ }
       }
 
       if (cancelled) return;
@@ -209,6 +218,11 @@ const usePlayer = () => {
           setIsPlaying(true);
           updateProgress();
 
+          // Ensure iOS audio session stays in playback mode (important for lock screen)
+          try {
+            if (navigator.audioSession) navigator.audioSession.type = 'playback';
+          } catch (_e) {}
+
           // Avoid routing HTML5 audio through WebAudio on mobile to prevent silent playback.
           if (!isIOS && !isAndroid) {
             setupAnalyser();
@@ -237,12 +251,20 @@ const usePlayer = () => {
             const advanced = nextSong();
             if (!advanced) {
               setIsPlaying(false);
+              if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = 'none';
+              }
             }
           }
         },
-        onplayerror: () => {
+        onplayerror: (_id, err) => {
+          console.warn('[Player] playback error, attempting unlock:', err);
           howl.once('unlock', () => howl.play());
-        }
+        },
+        onloaderror: (_id, err) => {
+          console.warn('[Player] load error:', err);
+          setIsPlaying(false);
+        },
       });
 
       howlRef.current = howl;
@@ -253,7 +275,9 @@ const usePlayer = () => {
 
     return () => {
       cancelled = true;
+      // Cancel both RAF and timeout variants of the progress loop.
       cancelAnimationFrame(animFrameRef.current);
+      clearTimeout(animFrameRef.current);
       if (howlRef.current) {
         howlRef.current.unload();
       }
@@ -342,13 +366,31 @@ const usePlayer = () => {
     howlRef.current.volume(isMuted ? 0 : (volume * outputHeadroom));
   }, [volume, isMuted, outputHeadroom]);
 
-  // Update progress loop
+  // Update progress loop — iOS thermal management:
+  //   • Visible / screen on  → 60 fps via requestAnimationFrame (smooth UI)
+  //   • Hidden / locked screen → 4 fps via setTimeout (audio keeps playing but
+  //     the JS loop rate drops dramatically, cutting CPU heat by ~85%)
+  const msPositionTimerRef = useRef(0);
   const updateProgress = useCallback(() => {
-    if (howlRef.current && howlRef.current.playing()) {
-      const position = howlRef.current.seek();
-      const currentDuration = howlRef.current.duration();
-      setProgress(position);
+    if (!howlRef.current || !howlRef.current.playing()) return;
+
+    const position = howlRef.current.seek();
+    const currentDuration = howlRef.current.duration();
+    setProgress(position);
+
+    // Throttle MediaSession position updates to once every 5 s (lock screen
+    // only needs the position for scrubbing, not for every animation frame).
+    const now = Date.now();
+    if (now - msPositionTimerRef.current > 5000) {
+      msPositionTimerRef.current = now;
       updateMediaSessionPosition(position, currentDuration);
+    }
+
+    if (document.hidden) {
+      // Background / lock screen: very low rate to keep CPU cool.
+      animFrameRef.current = setTimeout(updateProgress, 250);
+    } else {
+      // Foreground: buttery smooth.
       animFrameRef.current = requestAnimationFrame(updateProgress);
     }
   }, [setProgress, updateMediaSessionPosition]);

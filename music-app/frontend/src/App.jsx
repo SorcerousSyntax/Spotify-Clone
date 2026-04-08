@@ -306,7 +306,16 @@ const AppInner = () => {
   }, []);
 
   useEffect(() => {
-    hydrateFromSupabase().catch(console.error);
+    // Only hydrate from Supabase when the device has network access.
+    // If offline, the store is already seeded from localStorage — don't wipe it.
+    const tryHydrate = () => {
+      if (navigator.onLine) {
+        hydrateFromSupabase().catch(console.warn);
+      }
+    };
+    tryHydrate();
+    window.addEventListener('online', tryHydrate);
+    return () => window.removeEventListener('online', tryHydrate);
   }, [hydrateFromSupabase]);
 
   usePlayer();

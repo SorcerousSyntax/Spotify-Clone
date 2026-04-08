@@ -436,27 +436,20 @@ const usePlayerStore = create((set, get) => ({
       .select('*')
       .order('liked_at', { ascending: false });
 
-    if (likedQuery.error) {
-      console.error('Supabase liked_songs fetch error:', likedQuery.error);
-    }
-
     const historyQuery = await supabase
       .from('play_history')
       .select('*')
       .order('played_at', { ascending: false })
       .limit(20);
 
-    if (historyQuery.error) {
-      console.error('Supabase play_history fetch error:', historyQuery.error);
-    }
-
     const playlistsQuery = await supabase
       .from('playlists')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (playlistsQuery.error) {
-      console.error('Supabase playlists fetch error:', playlistsQuery.error);
+    if (likedQuery.error && historyQuery.error && playlistsQuery.error) {
+      console.warn('All Supabase queries failed, assuming offline mode.');
+      return;
     }
 
     const likedIds = (likedQuery.data || []).map((row) => row.song_id).filter(Boolean);
@@ -470,9 +463,7 @@ const usePlayerStore = create((set, get) => ({
         .select('*')
         .in('id', allDbIds);
 
-      if (songsQuery.error) {
-        console.error('Supabase songs fetch error:', songsQuery.error);
-      } else {
+      if (!songsQuery.error) {
         songsFromDbById = (songsQuery.data || []).reduce((acc, row) => {
           const mapped = normalizeSong({
             id: row.id,
