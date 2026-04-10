@@ -409,6 +409,7 @@ const usePlayerStore = create((set, get) => ({
         playlists: state.playlists,
         offlineSongIds: newOffline,
       }, state.currentUserId);
+
       set({ offlineSongIds: newOffline });
     } else {
       set((s) => {
@@ -419,18 +420,24 @@ const usePlayerStore = create((set, get) => ({
 
       try {
         await cacheSongForOffline(song);
-        const nextOffline = new Set(get().offlineSongIds);
+        const latestState = get();
+        const nextOffline = new Set(latestState.offlineSongIds);
         nextOffline.add(song.id);
 
-        persistOfflineLibrarySnapshot({
-          likedSongIds: state.likedSongIds,
-          recentlyPlayed: state.recentlyPlayed,
-          songsById: state.songsById,
-          playlists: state.playlists,
-          offlineSongIds: nextOffline,
-        }, get().currentUserId);
+        const nextSongsById = {
+          ...latestState.songsById,
+          [song.id]: song,
+        };
 
-        set({ offlineSongIds: nextOffline });
+        persistOfflineLibrarySnapshot({
+          likedSongIds: latestState.likedSongIds,
+          recentlyPlayed: latestState.recentlyPlayed,
+          songsById: nextSongsById,
+          playlists: latestState.playlists,
+          offlineSongIds: nextOffline,
+        }, latestState.currentUserId);
+
+        set({ offlineSongIds: nextOffline, songsById: nextSongsById });
       } catch (error) {
         console.error('Failed to cache song:', error);
       } finally {
