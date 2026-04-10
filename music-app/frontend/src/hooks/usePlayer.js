@@ -184,9 +184,13 @@ const usePlayer = () => {
         howlRef.current.unload();
       }
 
-      // iOS is extremely picky with source URLs. 
-      // If not a blob, we provide both proxied and original to let Howler decide.
-      const sources = [songSrc, !isBlob ? requestedUrl : null]
+      // iOS Safari is more reliable when the original URL is first.
+      // Keep proxy-first ordering for other platforms.
+      const sourceOrder = isIOS && !isBlob
+        ? [requestedUrl, songSrc]
+        : [songSrc, !isBlob ? requestedUrl : null];
+
+      const sources = sourceOrder
         .filter(Boolean)
         .filter((value, index, arr) => arr.indexOf(value) === index);
 
