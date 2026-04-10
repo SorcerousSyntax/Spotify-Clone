@@ -606,12 +606,14 @@ const usePlayerStore = create((set, get) => ({
   },
 
   prevSong: () => {
-    const { queue, queueIndex, progress, shuffle } = get();
+    const { queue, queueIndex, progress, shuffle, playerControls } = get();
     if (queue.length === 0) return false;
 
     // If more than 3 seconds in, restart current song
     if (progress > 3) {
       set({ progress: 0 });
+      // Also seek the actual audio position so the sound restarts from the beginning.
+      try { playerControls?.seek?.(0); } catch (_e) {}
       return true;
     }
 

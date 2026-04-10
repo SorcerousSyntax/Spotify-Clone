@@ -113,13 +113,27 @@ const usePlayer = () => {
     } catch (e) {}
   }, [isIOS]);
 
-  // iOS Audio Unlock - critical for both Safari and PWA mode
+  // iOS Audio Unlock - critical for both Safari and PWA mode.
+  // Must be called inside a user-gesture handler (touchstart/click).
+  // After resuming the AudioContext we also call howl.play() if the store
+  // says we should be playing but the Howl is currently paused — this covers
+  // the case where iOS blocked autoplay and the user taps anywhere on screen.
   useEffect(() => {
+    let unlocked = false;
     const unlock = () => {
+      if (unlocked) return;
+      unlocked = true;
       console.log('[Player] iOS Gesture Unlock');
       try {
         if (typeof Howler !== 'undefined') {
           Howler.mute(false);
+          // Howler.ctx is created lazily; create it now if needed so we can resume it.
+          if (!Howler.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+              try { Howler.ctx = new AudioCtx(); } catch (_e) {}
+            }
+          }
           if (Howler.ctx && Howler.ctx.state === 'suspended') {
             Howler.ctx.resume();
           }
@@ -133,14 +147,24 @@ const usePlayer = () => {
       } catch (e) {
         console.warn('Unlock error:', e);
       }
+
+      // If the store expects playback but the Howl is paused (blocked by iOS
+      // autoplay policy), kick it off now that we have a gesture context.
+      try {
+        const storeState = usePlayerStore.getState();
+        if (storeState.isPlaying && howlRef.current && !howlRef.current.playing()) {
+          howlRef.current.play();
+        }
+      } catch (_e) {}
+
       window.removeEventListener('click', unlock);
-      window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('touchstart', unlock, { passive: true });
     };
     window.addEventListener('click', unlock);
-    window.addEventListener('touchstart', unlock);
+    window.addEventListener('touchstart', unlock, { passive: true });
     return () => {
       window.removeEventListener('click', unlock);
-      window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('touchstart', unlock, { passive: true });
     };
   }, []);
 
@@ -184,11 +208,12 @@ const usePlayer = () => {
         howlRef.current.unload();
       }
 
-      // iOS Safari is more reliable when the original URL is first.
-      // Keep proxy-first ordering for other platforms.
-      const sourceOrder = isIOS && !isBlob
-        ? [requestedUrl, songSrc]
-        : [songSrc, !isBlob ? requestedUrl : null];
+      // Use the proxy URL first on all platforms — it handles CORS and range
+      // requests correctly, which iOS Safari requires for streaming audio.
+      // Fall back to the raw requestedUrl in case the proxy is unavailable.
+      const sourceOrder = isBlob
+        ? [songSrc]
+        : [songSrc, requestedUrl];
 
       const sources = sourceOrder
         .filter(Boolean)
@@ -253,7 +278,23 @@ const usePlayer = () => {
         },
         onplayerror: (_id, err) => {
           console.warn('[Player] playback error, attempting unlock:', err);
-          howl.once('unlock', () => howl.play());
+          // On iOS Safari the browser blocks autoplay and fires onplayerror with
+          // code 0. howl.once('unlock') may never fire in PWA / WKWebView.
+          // Instead, resume the AudioContext and retry play() directly with a
+          // short delay so the engine has time to process the unlock.
+          try {
+            if (Howler.ctx && Howler.ctx.state === 'suspended') {
+              Howler.ctx.resume().then(() => {
+                if (!cancelled) howl.play();
+              }).catch(() => {
+                setTimeout(() => { if (!cancelled) howl.play(); }, 300);
+              });
+            } else {
+              setTimeout(() => { if (!cancelled) howl.play(); }, 300);
+            }
+          } catch (_e) {
+            setTimeout(() => { if (!cancelled) howl.play(); }, 300);
+          }
         },
         onloaderror: async (_id, err) => {
           console.warn('[Player] load error, trying cache fallback:', err);
