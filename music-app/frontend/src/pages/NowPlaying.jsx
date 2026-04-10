@@ -237,7 +237,7 @@ const NowPlaying = () => {
           height: '100dvh',
           overflow: 'hidden', /* ← NO scroll */
           paddingTop: 'env(safe-area-inset-top, 0px)',
-          paddingBottom: 'env(safe-area-inset-bottom, 16px)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 96px)',
           y: dragY,
           scale: contentScale,
         }}
