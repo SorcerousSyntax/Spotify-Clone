@@ -2,8 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
-import https from 'https';
-import http from 'http';
 import { createClient } from '@supabase/supabase-js';
 import songsRouter from './routes/songs.js';
 import lyricsRouter from './routes/lyrics.js';
@@ -45,10 +43,9 @@ app.use('/api/songs', songsRouter);
 app.use('/api', lyricsRouter);
 
 // Audio stream proxy used by the frontend (/api/stream?url=...)
-// Uses Node's native http/https for true streaming with correct range-request
-// pass-through. iOS Safari requires a proper 206 + Content-Range response
-// whenever it sends a Range header (which it always does for audio).
-app.get('/api/stream', (req, res) => {
+// Keeps a single backend hop for iOS PWA and follows upstream redirects
+// server-side while preserving range semantics.
+app.get('/api/stream', async (req, res) => {
   const rawUrl = req.query.url;
   if (!rawUrl || typeof rawUrl !== 'string') {
     return res.status(400).json({ error: 'Missing url query parameter' });
@@ -65,82 +62,43 @@ app.get('/api/stream', (req, res) => {
     return res.status(400).json({ error: 'Only http/https URLs are allowed' });
   }
 
-  // Always send CORS headers on the audio response so iOS Safari accepts it.
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
-  res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Content-Length, Accept-Ranges');
+  try {
+    const upstream = await axios.get(parsed.toString(), {
+      responseType: 'stream',
+      timeout: 30000,
+      maxRedirects: 5,
+      headers: {
+        ...(req.headers.range ? { Range: req.headers.range } : {}),
+        'user-agent': req.headers['user-agent'] || 'Mozilla/5.0 (compatible; RaabtaAudioProxy/1.0)',
+        accept: 'audio/mpeg, audio/*, */*',
+      },
+      validateStatus: () => true,
+    });
 
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-
-  const upstreamHeaders = {
-    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-    'Accept': 'audio/mpeg, audio/*, */*',
-  };
-
-  // Forward Range header so the upstream honours the byte range.
-  if (req.headers.range) {
-    upstreamHeaders['Range'] = req.headers.range;
-  }
-
-  const transport = parsed.protocol === 'https:' ? https : http;
-
-  const upstreamReq = transport.request(
-    parsed.toString(),
-    { method: 'GET', headers: upstreamHeaders },
-    (upstreamRes) => {
-      // Follow redirects (JioSaavn CDN uses redirects)
-      if (upstreamRes.statusCode === 301 || upstreamRes.statusCode === 302 || upstreamRes.statusCode === 307 || upstreamRes.statusCode === 308) {
-        const location = upstreamRes.headers['location'];
-        if (location) {
-          upstreamRes.resume(); // drain
-          // Rewrite the URL and retry via self-proxy recursion — simpler: just redirect the client
-          // but since the client is iOS Safari on a cross-origin request, redirect won't carry the
-          // Range header. Instead: follow it server-side by re-routing through this same endpoint.
-          const redirected = new URL(location, parsed.toString());
-          return res.redirect(307, `/api/stream?url=${encodeURIComponent(redirected.toString())}`);
-        }
-      }
-
-      if (upstreamRes.statusCode >= 400) {
-        upstreamRes.resume();
-        if (!res.headersSent) {
-          return res.status(upstreamRes.statusCode).json({ error: 'Upstream audio fetch failed' });
-        }
-        return;
-      }
-
-      // Forward the most important headers for streaming audio.
-      const forward = ['content-type', 'content-length', 'content-range', 'accept-ranges', 'cache-control', 'last-modified', 'etag'];
-      forward.forEach((h) => {
-        const v = upstreamRes.headers[h];
-        if (v) res.setHeader(h, v);
-      });
-
-      // Ensure required headers are always present.
-      if (!res.getHeader('Content-Type')) res.setHeader('Content-Type', 'audio/mpeg');
-      if (!res.getHeader('Accept-Ranges')) res.setHeader('Accept-Ranges', 'bytes');
-
-      res.status(upstreamRes.statusCode);
-      upstreamRes.pipe(res);
-
-      req.on('close', () => { upstreamReq.destroy(); });
+    if (upstream.status >= 400) {
+      return res.status(upstream.status).json({ error: 'Upstream audio fetch failed' });
     }
-  );
 
-  upstreamReq.setTimeout(30000, () => {
-    upstreamReq.destroy();
-    if (!res.headersSent) res.status(504).json({ error: 'Upstream timeout' });
-  });
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Content-Length, Accept-Ranges');
 
-  upstreamReq.on('error', (err) => {
+    const forward = ['content-type', 'content-length', 'content-range', 'accept-ranges', 'cache-control', 'last-modified', 'etag'];
+    forward.forEach((h) => {
+      const v = upstream.headers[h];
+      if (v) res.setHeader(h, v);
+    });
+
+    if (!res.getHeader('Content-Type')) res.setHeader('Content-Type', 'audio/mpeg');
+    if (!res.getHeader('Accept-Ranges')) res.setHeader('Accept-Ranges', 'bytes');
+
+    res.status(upstream.status);
+    upstream.data.pipe(res);
+  } catch (err) {
     console.error('Audio proxy error:', err.message);
-    if (!res.headersSent) res.status(502).json({ error: 'Audio proxy failed' });
-  });
-
-  upstreamReq.end();
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Audio proxy failed' });
+    }
+  }
 });
 
 // Alias: /api/search → /api/songs/search (frontend calls /api/search)
