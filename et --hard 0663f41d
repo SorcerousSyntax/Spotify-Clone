@@ -1,0 +1,113 @@
+[33m18eae2d6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{0}: commit: ui change
+[33mac617fc4[m HEAD@{1}: commit: ui change
+[33macf2173c[m HEAD@{2}: commit: ui change
+[33mc9bbdd9b[m HEAD@{3}: commit: feat(ui): renovate visual layer and optimize background performance
+[33mf6be9690[m HEAD@{4}: commit: ui
+[33m0663f41d[m HEAD@{5}: commit: Fix iOS offline download and now playing header visibility
+[33m567bd327[m HEAD@{6}: commit: Fix iOS playback and lock-screen continuity
+[33m1945d7bb[m HEAD@{7}: commit: hope a final fix
+[33ma9652aa6[m HEAD@{8}: commit: hope a final fi
+[33m26933b5c[m HEAD@{9}: commit: hope a final fi
+[33m09d1e7ba[m HEAD@{10}: commit: again ios fix
+[33mca9f391e[m HEAD@{11}: commit: again ios fix
+[33mcfcf6640[m HEAD@{12}: commit: ios update
+[33m603ef109[m HEAD@{13}: commit: fix
+[33m6370ff8e[m HEAD@{14}: commit: style: update
+[33m2ffbc80b[m HEAD@{15}: commit: style: update top bar to liquid glass and add premium black/white button styling
+[33m703fb7e5[m HEAD@{16}: commit: fix: enable iOS/Safari audio playback and add PWA installation guide
+[33m3e699eab[m HEAD@{17}: commit: fix: adjust NowPlaying layout for nav bar and add playlist feedback
+[33m5c77c7ac[m HEAD@{18}: commit: style: revert nav to light glass with black text, fix NowPlaying scrolling and seeker hit area
+[33m615da42b[m HEAD@{19}: commit: style: apply contextual Spline backgrounds, cleanup Home page, and improve BottomNav visibility
+[33m6c5c8f05[m HEAD@{20}: commit: fix: add SplineBackground to Home page; fix BottomNav centering on mobile
+[33m72c16c6e[m HEAD@{21}: commit: feat: redesign BottomNav with CSS liquid glass iridescent border
+[33md02b0087[m HEAD@{22}: commit: feat: add Spline 3D background to auth pages (login/register)
+[33md2e6d343[m HEAD@{23}: commit: offline save
+[33m5999e2fc[m HEAD@{24}: commit: final touch
+[33m3a4ec542[m HEAD@{25}: commit: dot
+[33mbdc3bf5a[m HEAD@{26}: commit: bar
+[33mabe6e147[m HEAD@{27}: commit: playing
+[33m36df6966[m HEAD@{28}: commit: Funcationality
+[33m8dd41201[m HEAD@{29}: commit: REnovation
+[33me23171f7[m HEAD@{30}: commit: asthetics
+[33m796ec1ed[m HEAD@{31}: commit: asthetics
+[33mc119d43d[m HEAD@{32}: commit: asthetics
+[33m0a54524d[m HEAD@{33}: commit: asthetics
+[33m002744b6[m HEAD@{34}: commit: Fixxes
+[33m866d46f4[m HEAD@{35}: commit: corrections
+[33m31fd4b12[m HEAD@{36}: commit: corrections
+[33m7288f3c5[m HEAD@{37}: commit: particle fix
+[33m98df3de5[m HEAD@{38}: commit: particle rotation
+[33mc4cac5f1[m HEAD@{39}: commit: glassmorphism
+[33m73ec339b[m HEAD@{40}: commit: complete 3D immersive redesign - galaxy particles, pink theme, motion graphics
+[33m75d24cb5[m HEAD@{41}: commit: Restore Home functionality without changing approved design
+[33m5a3823cd[m HEAD@{42}: commit: Unify UI with Home design and add bottom profile nav
+[33mf74bd0a6[m HEAD@{43}: commit: fix: remove env files from tracking, update gitignore
+[33me5db2011[m HEAD@{44}: pull --rebase origin main (finish): returning to refs/heads/main
+[33me5db2011[m HEAD@{45}: pull --rebase origin main (pick): Improve Supabase config diagnostics
+[33m4c7f3240[m HEAD@{46}: pull --rebase origin main (start): checkout 4c7f324031fc71eee78c017562d0f58bf8d0e488
+[33m61b42b8c[m HEAD@{47}: commit: Improve Supabase config diagnostics
+[33mcb8618a7[m HEAD@{48}: pull --rebase origin main (finish): returning to refs/heads/main
+[33mcb8618a7[m HEAD@{49}: pull --rebase origin main (pick): Fix player repeat handling and ignore env files
+[33m860daa61[m HEAD@{50}: pull --rebase origin main (start): checkout 860daa617b904bd6f619ac08eb6da47609a16597
+[33m8f84d352[m HEAD@{51}: commit: Fix player repeat handling and ignore env files
+[33m337afe4c[m HEAD@{52}: commit: fix: lock now-playing viewport and restore distinct vibe mode backgrounds
+[33mb34e2a5c[m HEAD@{53}: commit: fix: restore pinned now-playing and bottom navigation positioning
+[33m06bbf932[m HEAD@{54}: commit: feat: add vibe intensity toggle with animated toast and stronger neon claymorphism
+[33mf716e8de[m HEAD@{55}: commit: feat: apply glassmorphism across all UI components
+[33ma6c147a5[m HEAD@{56}: commit: fix: remove tile glass/motion effects, replace nav pill with dot indicator
+[33mdddc09e2[m HEAD@{57}: commit: feat: pure black bg, star-field premium graphics, remove heartbeat animation
+[33mff4bc17d[m HEAD@{58}: commit: fix: stop page scale overflow causing rogue cover art, enhance BottomNav glass
+[33m9a8184de[m HEAD@{59}: commit: feat: glass morphism + 3D lift on all song cards and rows
+[33m39d623d2[m HEAD@{60}: commit: fix: widen art-proxy to all HTTPS CDNs, reset color on song change
+[33m0990f40f[m HEAD@{61}: commit: feat: bottom nav active pill color driven by album art dominant color
+[33m11a26461[m HEAD@{62}: commit: fix: add node_modules and dist to frontend .gitignore
+[33me4afe4db[m HEAD@{63}: commit: fix: remove node_modules and dist from git tracking, fix Vercel build permission denied
+[33mb109662b[m HEAD@{64}: commit: feat: white heartbeat ECG waveform, pink+purple glamour, art-proxy fix
+[33m83502b5b[m HEAD@{65}: commit: fix: art-proxy backend endpoint, route color extraction through proxy, 70% album blend, heartbeat EKG button
+[33ma00048a5[m HEAD@{66}: commit: fix: default color violet not green, raw album color in MiniPlayer for clear per-song tint
+[33mc34323db[m HEAD@{67}: commit: feat: MiniPlayer color driven by album art (75%), active lyrics line white
+[33mdb11d9a7[m HEAD@{68}: commit: fix: MiniPlayer strong album-color tint, soften bright pink to c084fc
+[33m1440f142[m HEAD@{69}: commit: redesign: NowPlaying - violet-first multi-color palette, floating orbs, richer animations
+[33m3b1130f2[m HEAD@{70}: commit: feat: premium violet UI redesign
+[33mad1856e0[m HEAD@{71}: commit: feat(home): show current song art in banner, add equalizer/vinyl ring, limit recent plays to 5
+[33m15a61b8d[m HEAD@{72}: commit: fix: declare likedSongIds in Home (was causing black screen crash)
+[33ma19e1934[m HEAD@{73}: commit: feat: better fonts, top bar with name, offline playlist, home overhaul
+[33m9dc929b7[m HEAD@{74}: commit: feat: enhance Home page with 3D animations + fix dynamic color extraction
+[33m96dc721e[m HEAD@{75}: commit: feat: redesign MiniPlayer and NowPlaying with 3D animations and dynamic color
+[33m535a0f10[m HEAD@{76}: commit: fix: protect saved-songs cache from SW cleanup and fix audio blob caching
+[33m00ebf0e3[m HEAD@{77}: commit: fix: improve offline app shell and saved song playback
+[33m2249ebaf[m HEAD@{78}: commit: Enhance mini player and nav with glass styling
+[33md3dfc446[m HEAD@{79}: commit: Apply Obsidian Stage visual redesign across app
+[33m651fc230[m HEAD@{80}: commit: Fix mobile library alignment and oversized recent covers
+[33mf0df827f[m HEAD@{81}: commit: Upgrade premium dark-green UI and playlist cover collages
+[33m00466131[m HEAD@{82}: commit: Elevate visual theme with richer contrast and atmosphere
+[33m2c10fe9b[m HEAD@{83}: commit: Add beat-reactive mini player glow transitions
+[33m5b036e18[m HEAD@{84}: commit: Restore Home recents and add album-color mini player glow
+[33me7dc32bd[m HEAD@{85}: commit: Auto-manage liked playlist and simplify library UX
+[33m1045109d[m HEAD@{86}: commit: Handle Supabase email rate-limit during signup
+[33m335831f0[m HEAD@{87}: commit: Personalize home banner greeting by logged-in user
+[33md6825b2a[m HEAD@{88}: commit: Stabilize now-playing layout to single-column compact view
+[33mc6102483[m HEAD@{89}: commit: Force compact mini player and remove desktop panel
+[33ma01f0156[m HEAD@{90}: commit: Fix shell padding and refresh SW caches
+[33mf9277964[m HEAD@{91}: commit: Remove bottom related songs and hide mini player on now-playing
+[33me9ce0095[m HEAD@{92}: commit: Prevent desktop mini player on touch devices
+[33me926a9e1[m HEAD@{93}: commit: Fix mobile now-playing layout and hide mini player on now-playing
+[33me5b2abbe[m HEAD@{94}: commit: Force Now Playing title auto-scroll marquee
+[33m28567069[m HEAD@{95}: commit: Add scrolling single-line titles in mini player
+[33ma4f64788[m HEAD@{96}: commit: Refine typography and center controls with mobile safe spacing
+[33m1a0dff50[m HEAD@{97}: commit: Open specific playlist from Home cards
+[33m9a8a3676[m HEAD@{98}: commit: Enable offline app shell and playlist song caching
+[33m07491de4[m HEAD@{99}: commit: Use same-origin /api search calls to avoid CORS issues
+[33m582678ae[m HEAD@{100}: commit: Show fallback search results even without direct stream URLs
+[33m7bc7c475[m HEAD@{101}: commit: Add Vercel SPA fallback rewrite for client routes
+[33m3318952f[m HEAD@{102}: commit: Add direct JioSaavn fallback for production search
+[33mbf13c70a[m HEAD@{103}: commit: Fix production search URL fallback and JioSaavn upstream fallback
+[33m42c046be[m HEAD@{104}: commit: Disable service worker registration and clean stale caches
+[33m3cf81998[m HEAD@{105}: commit: Fix production black screen by updating service worker caching
+[33m8eb9eac0[m HEAD@{106}: commit: Properly remove node_modules and dist
+[33m3fd8a877[m HEAD@{107}: commit: Fix search URL to use backend env variable
+[33mb2a79c67[m HEAD@{108}: commit: Remove node_modules entirely
+[33m1ff60641[m HEAD@{109}: commit: Fix vercel.json with real backend URL
+[33m9b509032[m HEAD@{110}: commit: Remove node_modules and dist from tracking
+[33m599a6969[m HEAD@{111}: Branch: renamed refs/heads/master to refs/heads/main
+[33m599a6969[m HEAD@{113}: commit (initial): Raabta initial commit

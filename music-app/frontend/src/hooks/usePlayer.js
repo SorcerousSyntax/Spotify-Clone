@@ -7,6 +7,10 @@ import {
   getSongAudioUrlCandidates,
 } from '../lib/offlineAudio';
 
+// Disable Howler's auto-suspend globally — must be set before any Howl is created.
+// Without this, iOS/Android background audio becomes unreliable.
+try { Howler.autoSuspend = false; } catch (_e) {}
+
 const SAFE_OUTPUT_HEADROOM = 0.82;
 const IOS_SAFE_OUTPUT_HEADROOM = 0.66;
 
@@ -100,14 +104,8 @@ const usePlayer = () => {
   }, []);
 
   useEffect(() => {
-    // Prevent Howler from suspending audio context in background (helps Android + iOS).
-    try {
-      Howler.autoSuspend = false;
-    } catch (e) {}
-
-    if (!isIOS) return;
-
     // Keep iOS in media playback mode so audio can continue on lock screen.
+    if (!isIOS) return;
     try {
       if (navigator.audioSession) {
         navigator.audioSession.type = 'playback';
@@ -160,23 +158,15 @@ const usePlayer = () => {
       let songSrc = preferredUrl;
       let isBlob = false;
 
-      // Check the offline cache for ALL platforms (including iOS).
-      // Strategy:
-      //   • iOS  + offline  → blob URL (only way to serve audio without network)
-      //   • iOS  + online   → keep proxy URL (better lock-screen / background behaviour)
-      //   • Other platforms → always prefer blob URL from cache if available
+      // Always check the offline cache first on every platform.
+      // On iOS a blob URL is actually *more* reliable than the network proxy
+      // inside a PWA/Safari context because it avoids CORS/range-request issues.
       if (preferredUrl && window.caches) {
         try {
           const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
           for (const url of candidateUrls) {
             const hit = await cache.match(url);
             if (hit) {
-              if (isIOS && navigator.onLine) {
-                // Online iOS: keep the proxy/direct URL so the lock-screen media
-                // session stays reliable (blob URLs can be revoked in background).
-                break;
-              }
-              // Offline iOS, or any non-iOS: serve from the cached blob.
               const blob = await hit.blob();
               if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
               objectUrlRef.current = URL.createObjectURL(blob);
@@ -261,8 +251,45 @@ const usePlayer = () => {
           console.warn('[Player] playback error, attempting unlock:', err);
           howl.once('unlock', () => howl.play());
         },
-        onloaderror: (_id, err) => {
-          console.warn('[Player] load error:', err);
+        onloaderror: async (_id, err) => {
+          console.warn('[Player] load error, trying cache fallback:', err);
+          // If the network URL failed, try serving from the offline cache as a blob.
+          if (!isBlob && window.caches) {
+            try {
+              const cache = await caches.open(OFFLINE_AUDIO_CACHE_NAME);
+              for (const url of candidateUrls) {
+                const hit = await cache.match(url);
+                if (hit) {
+                  const blob = await hit.blob();
+                  if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+                  objectUrlRef.current = URL.createObjectURL(blob);
+
+                  if (cancelled) return;
+
+                  const fallbackHowl = new Howl({
+                    src: [objectUrlRef.current],
+                    html5: true,
+                    volume: isMuted ? 0 : (volume * outputHeadroom),
+                    onload: () => { if (!cancelled) setDuration(fallbackHowl.duration()); },
+                    onplay: () => {
+                      setIsPlaying(true);
+                      updateProgress();
+                    },
+                    onpause: () => setIsPlaying(false),
+                    onend: () => {
+                      const { repeat, nextSong } = usePlayerStore.getState();
+                      if (repeat === 'one') { fallbackHowl.seek(0); fallbackHowl.play(); }
+                      else { if (!nextSong()) setIsPlaying(false); }
+                    },
+                    onloaderror: () => { console.warn('[Player] Cache fallback also failed.'); setIsPlaying(false); },
+                  });
+                  howlRef.current = fallbackHowl;
+                  fallbackHowl.play();
+                  return;
+                }
+              }
+            } catch (_cacheErr) {}
+          }
           setIsPlaying(false);
         },
       });

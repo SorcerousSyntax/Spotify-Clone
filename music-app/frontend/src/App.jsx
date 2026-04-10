@@ -13,6 +13,35 @@ import usePlayer from './hooks/usePlayer';
 import usePlayerStore from './store/playerStore';
 import { getSupabaseConfigError, supabase } from './lib/supabase';
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Read the Supabase session that was previously saved to localStorage by the
+ * Supabase JS client — without any network request. Returns the session object
+ * or null if nothing is cached / the token looks invalid.
+ *
+ * This lets us show the app immediately when offline, as long as the user has
+ * logged in at least once before.
+ */
+const readCachedSupabaseSession = () => {
+  try {
+    const key = Object.keys(localStorage).find(
+      (k) => k.startsWith('sb-') && k.endsWith('-auth-token')
+    );
+    if (!key) return null;
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Require the minimum Supabase session shape
+    if (parsed?.access_token && parsed?.user) return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 // Lazy-loaded pages
 const Home = React.lazy(() => import('./pages/Home'));
 const Search = React.lazy(() => import('./pages/Search'));
@@ -265,9 +294,29 @@ const AppInner = () => {
     (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
   const hydrateFromSupabase = usePlayerStore((s) => s.hydrateFromSupabase);
+  const setUserId = usePlayerStore((s) => s.setUserId);
 
   useEffect(() => {
     let mounted = true;
+
+    // -----------------------------------------------------------------------
+    // OFFLINE FAST-PATH
+    // If the device is offline, immediately seed the session from localStorage
+    // so the user can see their offline songs without waiting for the network.
+    // -----------------------------------------------------------------------
+    if (!navigator.onLine) {
+      const cached = readCachedSupabaseSession();
+      if (cached && mounted) {
+        setSession(cached);
+        setUserId(cached.user?.id || 'guest');
+        setAuthReady(true);
+      } else if (mounted) {
+        // First-time user on offline device — go to login
+        setSession(null);
+        setAuthReady(true);
+      }
+    }
+
     const loadSession = async () => {
       if (!supabase) {
         if (mounted) { setSession(null); setAuthReady(true); }
@@ -282,17 +331,29 @@ const AppInner = () => {
         ]);
 
         if (sessionResult?.timedOut) {
-          console.warn('Session bootstrap timed out, continuing without remote auth state.');
-        }
-
-        const { data } = sessionResult;
-        if (mounted) {
-          setSession(data?.session || null);
+          // Timed out — fall back to cached session so the app still works
+          console.warn('Session bootstrap timed out, using cached session if available.');
+          const cached = readCachedSupabaseSession();
+          if (mounted) {
+            const s = cached || null;
+            setSession(s);
+            setUserId(s?.user?.id || 'guest');
+          }
+        } else {
+          const { data } = sessionResult;
+          const s = data?.session || null;
+          if (mounted) {
+            setSession(s);
+            setUserId(s?.user?.id || 'guest');
+          }
         }
       } catch (error) {
-        console.warn('Session bootstrap failed, continuing in offline mode:', error?.message || error);
+        console.warn('Session bootstrap failed, using cached session:', error?.message || error);
+        const cached = readCachedSupabaseSession();
         if (mounted) {
-          setSession(null);
+          const s = cached || null;
+          setSession(s);
+          setUserId(s?.user?.id || 'guest');
         }
       } finally {
         if (mounted) {
@@ -300,10 +361,19 @@ const AppInner = () => {
         }
       }
     };
+
     loadSession();
-    const { data: authSub } = supabase ? supabase.auth.onAuthStateChange((_event, nextSession) => { setSession(nextSession || null); }) : { data: { subscription: { unsubscribe: () => {} } } };
+
+    const { data: authSub } = supabase
+      ? supabase.auth.onAuthStateChange((_event, nextSession) => {
+          const s = nextSession || null;
+          setSession(s);
+          setUserId(s?.user?.id || 'guest');
+        })
+      : { data: { subscription: { unsubscribe: () => {} } } };
+
     return () => { mounted = false; authSub.subscription.unsubscribe(); };
-  }, []);
+  }, [setUserId]);
 
   useEffect(() => {
     // Only hydrate from Supabase when the device has network access.
@@ -319,6 +389,8 @@ const AppInner = () => {
   }, [hydrateFromSupabase]);
 
   usePlayer();
+
+
 
   const isPublicAuthPage = location.pathname === '/login' || location.pathname === '/register';
   const isHomePage = location.pathname === '/';
