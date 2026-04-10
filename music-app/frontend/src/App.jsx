@@ -376,17 +376,19 @@ const AppInner = () => {
   }, [setUserId]);
 
   useEffect(() => {
-    // Only hydrate from Supabase when the device has network access.
-    // If offline, the store is already seeded from localStorage — don't wipe it.
+    // Hydrate only when auth has resolved and a user session exists.
+    // In iOS standalone mode, session restoration can lag behind initial render.
     const tryHydrate = () => {
-      if (navigator.onLine) {
-        hydrateFromSupabase().catch(console.warn);
-      }
+      if (!navigator.onLine) return;
+      if (!authReady) return;
+      if (!session?.user?.id) return;
+      hydrateFromSupabase().catch(console.warn);
     };
+
     tryHydrate();
     window.addEventListener('online', tryHydrate);
     return () => window.removeEventListener('online', tryHydrate);
-  }, [hydrateFromSupabase]);
+  }, [authReady, session?.user?.id, hydrateFromSupabase]);
 
   usePlayer();
 

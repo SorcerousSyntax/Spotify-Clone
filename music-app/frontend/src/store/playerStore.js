@@ -449,6 +449,13 @@ const usePlayerStore = create((set, get) => ({
       return;
     }
 
+    // Avoid guest hydration: unauthenticated reads can return empty datasets,
+    // which then overwrite local library state in standalone iOS PWA boot.
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session?.user?.id) {
+      return;
+    }
+
     const likedQuery = await supabase
       .from('liked_songs')
       .select('*')
