@@ -188,6 +188,7 @@ const upsertPlayHistoryRecord = async (songInput) => {
 // We keep a single global key so downloads and library state persist even when
 // the app is opened fresh while offline or when switching accounts.
 const GLOBAL_LIBRARY_KEY = 'raabta_library_v3_global';
+const GLOBAL_DOWNLOADS_KEY = 'raabta_downloads_v1_global';
 const LEGACY_LIBRARY_PREFIX = 'raabta_library_v2_';
 
 // Legacy helper retained for backwards compatibility (userId is ignored).
@@ -197,6 +198,14 @@ const readOfflineLibrarySnapshot = (_userId = 'guest') => {
   if (typeof window === 'undefined') return null;
 
   try {
+    let downloadsBackup = null;
+    try {
+      const backupRaw = localStorage.getItem(GLOBAL_DOWNLOADS_KEY);
+      downloadsBackup = backupRaw ? JSON.parse(backupRaw) : null;
+    } catch (_e) {
+      downloadsBackup = null;
+    }
+
     // Prefer the new global snapshot if it exists.
     const raw = localStorage.getItem(GLOBAL_LIBRARY_KEY);
 
@@ -256,19 +265,47 @@ const readOfflineLibrarySnapshot = (_userId = 'guest') => {
         } catch (_e) {
           // If migration write fails, we still return the in-memory snapshot.
         }
-      } else {
+      } else if (!downloadsBackup) {
         return null;
+      } else {
+        parsed = {
+          likedSongIds: [],
+          recentlyPlayed: [],
+          songsById: {},
+          playlists: [],
+          offlineSongIds: Array.isArray(downloadsBackup?.offlineSongIds)
+            ? downloadsBackup.offlineSongIds
+            : [],
+        };
       }
     } else {
       parsed = JSON.parse(raw);
     }
 
+    const backupSongsById =
+      downloadsBackup?.songsById && typeof downloadsBackup.songsById === 'object'
+        ? downloadsBackup.songsById
+        : {};
+    const parsedSongsById =
+      parsed?.songsById && typeof parsed.songsById === 'object'
+        ? parsed.songsById
+        : {};
+    const mergedSongsById = {
+      ...backupSongsById,
+      ...parsedSongsById,
+    };
+
+    const mergedOfflineIds = [...new Set([
+      ...(Array.isArray(parsed?.offlineSongIds) ? parsed.offlineSongIds : []),
+      ...(Array.isArray(downloadsBackup?.offlineSongIds) ? downloadsBackup.offlineSongIds : []),
+    ])];
+
     return {
       likedSongIds: Array.isArray(parsed?.likedSongIds) ? parsed.likedSongIds : [],
       recentlyPlayed: Array.isArray(parsed?.recentlyPlayed) ? parsed.recentlyPlayed : [],
-      songsById: parsed?.songsById && typeof parsed.songsById === 'object' ? parsed.songsById : {},
+      songsById: mergedSongsById,
       playlists: Array.isArray(parsed?.playlists) ? parsed.playlists : [],
-      offlineSongIds: Array.isArray(parsed?.offlineSongIds) ? parsed.offlineSongIds : [],
+      offlineSongIds: mergedOfflineIds,
     };
   } catch (error) {
     console.warn('Offline snapshot read failed:', error?.message || error);
@@ -280,15 +317,39 @@ const persistOfflineLibrarySnapshot = (snapshot, _userId = 'guest') => {
   if (typeof window === 'undefined') return;
   const { likedSongIds, recentlyPlayed, songsById, playlists, offlineSongIds } = snapshot;
 
+  const normalizedOfflineIds = Array.isArray(offlineSongIds) ? [...offlineSongIds] : [...(offlineSongIds || [])];
+  const normalizedSongsById = songsById || {};
+
+  // Always persist a compact downloads-only backup. This keeps offline songs
+  // available even if the larger library snapshot hits localStorage limits.
+  try {
+    const downloadsSongsById = normalizedOfflineIds.reduce((acc, id) => {
+      if (normalizedSongsById[id]) {
+        acc[id] = normalizedSongsById[id];
+      }
+      return acc;
+    }, {});
+
+    localStorage.setItem(
+      GLOBAL_DOWNLOADS_KEY,
+      JSON.stringify({
+        offlineSongIds: normalizedOfflineIds,
+        songsById: downloadsSongsById,
+      })
+    );
+  } catch (error) {
+    console.warn('Offline downloads backup write failed:', error?.message || error);
+  }
+
   try {
     localStorage.setItem(
       GLOBAL_LIBRARY_KEY,
       JSON.stringify({
         likedSongIds: [...(likedSongIds || [])],
         recentlyPlayed: Array.isArray(recentlyPlayed) ? recentlyPlayed : [],
-        songsById: songsById || {},
+        songsById: normalizedSongsById,
         playlists: Array.isArray(playlists) ? playlists : [],
-        offlineSongIds: Array.isArray(offlineSongIds) ? [...offlineSongIds] : [],
+        offlineSongIds: normalizedOfflineIds,
       })
     );
   } catch (error) {
