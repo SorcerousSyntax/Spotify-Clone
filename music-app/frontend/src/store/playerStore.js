@@ -184,19 +184,84 @@ const upsertPlayHistoryRecord = async (songInput) => {
   }
 };
 
-// Returns a per-user localStorage key so two accounts never share cached data.
-const getLibraryKey = (userId = 'guest') => `raabta_library_v2_${userId}`;
+// Local offline library storage 
+// We keep a single global key so downloads and library state persist even when
+// the app is opened fresh while offline or when switching accounts.
+const GLOBAL_LIBRARY_KEY = 'raabta_library_v3_global';
+const LEGACY_LIBRARY_PREFIX = 'raabta_library_v2_';
 
-const readOfflineLibrarySnapshot = (userId = 'guest') => {
+// Legacy helper retained for backwards compatibility (userId is ignored).
+const getLibraryKey = (_userId = 'guest') => GLOBAL_LIBRARY_KEY;
+
+const readOfflineLibrarySnapshot = (_userId = 'guest') => {
   if (typeof window === 'undefined') return null;
 
   try {
-    const key = getLibraryKey(userId);
-    const raw = localStorage.getItem(key);
+    // Prefer the new global snapshot if it exists.
+    const raw = localStorage.getItem(GLOBAL_LIBRARY_KEY);
 
-    if (!raw) return null;
+    // If no global snapshot is present, try to migrate any legacy per-user
+    // snapshots (raabta_library_v2_*). This keeps existing downloads and
+    // playlists for users who previously had per-account caches.
+    let parsed;
+    if (!raw) {
+      const allKeys = Object.keys(localStorage || {});
+      const legacyKeys = allKeys.filter((key) => key.startsWith(LEGACY_LIBRARY_PREFIX));
 
-    const parsed = JSON.parse(raw);
+      if (legacyKeys.length > 0) {
+        const merged = {
+          likedSongIds: new Set(),
+          recentlyPlayed: [],
+          songsById: {},
+          playlists: [],
+          offlineSongIds: new Set(),
+        };
+
+        legacyKeys.forEach((key) => {
+          try {
+            const legacyRaw = localStorage.getItem(key);
+            if (!legacyRaw) return;
+            const legacy = JSON.parse(legacyRaw);
+
+            if (Array.isArray(legacy?.likedSongIds)) {
+              legacy.likedSongIds.forEach((id) => merged.likedSongIds.add(id));
+            }
+            if (Array.isArray(legacy?.recentlyPlayed)) {
+              merged.recentlyPlayed.push(...legacy.recentlyPlayed);
+            }
+            if (legacy?.songsById && typeof legacy.songsById === 'object') {
+              Object.assign(merged.songsById, legacy.songsById);
+            }
+            if (Array.isArray(legacy?.playlists)) {
+              merged.playlists.push(...legacy.playlists);
+            }
+            if (Array.isArray(legacy?.offlineSongIds)) {
+              legacy.offlineSongIds.forEach((id) => merged.offlineSongIds.add(id));
+            }
+          } catch (_e) {
+            // Ignore bad legacy entries and continue merging what we can.
+          }
+        });
+
+        parsed = {
+          likedSongIds: [...merged.likedSongIds],
+          recentlyPlayed: merged.recentlyPlayed,
+          songsById: merged.songsById,
+          playlists: merged.playlists,
+          offlineSongIds: [...merged.offlineSongIds],
+        };
+
+        try {
+          localStorage.setItem(GLOBAL_LIBRARY_KEY, JSON.stringify(parsed));
+        } catch (_e) {
+          // If migration write fails, we still return the in-memory snapshot.
+        }
+      } else {
+        return null;
+      }
+    } else {
+      parsed = JSON.parse(raw);
+    }
 
     return {
       likedSongIds: Array.isArray(parsed?.likedSongIds) ? parsed.likedSongIds : [],
@@ -211,13 +276,13 @@ const readOfflineLibrarySnapshot = (userId = 'guest') => {
   }
 };
 
-const persistOfflineLibrarySnapshot = (snapshot, userId = 'guest') => {
+const persistOfflineLibrarySnapshot = (snapshot, _userId = 'guest') => {
   if (typeof window === 'undefined') return;
   const { likedSongIds, recentlyPlayed, songsById, playlists, offlineSongIds } = snapshot;
 
   try {
     localStorage.setItem(
-      getLibraryKey(userId),
+      GLOBAL_LIBRARY_KEY,
       JSON.stringify({
         likedSongIds: [...(likedSongIds || [])],
         recentlyPlayed: Array.isArray(recentlyPlayed) ? recentlyPlayed : [],
